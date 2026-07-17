@@ -1,0 +1,28 @@
+aid: anchorage
+name: Anchorage
+description: 'Anchorage is a company surfaced as a portfolio company of a16z, amplify-partners and added
+  to the API Evangelist network as a stub for enrichment. Sector: crypto. This profile is a lead awaiting
+  the enrichment pipeline.'
+url: https://raw.githubusercontent.com/api-evangelist/anchorage/refs/heads/main/apis.yml
+x-type: company
+x-source: vc-portfolio
+x-backed-by:
+- a16z
+- amplify-partners
+x-tier: stub
+x-tier-reason: portfolio-lead
+specificationVersion: '0.20'
+created: '2026-07-17'
+modified: '2026-07-17'
+tags:
+- Company
+- Crypto
+apis: []
+maintainers:
+- FN: Kin Lane
+  email: kin@apievangelist.com
+- FN: APIs.json
+  email: info@apis.io
+common:
+- type: Website
+  url: https://anchorage.com
