@@ -1,0 +1,17 @@
+generated: '2026-07-17'
+method: derived
+source: openapi/anchorage-v2-openapi-original.yml, openapi/anchorage-v3-openapi-original.yml
+summary:
+  types:
+  - apiKey
+  api_key_in:
+  - header
+schemes:
+- name: Api-Access-Key
+  type: apiKey
+  in: header
+  parameter: Api-Access-Key
+  description: An API key associated with a security role
+  sources:
+  - openapi/anchorage-v2-openapi-original.yml
+  - openapi/anchorage-v3-openapi-original.yml
