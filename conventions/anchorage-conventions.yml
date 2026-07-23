@@ -1,0 +1,49 @@
+generated: '2026-07-17'
+method: searched
+source: https://docs.anchorage.com/knowledge-base/api-reference/errors-pagination.md
+docs:
+  - https://docs.anchorage.com/knowledge-base/api-reference/authentication.md
+  - https://docs.anchorage.com/knowledge-base/api-reference/errors-pagination.md
+  - https://docs.anchorage.com/knowledge-base/platform/developers/request-signing.md
+authentication:
+  style: api-key + request signing
+  api_key_header: Api-Access-Key
+  request_signing:
+    algorithm: Ed25519
+    headers: [Api-Signature, Api-Timestamp]
+    applies_to: Sensitive endpoints (transfers, withdrawals, trading, and other state-changing operations)
+  see: authentication/anchorage-authentication.yml
+idempotency:
+  supported: true
+  mechanism: request-body-field
+  field: idempotentId
+  format: UUID string in the POST request JSON body
+  scope: Certain POST endpoints (36 operations in v2)
+  behavior: Retries with the same idempotentId do not perform the same operation twice.
+pagination:
+  style: cursor
+  request_params:
+    - {name: afterId, description: Request a page after (older than) this pagination ID}
+    - {name: limit, description: Maximum number of results requested}
+    - {name: endDate, description: Trading endpoints only; YYYY-MM-DD}
+  response:
+    cursor_field: page.next
+    notes: Responses include a `next` cursor in the `page` attribute when more results exist.
+rate_limiting:
+  limit: 20 requests/second per organization
+  burst: up to 100 requests within a single second
+  scope: All API keys within an organization share one common rate limit.
+  status_code: 429
+  see: rate-limits/anchorage-rate-limits.yml
+versioning:
+  scheme: uri-path
+  versions: [v2, v3]
+  current: v2 (144 operations); v3 (58 operations) is a newer surface for balances, wallet ops, transaction construction, fiat banking, and AML.
+error_envelope:
+  shape: {errorType: enum, message: string}
+  format: custom (not RFC 9457 problem+json)
+  see: errors/anchorage-problem-types.yml
+notes: >-
+  Cross-cutting request/response semantics captured from the Anchorage Digital
+  API reference. Idempotency is real (idempotentId), which drives the
+  Idempotency rating pointer.

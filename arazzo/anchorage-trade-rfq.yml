@@ -1,0 +1,33 @@
+arazzo: 1.0.1
+info:
+  title: Anchorage Digital - Trade via RFQ
+  version: 1.0.0
+  summary: Request a quote, accept it, and confirm the resulting order and trade.
+sourceDescriptions:
+  - name: anchorageV2
+    url: ../openapi/anchorage-v2-openapi-original.yml
+    type: openapi
+workflows:
+  - workflowId: tradeViaRFQ
+    summary: Request-for-quote trade with confirmation.
+    steps:
+      - stepId: listPairs
+        operationId: getTradePairs
+        successCriteria:
+          - condition: $statusCode == 200
+      - stepId: requestQuote
+        operationId: requestQuote
+        outputs:
+          quoteId: $response.body#/quoteId
+      - stepId: acceptQuote
+        operationId: acceptQuote
+        outputs:
+          orderId: $response.body#/orderId
+      - stepId: confirmOrder
+        operationId: getOrderStatus
+        parameters:
+          - name: orderId
+            in: path
+            value: $steps.acceptQuote.outputs.orderId
+        successCriteria:
+          - condition: $statusCode == 200

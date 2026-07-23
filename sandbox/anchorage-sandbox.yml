@@ -1,0 +1,36 @@
+generated: '2026-07-17'
+method: searched
+source: https://docs.anchorage.com/knowledge-base/platform/developers/sandbox/sandbox-testing-guide.md
+docs:
+  - https://docs.anchorage.com/knowledge-base/platform/developers/sandbox/sandbox-overview.md
+  - https://docs.anchorage.com/knowledge-base/platform/developers/sandbox/sandbox-onboarding.md
+  - https://docs.anchorage.com/knowledge-base/platform/developers/sandbox/sandbox-testing-guide.md
+environments:
+  sandbox:
+    api_base_url: https://api.anchorage-staging.com
+    web_dashboard: https://clientdashboard.anchorage-staging.com/login
+    ios_app: Anchorage Digital sandbox iOS application
+  production:
+    api_base_url: https://api.anchorage.com
+    web_dashboard: https://anchoragelogin.com/login/
+separation:
+  model: separate-environment
+  notes: >-
+    Sandbox is a fully separate environment with its own API keys and dashboard.
+    Only sandbox API keys work against the staging API; mainnet addresses cannot
+    be created in the sandbox.
+test_assets:
+  - {asset: Bitcoin (Testnet), identifier: BTC_T}
+  - {asset: Ethereum (Hoodi Testnet), identifier: ETHHOODI}
+  - {asset: ERC-20 test token, identifier: USDANCHOODI}
+  - {asset: Solana (Devnet), identifier: SOL_TD}
+  - {asset: BUIDL (Sepolia), identifier: BUIDLSEP}
+funding:
+  methods:
+    - Public testnet faucets
+    - Direct testnet fund transfers from your Anchorage point of contact
+kyc: Mock KYC flow during sandbox onboarding (QR enrollment with the demo app)
+notes: >-
+  Test values captured verbatim from the sandbox testing guide. No test card
+  numbers exist (Anchorage is a crypto custody/banking platform, not a card
+  acquirer); test funds are testnet assets funded via faucets.

@@ -1,0 +1,63 @@
+generated: '2026-07-17'
+method: derived
+source:
+- openapi/anchorage-v2-openapi-original.yml
+- openapi/anchorage-v3-openapi-original.yml
+- https://docs.anchorage.com/knowledge-base/api-reference/errors-pagination.md
+format: custom-error-envelope
+envelope:
+  description: Error responses return an ErrorDetails object.
+  fields:
+  - name: errorType
+    type: enum
+    description: The type of error returned.
+  - name: message
+    type: string
+    description: A human-readable message providing more details about the error.
+status_codes:
+- status: 200
+  meaning: The request was successful.
+- status: 400
+  meaning: The request was improperly formed, often due to invalid syntax, insufficient funds, or a missing
+    required parameter.
+- status: 401
+  meaning: The request was missing a valid API key.
+- status: 403
+  meaning: The API key does not have permission to perform the requested action.
+- status: 404
+  meaning: The requested resource does not exist.
+- status: 409
+  meaning: The requested action cannot proceed because the resource is not in the required state.
+- status: 429
+  meaning: Too many requests were sent in a given amount of time. Rate limit is 20 requests/second per
+    organization (burst up to 100).
+- status: 5xx
+  meaning: Something went wrong on Anchorage Digital's side.
+error_types:
+- errorType: InternalError
+  http: 500
+- errorType: InvalidRequest
+  http: 400
+- errorType: Unauthenticated
+  http: 401
+- errorType: Forbidden
+  http: 403
+- errorType: NotFound
+  http: 404
+- errorType: Conflict
+  http: 409
+- errorType: UnprocessableEntity
+  http: 422
+- errorType: TooManyRequests
+  http: 429
+- errorType: ServiceUnavailable
+  http: 503
+- errorType: QuoteExpired
+  http: 409
+- errorType: InsufficientFunds
+  http: 400
+- errorType: NotImplemented
+  http: 501
+docs: https://docs.anchorage.com/knowledge-base/api-reference/errors-pagination.md
+notes: Derived from OpenAPI ErrorType/ErrorDetails schemas and the published errors reference. Anchorage
+  returns a custom error envelope (errorType + message), not RFC 9457 problem+json.

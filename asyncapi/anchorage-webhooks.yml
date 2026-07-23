@@ -1,0 +1,39 @@
+generated: '2026-07-17'
+method: searched
+type: Webhooks
+source:
+  - https://docs.anchorage.com/knowledge-base/platform/developers/webhooks/webhooks-overview.md
+  - openapi/anchorage-v2-openapi-original.yml
+spec_type: none
+transport: https-callback
+description: >-
+  Anchorage Digital delivers event-driven notifications for operations and
+  transactions across crypto and USD. Webhook endpoints are registered and
+  managed through the Webhook Notifications API; the full, current event-type
+  list is retrieved at runtime via listWebhookEventTypes. No AsyncAPI document
+  is published.
+management_api:
+  tag: Webhook Notifications
+  operations:
+    - createWebhookEndpoints
+    - listWebhookEndpoints
+    - getWebhookEndpoint
+    - updateWebhookEndpoint
+    - createWebhookEndpointSubscriptions
+    - listWebhookEndpointSubscriptions
+    - cancelWebhookEndpointSubscription
+    - listWebhookEventTypes
+    - getWebhookValidationKey
+security:
+  signature: Payloads are signed; consumers fetch a validation key via getWebhookValidationKey.
+event_type_shape:
+  id: string (e.g. transfer.completed)
+  description: string
+example_events:
+  - {id: transfer.completed, description: Notification of a successful transfer that is now completed}
+delivery:
+  docs: https://docs.anchorage.com/knowledge-base/platform/developers/webhooks/webhooks-delivery.md
+  notes: Retry behavior, delivery guarantees, and timeout requirements are documented.
+notes: >-
+  Emitted as a Webhooks surface (not AsyncAPI). Event types are dynamic and
+  enumerated via the API rather than a static published catalog.

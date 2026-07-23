@@ -1,0 +1,27 @@
+generated: '2026-07-17'
+method: probed
+source: live DNS/TLS/HTTP probes of apis.yml + OpenAPI hosts
+hosts:
+- host: anchorage.com
+  https: true
+  tls_version: TLSv1.3
+  cert_expires: Sep 30 10:04:18 2026 GMT
+  hsts: true
+  hsts_max_age: 31536000
+- host: api.anchorage-staging.com
+  https: true
+  tls_version: TLSv1.3
+  cert_expires: Sep 22 13:16:13 2026 GMT
+  hsts: null
+domains:
+- domain: anchorage.com
+  dnssec: true
+  caa: []
+  spf: true
+  dmarc: true
+  dmarc_policy: reject
+- domain: anchorage-staging.com
+  dnssec: true
+  caa: []
+  spf: false
+  dmarc: false

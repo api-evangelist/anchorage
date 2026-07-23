@@ -1,0 +1,23 @@
+generated: '2026-07-17'
+method: searched
+hosts_probed:
+  - https://api.anchorage.com
+  - https://docs.anchorage.com
+  - https://anchorage.com
+  - https://www.anchorage.com
+documents: []
+notes: >-
+  No usable /.well-known/ discovery documents were found. Every probed path
+  returned 404 except docs.anchorage.com/.well-known/openid-configuration, which
+  returned HTTP 200 but served the Mintlify docs SPA HTML shell (a soft-404),
+  not a real OIDC discovery document - so it is not recorded. The API uses an
+  API-key + Ed25519 request-signing model rather than OAuth/OIDC, so no
+  authorization-server metadata is expected.
+probes:
+  - {path: /.well-known/security.txt, host: api.anchorage.com, status: 404}
+  - {path: /.well-known/openid-configuration, host: api.anchorage.com, status: 404}
+  - {path: /.well-known/oauth-authorization-server, host: api.anchorage.com, status: 404}
+  - {path: /.well-known/api-catalog, host: api.anchorage.com, status: 404}
+  - {path: /.well-known/ai-plugin.json, host: api.anchorage.com, status: 404}
+  - {path: /.well-known/openid-configuration, host: docs.anchorage.com, status: 200, note: soft-404-html-spa}
+  - {path: /.well-known/security.txt, host: anchorage.com, status: 404}

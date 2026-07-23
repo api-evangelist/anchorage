@@ -1,0 +1,43 @@
+generated: '2026-07-17'
+method: derived
+source:
+- openapi/anchorage-v2-openapi-original.yml
+- openapi/anchorage-v3-openapi-original.yml
+- https://docs.anchorage.com/knowledge-base/api-reference/
+standards:
+- id: oauth2
+  conforms: false
+  evidence: No oauth2 securityScheme; auth is API key + Ed25519 request signing.
+- id: oidc
+  conforms: false
+- id: apikey-auth
+  conforms: true
+  evidence: Api-Access-Key header apiKey securityScheme across v2 and v3.
+- id: ed25519-request-signing
+  conforms: true
+  evidence: Sensitive endpoints require Api-Signature (Ed25519) + Api-Timestamp headers.
+- id: rfc9457-problem-details
+  conforms: false
+  evidence: Errors use a custom {errorType,message} envelope, not application/problem+json.
+- id: idempotency
+  conforms: true
+  evidence: idempotentId field on 36 POST bodies enables idempotent retries.
+- id: cursor-pagination
+  conforms: true
+  evidence: afterId/limit params with a next cursor in the page attribute.
+- id: webhooks
+  conforms: true
+  evidence: Webhook Notifications API with signed event delivery and validation keys.
+- id: openapi-3
+  conforms: true
+  evidence: Published OpenAPI 3.0.0 specs for v2 (144 ops) and v3 (58 ops).
+- id: fapi
+  conforms: false
+- id: psd2
+  conforms: false
+- id: travel-rule
+  conforms: true
+  evidence: Travel Rule (FATF) support documented for deposits/withdrawals between VASPs.
+notes: Standards conformance derived from the OpenAPI security schemes, error/pagination conventions,
+  and documented capabilities. No published third-party certification (SOC/ISO/PCI) confirmed on the public
+  docs, so no Compliance pointer is emitted.

@@ -1,0 +1,43 @@
+generated: '2026-07-17'
+method: searched
+source: https://docs.anchorage.com/knowledge-base/api-reference/changelog.md
+scheme: dated
+current_version: v2 (with a newer v3 surface)
+window: recent
+entries:
+  - date: '2026-07-02'
+    kind: added
+    breaking: false
+    highlights: Two new Stablecoins endpoints for reserve info - GET /stablecoins/reserves and GET /stablecoins/reserves/entitled-stablecoins.
+  - date: '2026-06-29'
+    kind: changed
+    breaking: true
+    highlights: GET /tags response restructured to nest the tags array within a `data` object; integrations must read response.data.tags.
+  - date: '2026-06-24'
+    kind: changed
+    breaking: true
+    highlights: Field createOnAllCompatibleNetworks renamed to activateAllCompatibleNetworks in POST /vaults/{vaultId}/wallets.
+  - date: '2026-06-22'
+    kind: added
+    breaking: false
+    highlights: New Tags API (GET/POST /tags, POST /tags/apply, DELETE /tags/apply/{entityId}/{tagName}, GET /tags/search).
+  - date: '2026-06-18'
+    kind: changed
+    breaking: false
+    highlights: GET /asset-types now includes a compatibleNetworkIds array.
+  - date: '2026-06-17'
+    kind: added
+    breaking: false
+    highlights: Optional specLotId field on POST /trading/async-order for tax-lot specification on FOK SELL orders; new optional fields on GET /collateral_management/packages.
+  - date: '2026-06-09'
+    kind: added
+    breaking: false
+    highlights: New POST /collateral_management/packages/{packageId}/collateral-decrease endpoint.
+  - date: '2026-06-08'
+    kind: added
+    breaking: false
+    highlights: New POST /wallets/{walletId}/activate endpoint to activate an existing wallet on additional networks.
+docs:
+  - https://docs.anchorage.com/knowledge-base/api-reference/changelog.md
+  - https://docs.anchorage.com/knowledge-base/porto/changelog.md
+  - https://docs.anchorage.com/agentic-banking/changelog.md

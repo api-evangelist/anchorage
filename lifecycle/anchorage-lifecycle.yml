@@ -1,0 +1,25 @@
+generated: '2026-07-17'
+method: searched
+source:
+  - https://docs.anchorage.com/knowledge-base/api-reference/changelog.md
+  - openapi/anchorage-v2-openapi-original.yml
+versioning:
+  scheme: uri-path
+  current: v2
+  versions: [v2, v3]
+  docs: https://docs.anchorage.com/knowledge-base/api-reference/introduction.md
+deprecation:
+  policy: >-
+    Breaking changes and deprecations are announced through the dated API
+    changelog; clients are advised to subscribe for updates, additions, and
+    breaking changes.
+  changelog: https://docs.anchorage.com/knowledge-base/api-reference/changelog.md
+  sunset_header: false
+status_page: https://anchorage.statuspage.io
+deprecated_operations:
+  - openapi/anchorage-v2-openapi-original.yml#createSubaccount
+notes: >-
+  Anchorage publishes a public status page (anchorage.statuspage.io; the
+  status.anchorage.com host does not resolve) and a dated API changelog that
+  carries deprecation/breaking-change notices. One operation (createSubaccount)
+  is marked deprecated in the v2 OpenAPI.

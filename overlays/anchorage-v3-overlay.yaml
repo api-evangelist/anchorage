@@ -1,0 +1,18 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements for Anchorage Digital API v3
+  version: 1.0.0
+extends: openapi/anchorage-v3-openapi-original.yml
+actions:
+- target: $.info
+  update:
+    x-apievangelist-network: https://apis.io/provider/anchorage
+    x-api-evangelist-idempotency: idempotentId field in POST bodies
+    x-api-evangelist-rate-limit: 20 req/s per organization, burst 100
+    x-api-evangelist-production-server: https://api.anchorage.com/v3
+- target: $.servers
+  update:
+  - url: https://api.anchorage.com/v3
+    description: Production
+  - url: https://api.anchorage-staging.com/v3
+    description: Sandbox

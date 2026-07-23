@@ -1,0 +1,12 @@
+generated: '2026-07-17'
+method: derived
+source: openapi/anchorage-v2-openapi-original.yml
+workflows:
+  - file: anchorage-receive-deposit.yml
+    workflowId: receiveCryptoDeposit
+    title: Receive a crypto deposit
+    summary: Create a wallet in a vault, provision a deposit address, and watch for the inbound deposit.
+  - file: anchorage-trade-rfq.yml
+    workflowId: tradeViaRFQ
+    title: Trade via RFQ
+    summary: Request a quote, accept it, and confirm the resulting order and trade.

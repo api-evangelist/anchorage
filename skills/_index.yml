@@ -1,0 +1,20 @@
+generated: '2026-07-17'
+method: generated
+source: openapi/anchorage-v2-openapi-original.yml
+skills:
+  - file: anchorage-receive-crypto-deposit.md
+    name: Receive a crypto deposit
+    api: openapi/anchorage-v2-openapi-original.yml
+    operations: [getVaults, createVaultWallet, provisionWalletAddress, getAddresses, getTransactions]
+  - file: anchorage-withdraw-crypto.md
+    name: Withdraw crypto with quorum approval
+    api: openapi/anchorage-v2-openapi-original.yml
+    operations: [getWallets, createWithdrawal, getTransaction, getTransactions]
+  - file: anchorage-trade-rfq.md
+    name: Execute a trade via RFQ
+    api: openapi/anchorage-v2-openapi-original.yml
+    operations: [getTradePairs, requestQuote, acceptQuote, getOrderStatus, getTrade]
+  - file: anchorage-subscribe-webhooks.md
+    name: Subscribe to webhook events
+    api: openapi/anchorage-v2-openapi-original.yml
+    operations: [listWebhookEventTypes, createWebhookEndpoints, createWebhookEndpointSubscriptions, getWebhookValidationKey, listWebhookEndpointSubscriptions]

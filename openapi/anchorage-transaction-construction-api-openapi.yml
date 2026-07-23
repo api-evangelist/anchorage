@@ -1,0 +1,1457 @@
+openapi: 3.0.0
+info:
+  version: 2.0.0
+  title: Anchorage Digital API Reference Addresses Transaction Construction API
+  contact:
+    email: api@anchorage.com
+  description: "# Introduction\n*CONFIDENTIAL: Please do not distribute this documentation externally without prior Anchorage Digital approval.*\n\n\nThe Anchorage Digital REST API v2.0 provides a set of operations and resources that allow Anchorage Digital clients and partners to:\n  - Programmatically transfer funds from an Anchorage Digital vault or wallet without human intervention\n  - Create and list deposit addresses in a vault\n  - Read and monitor vault balances\n  - Query transaction history including deposits\n  - Request quotes from and execute trades with the Anchorage Digital trading desk\n\n\nWant help or to share your opinion on how this API works for you? Please contact api@anchorage.com.\n\n\n# Authentication and Security\n\nThe Anchorage Digital API performs authentication and authorization via a combination of:\n\n\n* An API key, which is a bearer token\n\n* A permission group signed by the user's organization, which is linked to the API key\n\n* An Ed25519 Signature, which comes from a user-generated key and is required for certain requests\n\n\n## Permission Groups\n\n\nA permission group acts as a set of rules for how an organization and its resources can be accessed. Permission groups are created independently of API keys, and new permission groups must be created prior to making an API key.\n\n\nEach permission group has a name, a description and a set of permissions which can be applied to your organization's vaults. Updating, creating and deleting permissions groups require a quorum of approvals. After creation, a permission group can be freely assigned to an unlimited number of API keys.\n\n\nEach API key inherits its permissions from the associated permission group. When the permission group is updated, all API keys associated with it will inherit the updated permission set. If a permission group is deleted, all associated API keys will no longer work.\n\n\nEach organization is created with a default permission group that allows read-only access. This permission group may be modified or deleted at any time, and no API keys are created by default with this permission group.\n\n\n### Permissions\n\n\nPossible vault permissions include the following:\n\n\n<table>\n  <tr>\n    <td><b>Read vault activity (READ)</b></td>\n    <td>See an overview of your vault(s) and wallets. Read vault details, balances, asset types, transaction history and deposit addresses.</td>\n  </tr>\n  <tr>\n    <td><b>Create address (CREATE_DEPOSIT_ADDRESS)</b></td>\n    <td>Receive deposits in the vault from external sources. Create and read deposit addresses.</td>\n  </tr>\n  <tr>\n    <td><b>Transfer funds (TRANSFER)</b></td>\n    <td>This permission is configurable to enable an API key endowed with this permission to either 1) Transfer funds to any Anchorage Digital institutional account, including those outside of your organization or 2) Transfer funds to any blockchain address not custodied by Anchorage Digital that has gone through quorum approval.</td>\n  </tr>\n  <tr>\n    <td><b>Propose and accept settlements (PROPOSE_ACCEPT_SETTLEMENTS)</b></td>\n    <td>This is an Atlas specific permission for initiating settlements.</td>\n  </tr>\n  <tr>\n    <td><b>Authorize settlements (AUTHORIZE_SETTLEMENTS)</b></td>\n    <td>This is an Atlas specific permission for authorizing settlements after they've been proposed or accepted.</td>\n  </tr>\n</table>\n\n\nThere are also special vault permissions for enabled by Anchorage Digital on a per-organization basis:\n\nAdditionally, there are global permissions which apply to the entire organization:\n\n\n<table>\n  <tr>\n    <td><b>Initiate withdrawals (INITIATE_WITHDRAWAL)</b></td>\n    <td>Initiate withdrawals to external destinations. All withdrawals require quorum approval through the Anchorage Digital mobile app.</td>\n  </tr>\n  <tr>\n    <td><b>Execute trades (TRADE)</b></td>\n    <td>Request for quotes (RFQ) from the Anchorage Digital trading desk. Create and accept quotes. Read data of trades and settlements created by this key.</td>\n  </tr>\n  <tr>\n    <td><b>Read trade activity (READ_TRADE)</b></td>\n    <td>Read trade activity and trade settlements data of your organization.</td>\n  </tr>\n  <tr>\n    <td><b>Read lending activity (LENDER_READ)</b></td>\n    <td>Read lending activity of your organization.</td>\n  </tr>\n  <tr>\n    <td><b>Read facility data (FACILITY_ONLY)</b></td>\n    <td>Read lending facility data.</td>\n  </tr>\n  <tr>\n    <td><b>Read deposit attribution activity (READ_DEPOSIT_ATTRIBUTION)</b></td>\n    <td>Read deposit attribution activity of your organization.</td>\n  </tr>\n  <tr>\n    <td><b>Manage deposit attributions (DEPOSIT_ATTRIBUTION)</b></td>\n    <td>Read deposit attribution activity of your organization. Perform deposit attributions.</td>\n  </tr>\n  <tr>\n    <td><b>Initiate Staking and Unstaking (STAKE)</b></td>\n    <td>Initiate staking or unstaking operation. All operations require quorum approval through the Anchorage Digital mobile app.</td>\n  </tr>\n</table>\n\n\n### Example Workflow - Allow transfers from specific vaults\n\nTo create an API key with the ability to transfer funds from an Anchorage Digital vaults or wallet, a permission group must first be created with the **Transfer funds** permission for the desired source vaults. Creating this permission group requires a quorum of approvals on the Anchorage Digital iOS app. Once the creation is confirmed, any number of API keys may be created with this permission group in the Anchorage Digital Web Dashboard under the API 2.0 section.\n\nTo add additional permissions to the API key, update the associated permission group through the Anchorage Digital Web Dashboard. To revoke any permissions, the individual API key may be revoked, or the permission group may be updated or deleted to remove Transfer access.\n\n## API Keys\n\nAll API requests must be made over HTTPS and must include authentication using the following scheme.\n\n<!-- ReDoc-Inject: <security-definitions> -->\n\n### Generating an API Key\n\nIn order to make a valid API request, you must first create an API key. API keys can be created and managed in the Anchorage Digital Web Dashboard under the [API 2.0 tab](https://anchoragelogin.com/api). When you create an API key, there are 3 pieces of information you will need to remember:\n  - API access key\n  - Ed25519 public key (optional for read-only requests)\n  - Ed25519 private/signing key (optional for read-only requests)\n\nYou must generate an Ed25519 signing key pair and save the public portion in the Anchorage Digital Web Dashboard when creating the API access key. The signing key pair is used for added security with sensitive requests.\n\nPlease note, Anchorage Digital cannot recover your API access key or private signing key if you forget them. You may generate a new access key and signing key at any time if you lose access.\n\n### API Key Permissions\n\nEach API key is associated with a permission group. This permission group specifies the permitted actions for all associated API keys. Read more about permission groups [here](#section/Authentication-and-Security/Permission-Groups).\n\n### Creating a request\n\nAll requests must include the `Api-Access-Key` header, which contains your API access key as a string.\n\nEndpoints that require a signature must include the `Api-Signature` and `Api-Timestamp` headers. Read more about signatures [here](#section/Authentication-and-Security/Signatures).\n\nAll request bodies must be valid JSON and have the content type `application/json`.\n\n## Request Signatures\n\nCertain endpoints require an Ed25519 signature to be provided alongside the API key. These endpoints will specify the `Api-Signature` and `Api-Timestamp` headers as additional parameters.\n\nSignatures are optional unless explicitly required, but are encouraged for all requests. If a signature is provided, it will be verified.\n\n### Signing Keys\n\nA signing key pair is generated by the user and the corresponding public key must be provided when creating an API key.\n\nWhen creating an API key, you will be prompted to provide an Ed25519 public key. You must use the associated Ed25519 signing key (private key) when creating signatures for requests from this API key.\n\nPlease note that signing keys (Ed25519 private keys) should be stored securely by the user. The signing key should only be used to derive request signatures and should never be sent in a request. Anchorage Digital will never request you share your private key.\n\n### Generating a Signing Key\n\nThe user must securely generate an Ed25519 key pair on their own hardware and retain both the public and private portions. The Anchorage Digital API accepts a 64-character (32 bytes) hex-encoded Ed25519 public key when creating an API access key.\n\n\n#### Code sample (Python)\n\n*Generate a new signing key pair*\n\n```python\n# https://pypi.org/project/PyNaCl/\n\nimport nacl\nimport nacl.signing\nimport secrets\n\nseed = secrets.token_bytes(32)\n\n# Generate a new random signing key\nsigning_key = nacl.signing.SigningKey(seed)\n\n# Obtain the hex-encoded signing key\nprint('Signing key:')\nprint(signing_key.encode().hex())\n\n# Obtain the hex-encoded verify key for the given signing key\n# Use this in the Anchorage Digital Web Dashboard when creating an API key\nprint('Public key:')\nprint(signing_key.verify_key.encode().hex())\n```\n\n\n### Signing a Request\n\nTo sign a request, generate a request signature using the Ed25519 private (signing) key and provide it alongside the request in the `Api-Signature` header.\n\nTo create a request signature, first concatenate the `timestamp`, `method`, `request path`, and `body` into a string. Then, create a signature of this message using the Ed25519 private key and hex-encode the output. Use this value as the `Api-Signature` header and use the `timestamp` value as the `Api-Timestamp` header.\n\n- The `method` is an uppercase HTTP method (ex. `GET`, `POST`, `DELETE`)\n- The `request path` should contain all query parameters (ex. `/v2/transfers?foo=bar&baz=bang`)\n- The `body` is a stringified HTTP request body\n- The `body` should be omitted if the request does not contain a body (ex. a `GET` or `DELETE` request)\n- The `timestamp` is the same as the `Api-Timestamp` header\n- The `timestamp` is a number of seconds since the Unix Epoch in UTC, and must be within one minute of the API service's time when the request is received\n\n### Reference signature\n\nTo verify your signature generation code is correct, generate a signature for the following request and timestamp using the provided signing key. If the generated signature matches the signature below, your signature generation code is correct.\n\n\n<table>\n  <tr>\n    <td>Timestamp</td>\n    <td>1577880000</td>\n  </tr>\n  <tr>\n    <td>HTTP Method (Uppercase)</td>\n    <td>POST</td>\n  </tr>\n  <tr>\n    <td>HTTP Path + query</td>\n    <td>/v2/transfers?foo=bar&baz=bang</td>\n  </tr>\n  <tr>\n    <td>HTTP Body</td>\n    <td>{\"source\": {\"id\": \"1c920f4241b78a1d483a29f3c24b6c4c\", \"type\": \"VAULT\"}, \"assetType\": \"ETH\", \"destination\": {\"id\": \"55e89d4a644d736b01533a2ea9b32a20\", \"type\": \"VAULT\"}, \"amount\": \"1000.00000000\"}</td>\n  </tr>\n  <tr>\n    <td>Signing Key (Ed25519 Private Key Seed)</td>\n    <td>0101010101010101010101010101010101010101010101010101010101010101</td>\n  </tr>\n  <tr>\n    <td>Public Key</td>\n    <td>8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c</td>\n  </tr>\n  <tr>\n    <td>Signature</td>\n    <td>4bf42054bf7db1f8a2a2bc83d2a108502ee7a9d2ac7a2738adc2f932922446786fb9be1bd1eb475023296c6cba4ddbe28b04baca4b7521b1f1840a4ffd2b4d0d</td>\n  </tr>\n</table>\n\n## Reference clients\n\n### Python (with `requests` library)\n\n*Authorize and sign requests*\n\n```python\n\n# https://pypi.org/project/PyNaCl/\n\nfrom nacl import signing\n\nimport time\n\nimport requests\n\n\nclass AnchorageAuth(requests.auth.AuthBase):\n    ACCESS_KEY_HEADER = \"Api-Access-Key\"\n    SIGNATURE_HEADER = \"Api-Signature\"\n    TIMESTAMP_HEADER = \"Api-Timestamp\"\n\n    access_key: str\n    signing_key: signing.SigningKey\n\n    def __init__(self, access_key: str, signing_key_seed: bytes):\n        self.access_key = access_key\n        self.signing_key = signing.SigningKey(signing_key_seed)\n\n    def __call__(self, r: requests.PreparedRequest):\n        r.headers[self.ACCESS_KEY_HEADER] = self.access_key\n\n        timestamp = str(int(time.time()))\n        method = r.method.upper() if r.method else \"GET\"\n        body: bytes = bytes()\n        if r.body and isinstance(r.body, bytes):\n            body = r.body\n        elif r.body and isinstance(r.body, str):\n            body = bytearray(r.body, \"utf-8\")\n        message = b\"\".join(\n            [bytearray(timestamp, \"utf-8\"), bytearray(method, \"utf-8\"), bytearray(r.path_url, \"utf-8\"), body]\n        )\n        signature = self.signing_key.sign(message).signature.hex()\n        r.headers[self.SIGNATURE_HEADER] = signature\n        r.headers[self.TIMESTAMP_HEADER] = timestamp\n        return r\n\n\n# load secrets\n\n# Use the API key generated in the Anchorage Digital Web Dashboard\n\naccess_key = ...\n\n# Use the Ed25519 signing private key\n\nsigning_key_str = ... # load the raw string\n\nsigning_key = bytes(bytearray.fromhex(signing_key_str))\n\ndata = {}\n\nanchorage_auth = AnchorageAuth(access_key, signing_key)\n\nr = requests.post(\"https://api.anchorage.com/v2/transfers\", data=data, auth=anchorage_auth)\n\n```\n\n### Ruby - Reproduce reference signature\n```ruby\n  require \"ed25519\"\n  require \"net/http\"\n  require \"time\"\n\n  def hex_to_bin(s)\n      [s].pack('H*')\n  end\n\n  def bin_to_hex(s)\n      s.unpack('H*').first\n  end\n\n  private_key_seed_hex = '0101010101010101010101010101010101010101010101010101010101010101'\n  public_key_hex = '8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c'\n  key_pair_hex = private_key_seed_hex + public_key_hex\n\n  key_pair = hex_to_bin(key_pair_hex)\n\n  signing_key = Ed25519::SigningKey.from_keypair(key_pair)\n\n  timestamp = '1577880000' # Time.now.to_i.to_s\n\n  req = Net::HTTP::Post.new('/v2/transfers?foo=bar&baz=bang')\n  req.body = '{\"source\": {\"id\": \"1c920f4241b78a1d483a29f3c24b6c4c\", \"type\": \"VAULT\"}, \"assetType\": \"ETH\", \"destination\": {\"id\": \"55e89d4a644d736b01533a2ea9b32a20\", \"type\": VAULT\"}, \"amount\": \"1000.00000000\"}'\n\n  signature = signing_key.sign(timestamp + req.method + req.path + req.body)\n\n  req['Api-Access-Key'] = 'YOUR_ACCESS_KEY'\n  req['Api-Timestamp'] = timestamp\n  req['Api-Signature'] = bin_to_hex(signature)\n\n  puts bin_to_hex(signature)\n```\n\n# Errors\n\n\nThe Anchorage Digital API returns standard HTTP error codes for each API request.\n\n\n<table>\n  <tr>\n    <th style=\"width: 30%;\">Response Code</th>\n    <th>Description</th>\n  <tr>\n  <tr>\n    <td>200 OK</td>\n    <td>The request was successful.</td>\n  </tr>\n  <tr>\n    <td>400 Bad Request</td>\n    <td>The request was improperly formed and could not be understood by the server, often due to invalid syntax, insufficient funds, or a missing required parameter.</td>\n  </tr>\n  <tr>\n    <td>401 Unauthorized</td>\n    <td>The request was missing a valid API key.</td>\n  </tr>\n  <tr>\n    <td>403 Forbidden</td>\n    <td>The provided API key does not have permission to perform the requested action.</td>\n  </tr>\n  <tr>\n    <td>404 Not Found</td>\n    <td>The requested resource does not exist.</td>\n  </tr>\n  <tr>\n    <td>409 Conflict</td>\n    <td>The requested resource cannot proceed with the requested action because it is not in the required state.</td>\n  </tr>\n   <tr>\n    <td>429 Too Many Requests</td>\n    <td>Too many requests have been sent in a given amount of time.</td>\n  </tr>\n  <tr>\n    <td>\n      500 Internal Server Error\n      <br />\n      502 Bad Gateway\n      <br />\n      503 Service Unavailable\n      <br />\n      504 Gateway Timeout\n    </td>\n    <td>Something went wrong on Anchorage’s side. We have been alerted and are working on it.</td>\n  </tr>\n</table>\n\n\nIn addition to returning HTTP error codes for failed requests, the Anchorage Digital API includes a readable error message describing what went wrong in the response body.\n\n\n<SchemaDefinition schemaRef=\"#/components/schemas/ErrorDetails\" showReadOnly={true} showWriteOnly={true} />\n\n\n# Idempotency\n\n\nCertain endpoints support idempotent requests so that a given request can be safely retried without performing the same operation twice. For example, if a request to transfer funds does not respond due to network issues, you can retry the request using the same idempotent ID to ensure that only one transfer is created.\n\n\nEndpoints that support idempotent requests have an optional `idempotentId` field that can be included in the body of the `POST` request. Provide a unique string using your method of choice (such as a v4 UUID).\n\n\nIf a request is valid, Anchorage Digital will save the request indefinitely. If a subsequent request is received with the same `idempotentId` we will return the previously saved response for that `idempotentId`.\n\n\n# Rate Limits\n\n\nKeys provisioned by an Organization share one common rate limit. API requests are limited to 20 requests per second per Organization, allowing for bursts of up to 100 requests within a single second.\n\n\n# Pagination\n\n\nCursor pagination is used for REST endpoints which return multiple data points. Pagination allows for fetching data after the current page and specifying how many records to return. The `next` cursor is available in responses with the `page` attribute. Requests should use the `next` cursor URL to query subsequent data. Query parameter `afterId` specifies the last record previously retrieved. Some endpoints instead use the `endDate` parameter to specify the end date and older for records to retrieve. Query parameter `limit` specifies the maximum number of records in a response.\n\n## Parameters\n\n<table>\n  <tr>\n    <th style=\"width: 30%;\">Parameter</th>\n    <th>Description</th\n  </tr>\n  <tr>\n    <td>afterId</td>\n    <td>Request page after (older than) this pagination id.</td>\n  </tr>\n  <tr>\n    <td>endDate</td>\n    <td>Request records older than this date (YYYY-MM-DD format). Used for /trading/trades and /trading/settlements resources.</td>\n  </tr>\n  <tr>\n    <td>limit</td>\n    <td>Maximum number of results requested. Default usually 25, but varies depending on resource.</td>\n  </tr>\n</table>\n\n## Example\n\n`GET /v2/transfers?afterId=1968b94b09b8a1a8a381775d1f04978c424d891d50e517774bf984297985b471&limit=100`\n\n## Next cursor\n\nThe `next` cursor is a URL which references the last record in a set of records. When queried, the `next` cursor URL will return subsequent records, but otherwise using the same query parameters."
+servers:
+- url: https://api.anchorage-staging.com/v2
+security:
+- Api-Access-Key: []
+tags:
+- description: Operations for constructing and signing transactions via the Construct API
+  name: Transaction Construction
+paths:
+  /wallet-operations/construct/asset-types:
+    get:
+      operationId: listConstructAssetTypes
+      summary: List Construct Asset Types
+      description: 'Permissions required: **None**
+
+
+        List asset types supported for transaction construction.'
+      parameters:
+      - name: networkId
+        in: query
+        description: Filter by specific network ID. Returns only assets on the specified network.
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListAssetTypesResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+      tags:
+      - Transaction Construction
+  /wallet-operations/construct/transfer:
+    post:
+      operationId: constructTransferTransaction
+      summary: Construct Transfer Transaction
+      description: 'Permissions required: **Construct and sign transactions**
+
+
+        Construct and sign a transfer transaction immediately.
+
+
+        This endpoint signs the transaction right away. Use Propose Construct Transfer Transaction instead if you need
+
+        an approval workflow before signing.
+
+
+        Use Construct Transaction instead to construct another type of transaction.
+
+
+        > Note: This endpoint does NOT broadcast the transaction to the blockchain.
+
+        After construction and signing, the caller is responsible for broadcasting the transaction.
+
+
+        This endpoint returns immediately with a `walletOperationId`. Poll `GET /wallet-operations/{walletOperationId}` to check
+
+        the status and retrieve the signed transaction data once construction is complete. Use the signedTransaction
+
+        field from the response to broadcast to the blockchain.'
+      parameters: []
+      requestBody:
+        description: Transfer transaction construction request
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConstructTransferRequest'
+      responses:
+        '202':
+          description: Transfer transaction construction request accepted for processing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstructWalletOperationResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+      tags:
+      - Transaction Construction
+  /wallet-operations/construct/propose-transfer:
+    post:
+      operationId: proposeConstructTransferTransaction
+      summary: Propose Construct Transfer Transaction
+      description: 'Permissions required: **Propose constructed transactions**
+
+
+        Construct a transfer transaction for approval workflow. The transaction will not be signed until it receives
+
+        the required endorsements.
+
+
+        This endpoint constructs the transaction but defers signing. The operation will enter PENDING_ENDORSEMENT status
+
+        and require approval through your organization''s workflow before signing occurs.
+
+
+        Use Construct Transfer Transaction instead if you want to sign immediately without an approval workflow.
+
+
+        Use Propose Construct Transaction instead to construct another type of transaction with deferred signing.
+
+
+        > Note: This endpoint does NOT broadcast the transaction to the blockchain.
+
+        After construction and signing, the caller is responsible for broadcasting the transaction.
+
+
+        This endpoint returns immediately with a `walletOperationId` in `PENDING_ENDORSEMENT` status. The transaction
+
+        will not be signed until it receives the required endorsements through your approval workflow. Poll
+
+        `GET /wallet-operations/{walletOperationId}` to check the status. Once endorsed and signed, use the
+
+        signedTransaction field from the response to broadcast to the blockchain.'
+      parameters: []
+      requestBody:
+        description: Transfer transaction construction request for approval workflow
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConstructTransferRequest'
+      responses:
+        '202':
+          description: Transfer transaction construction request accepted for approval workflow
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstructWalletOperationResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+      tags:
+      - Transaction Construction
+  /wallet-operations/construct/transaction:
+    post:
+      operationId: constructTransaction
+      summary: Construct Transaction
+      description: 'Permissions required: **Construct and sign transactions**
+
+
+        Construct and sign a specialized transaction immediately.
+
+
+        This endpoint signs the transaction right away. Use Propose Construct Transaction instead if you need
+
+        an approval workflow before signing.
+
+
+        Use Construct Transfer Transaction instead to construct a transfer transaction.
+
+
+        > Note: This endpoint does NOT broadcast the transaction to the blockchain.
+
+        After construction and signing, the caller is responsible for broadcasting the transaction.
+
+
+        This endpoint returns immediately with a `walletOperationId`. Poll `GET /wallet-operations/{walletOperationId}` to check
+
+        the status and retrieve the signed transaction data once construction is complete. Use the signedTransaction
+
+        field from the response to broadcast to the blockchain.'
+      parameters: []
+      requestBody:
+        description: Transaction construction request
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConstructTransactionRequest'
+      responses:
+        '202':
+          description: Transaction construction request accepted for processing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstructWalletOperationResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+      tags:
+      - Transaction Construction
+  /wallet-operations/construct/propose-transaction:
+    post:
+      operationId: proposeConstructTransaction
+      summary: Propose Construct Transaction
+      description: 'Permissions required: **Propose constructed transactions**
+
+
+        Construct a specialized transaction for approval workflow. The transaction will not be signed until it receives
+
+        the required endorsements.
+
+
+        This endpoint constructs the transaction but defers signing. The operation will enter PENDING_ENDORSEMENT status
+
+        and require approval through your organization''s workflow before signing occurs.
+
+
+        Use Construct Transaction instead if you want to sign immediately without an approval workflow.
+
+
+        Use Propose Construct Transfer Transaction instead to construct a transfer transaction with deferred signing.
+
+
+        > Note: This endpoint does NOT broadcast the transaction to the blockchain.
+
+        After construction and signing, the caller is responsible for broadcasting the transaction.
+
+
+        This endpoint returns immediately with a `walletOperationId` in `PENDING_ENDORSEMENT` status. The transaction
+
+        will not be signed until it receives the required endorsements through your approval workflow. Poll
+
+        `GET /wallet-operations/{walletOperationId}` to check the status. Once endorsed and signed, use the
+
+        signedTransaction field from the response to broadcast to the blockchain.'
+      parameters: []
+      requestBody:
+        description: Transaction construction request for approval workflow
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConstructTransactionRequest'
+      responses:
+        '202':
+          description: Transaction construction request accepted for approval workflow
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstructWalletOperationResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+      tags:
+      - Transaction Construction
+components:
+  schemas:
+    StellarChangeTrustTemplate:
+      description: Template for creating a Stellar ChangeTrust operation to establish a trustline. A trustline allows an account to hold and receive a non-native asset (any asset other than XLM).
+      type: object
+      properties:
+        assetType:
+          description: A unique string identifying a specific asset on a specific blockchain and environment (testnet, mainnet).
+          type: string
+          example: USDC
+        baseFee:
+          description: Base fee in XLM (optional, defaults to network base fee)
+          type: string
+          nullable: true
+        limit:
+          description: Maximum amount of the asset that the account can hold. Defaults to maximum possible if not specified. Set to '0' to remove the trustline.
+          type: string
+          example: '1000000.0000000'
+          nullable: true
+        sequenceNumber:
+          description: Sequence number for the source account
+          type: string
+        type:
+          description: Discriminator field indicating this is a Stellar ChangeTrust template
+          type: string
+          default: STELLAR_CHANGE_TRUST
+          enum:
+          - STELLAR_CHANGE_TRUST
+      additionalProperties: false
+      required:
+      - type
+      - assetType
+      - sequenceNumber
+      title: Stellar Change Trust Template
+    ETHNetworkSpecific:
+      description: EVM-compatible network parameters for transaction construction. Supports Ethereum and other EVM-compatible chains including L2s.
+      type: object
+      properties:
+        gasLimit:
+          description: Maximum gas to use
+          type: integer
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          enum:
+          - ETH
+          - AVALANCHE_CCHAIN
+          - BSC
+          - ARBITRUM
+          - BASE
+          - OPTIMISM
+          - ZKSYNC
+          - SEI_SEI
+          - HYPEREVM
+        maxFeePerGas:
+          description: Maximum fee per gas in the native currency
+          type: string
+        maxPriorityFeePerGas:
+          description: Maximum priority fee per gas in the native currency
+          type: string
+        nonce:
+          description: Transaction nonce
+          type: string
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - nonce
+      - gasLimit
+      - maxPriorityFeePerGas
+      - maxFeePerGas
+      title: EVM Network Specific
+    SOLNonceReplayProtection:
+      description: Solana nonce-based replay protection for durable transactions
+      type: object
+      properties:
+        nonceAccount:
+          description: Nonce account address
+          type: string
+        nonceValue:
+          description: Current nonce value
+          type: string
+        replayProtection:
+          type: string
+          default: NONCE
+          enum:
+          - NONCE
+      additionalProperties: false
+      required:
+      - replayProtection
+      - nonceAccount
+      - nonceValue
+      title: Nonce-based Replay Protection
+    ConstructTransactionRequest:
+      description: Request to construct a transaction
+      type: object
+      properties:
+        clientReferenceId:
+          description: Client-provided reference ID to track this transaction in their internal systems
+          type: string
+          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+          nullable: true
+        idempotencyKey:
+          description: Client-provided idempotency key to ensure request is processed only once
+          type: string
+          example: e763a50d-aa82-4ec7-b5a3-89ad0462d248
+          maxLength: 128
+        sourceWalletId:
+          description: Globally unique wallet identifier for the wallet that will pay transaction fees and sign the transaction
+          type: string
+        template:
+          description: The transaction template specifying what transaction to construct. Use the 'type' field to discriminate between different transaction types.
+          discriminator:
+            propertyName: type
+            mapping:
+              SOLANA_CREATE_NONCE_ACCOUNT: '#/components/schemas/SolanaCreateNonceAccountTemplate'
+              STELLAR_CHANGE_TRUST: '#/components/schemas/StellarChangeTrustTemplate'
+              RIPPLE_TRUST_SET: '#/components/schemas/RippleTrustSetTemplate'
+              RIPPLE_REQUIRE_DESTINATION_TAG: '#/components/schemas/RippleRequireDestinationTagTemplate'
+          oneOf:
+          - $ref: '#/components/schemas/SolanaCreateNonceAccountTemplate'
+          - $ref: '#/components/schemas/StellarChangeTrustTemplate'
+          - $ref: '#/components/schemas/RippleTrustSetTemplate'
+          - $ref: '#/components/schemas/RippleRequireDestinationTagTemplate'
+      additionalProperties: false
+      required:
+      - template
+      - sourceWalletId
+    RippleTrustSetTemplate:
+      description: Template for creating a Ripple TrustSet transaction to establish a trustline. A trustline allows an account to hold and receive issued tokens (any asset other than XRP).
+      type: object
+      properties:
+        assetType:
+          description: A unique string identifying a specific asset on a specific blockchain and environment (testnet, mainnet).
+          type: string
+          example: USDC
+        fee:
+          description: Transaction fee in XRP
+          type: string
+        limit:
+          description: Maximum amount of the asset that the account can hold. Defaults to maximum possible if not specified. Set to '0' to remove the trustline.
+          type: string
+          example: '1000000'
+          nullable: true
+        sequence:
+          description: Sequence number for the source account
+          type: string
+        type:
+          description: Discriminator field indicating this is a Ripple TrustSet template
+          type: string
+          default: RIPPLE_TRUST_SET
+          enum:
+          - RIPPLE_TRUST_SET
+      additionalProperties: false
+      required:
+      - type
+      - assetType
+      - sequence
+      - fee
+      title: Ripple Trust Set Template
+    SOLAccountMeta:
+      description: Account metadata for Solana transfer hooks. Required for Token-2022 tokens with transfer hooks.
+      type: object
+      properties:
+        isSigner:
+          description: Whether this account must sign the transaction
+          type: boolean
+        isWritable:
+          description: Whether this account's data may be modified
+          type: boolean
+        pubkey:
+          description: Public key address of the additional account
+          type: string
+      required:
+      - pubkey
+      - isSigner
+      - isWritable
+      title: Solana Account Metadata
+    HBARNetworkSpecific:
+      description: 'Hedera-specific network parameters for transaction construction. Note: Transaction validity duration is hardcoded to 180 seconds (the maximum allowed by the Hedera network).'
+      type: object
+      properties:
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          default: HBAR
+          enum:
+          - HBAR
+        maxTransactionFee:
+          description: Maximum transaction fee in HBAR
+          type: string
+        nodeAccountId:
+          description: Node account to submit the transaction to (e.g., "0.0.3")
+          type: string
+          example: 0.0.3
+        validStartTimestampNanos:
+          description: Nanoseconds component (0-999999999) of the valid start timestamp.
+          type: integer
+          format: int32
+          example: 123456789
+        validStartTimestampSecs:
+          description: Unix epoch seconds from which the transaction is valid. Must be greater than 0.
+          type: integer
+          format: int64
+          example: 1234567890
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - validStartTimestampSecs
+      - validStartTimestampNanos
+      - maxTransactionFee
+      - nodeAccountId
+      title: Hedera Network Specific
+    SOLNetworkSpecific:
+      description: Solana-specific network parameters for transaction construction
+      type: object
+      properties:
+        additionalAccountMetas:
+          description: Additional account metadata required for Token-2022 tokens with transfer hook extensions. These accounts are passed to the transfer hook program during token transfers. Only applicable when transferring SPL tokens that have transfer hooks configured.
+          type: array
+          items:
+            $ref: '#/components/schemas/SOLAccountMeta'
+          nullable: true
+        computeUnitLimit:
+          description: Maximum compute units the transaction can consume. If not specified, the runtime will compute a default value.
+          type: integer
+          nullable: true
+        computeUnitPrice:
+          description: Price per compute unit in SOL. Used to prioritize transactions.
+          type: string
+          nullable: true
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          default: SOL
+          enum:
+          - SOL
+        replayProtectionParams:
+          $ref: '#/components/schemas/SOLReplayProtectionParams'
+        sender:
+          description: Address of the account that owns and sends the assets. Use this when the sender is different from the nonce authority account. If not specified, the nonce authority (derived from the source wallet) is used as both the signer for the nonce advance instruction and the sender of assets.
+          type: string
+          nullable: true
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - replayProtectionParams
+      title: Solana Network Specific
+    ListAssetTypesResponse:
+      description: Response containing a list of supported asset types
+      type: object
+      properties:
+        data:
+          description: Array of asset type details
+          type: array
+          items:
+            $ref: '#/components/schemas/AssetType'
+      required:
+      - data
+    UTXONetworkSpecific:
+      description: UTXO-based blockchain network parameters for transaction construction (BTC, BCH, LTC, DOGE)
+      type: object
+      properties:
+        changeAddress:
+          description: Address to send change to. If specified, any remainder after subtracting outputs and fee from UTXO inputs will be sent as change to this address.
+          type: string
+          nullable: true
+        changeAddressClientReferenceId:
+          description: Client-provided reference ID to track the change output in their internal systems
+          type: string
+          example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+          nullable: true
+        fee:
+          description: Transaction fee in the native currency
+          type: string
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          enum:
+          - BTC
+          - BCH
+          - LTC
+          - DOGE
+        utxos:
+          description: 'Note: the fee is computed by subtracting the destination amounts from the UTXO amounts'
+          type: array
+          items:
+            $ref: '#/components/schemas/UTXO'
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - utxos
+      - fee
+      title: UTXO Network Specific
+    BlockchainDestination:
+      description: Transfer destination specified as a blockchain address with optional memo
+      type: object
+      properties:
+        address:
+          description: A unique string identifying an account on a blockchain. This is sometimes dervied from a public key and sometimes decided by the blockchain.
+          type: string
+          example: '0x8b3192f5eEBD8579568A2Ed41E6FEB402f93f73F'
+        memo:
+          description: Optional memo/tag/destination tag (required by some blockchain networks)
+          type: string
+          maxLength: 256
+          nullable: true
+        type:
+          description: Discriminator field indicating this is a blockchain destination
+          type: string
+          default: BLOCKCHAIN
+          enum:
+          - BLOCKCHAIN
+      additionalProperties: false
+      required:
+      - type
+      - address
+      title: Blockchain Destination
+    APTNetworkSpecific:
+      description: Aptos-specific network parameters for transaction construction
+      type: object
+      properties:
+        expirationTimestampSecs:
+          description: Unix timestamp in seconds after which the transaction expires and will be rejected by the network.
+          type: string
+        gasUnitPrice:
+          description: Price per gas unit in APT. Higher values prioritize the transaction.
+          type: string
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          default: APT
+          enum:
+          - APT
+        maxGasAmount:
+          description: Maximum gas units the transaction can consume. The transaction fails if it exceeds this limit.
+          type: string
+        sequenceNumber:
+          description: Sequence number for the source account. Each transaction from an account must have a unique, incrementing sequence number.
+          type: string
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - sequenceNumber
+      - gasUnitPrice
+      - maxGasAmount
+      - expirationTimestampSecs
+      title: Aptos Network Specific
+    CryptoDestination:
+      description: Identifies the target of a transfer. Use the 'type' field to discriminate between variants.
+      discriminator:
+        propertyName: type
+        mapping:
+          BLOCKCHAIN: '#/components/schemas/BlockchainDestination'
+          WALLET: '#/components/schemas/WalletDestination'
+      oneOf:
+      - $ref: '#/components/schemas/BlockchainDestination'
+      - $ref: '#/components/schemas/WalletDestination'
+    SUICoin:
+      description: A Sui coin object to be used for gas payment
+      type: object
+      properties:
+        digest:
+          description: Base58-encoded digest of the object
+          type: string
+          example: E3c6ybzozYmN551iTadDtDecrdiviv55fwMtL6U1MfrB
+        objectId:
+          description: Hex-encoded object ID of the coin
+          type: string
+          example: '0x0037cf382dc39fef8fa3dea79b9425ea636186dba86808d028644f1bafbd84e9'
+        version:
+          description: Version (sequence number) of the object
+          type: string
+      additionalProperties: false
+      required:
+      - objectId
+      - version
+      - digest
+      title: Sui Gas Coin
+    WalletDestination:
+      description: Transfer destination specified by Anchorage wallet identifier
+      type: object
+      properties:
+        type:
+          description: Discriminator field indicating this is a wallet destination
+          type: string
+          default: WALLET
+          enum:
+          - WALLET
+        walletId:
+          description: Globally unique wallet identifier
+          type: string
+      additionalProperties: false
+      required:
+      - type
+      - walletId
+      title: Wallet Destination
+    AssetType:
+      description: Details about a supported asset type, including its identifier, name, decimal precision, and blockchain network
+      type: object
+      properties:
+        assetType:
+          description: A unique string identifying a specific asset on a specific blockchain and environment (testnet, mainnet).
+          type: string
+          example: BTC
+        decimals:
+          description: Number of decimal places used to represent amounts of this asset. For example, Bitcoin has 8 decimals, so 1 BTC = 100000000 satoshis.
+          type: integer
+          example: 8
+        name:
+          description: Human-readable name of the asset
+          type: string
+          example: Bitcoin
+        networkId:
+          description: A unique string identifying a combination of blockchain and environment (testnet, mainnet).
+          type: string
+          example: BTC
+        onchainIdentifier:
+          description: On-chain identifier for the asset. For Ethereum, this is the contract address for token contracts (e.g., ERC-20 tokens). For Tendermint-based networks, this represents the denomination or asset identifier used on-chain. Omitted for native blockchain assets like BTC or ETH.
+          type: string
+          example: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
+          nullable: true
+      required:
+      - assetType
+      - name
+      - decimals
+      - networkId
+    XRPNetworkSpecific:
+      description: XRP Ledger-specific network parameters for transaction construction
+      type: object
+      properties:
+        fee:
+          description: Transaction fee in XRP
+          type: string
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          default: XRP
+          enum:
+          - XRP
+        sequence:
+          description: Sequence number for the source account
+          type: string
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - sequence
+      - fee
+      title: Ripple Network Specific
+    ConstructWalletOperationResponse:
+      description: Async response with wallet operation ID. Use the walletOperationId with the GET /wallet-operations/{walletOperationId} endpoint to poll for the operation status and retrieve the constructed transaction details.
+      type: object
+      properties:
+        walletOperationId:
+          description: Wallet operation identifier. Poll the GET /wallet-operations/{walletOperationId} endpoint to check the status and retrieve the transaction data once construction is complete.
+          type: string
+          example: op_550e8400-e29b-41d4-a716-446655440000
+      required:
+      - walletOperationId
+    ADANetworkSpecific:
+      description: Cardano-specific network parameters for transaction construction
+      type: object
+      properties:
+        changeAddress:
+          description: Address to send change to. If specified, any remainder after subtracting outputs and fee from UTXO inputs will be sent as change to this address.
+          type: string
+        changeAddressClientReferenceId:
+          description: Client-provided reference ID to track the change output in their internal systems
+          type: string
+          example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+        fee:
+          description: Transaction fee in ADA
+          type: string
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          default: CARDANO
+          enum:
+          - CARDANO
+        ttl:
+          description: Time to live as an absolute slot number. The transaction is invalid after this slot.
+          type: integer
+          format: int64
+        utxos:
+          description: Unspent transaction outputs to use as inputs for the transaction
+          type: array
+          items:
+            $ref: '#/components/schemas/UTXO'
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - utxos
+      - fee
+      - ttl
+      title: Cardano Network Specific
+    FLOWNetworkSpecific:
+      description: Flow-specific network parameters for transaction construction
+      type: object
+      properties:
+        gasLimit:
+          description: Maximum amount of computation that can be done
+          type: string
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          default: FLOW
+          enum:
+          - FLOW
+        proposer:
+          description: The proposal key for the transaction. If not specified, the "source" wallet is the sender.
+          type: object
+          additionalProperties: false
+          properties:
+            address:
+              description: Address of the account proposing the transaction
+              type: string
+            keyIndex:
+              description: Index of the key within the proposer account to use for signing
+              type: integer
+            sequenceNumber:
+              description: Sequence number for the proposal key
+              type: string
+          required:
+          - address
+          - keyIndex
+          - sequenceNumber
+        referenceBlockId:
+          description: ID of a recent block to reference. Transaction expires after ~10 minutes from this block.
+          type: string
+        sender:
+          description: Address of the account sending the assets. If no specified, the "source" wallet is the sender.
+          type: string
+          nullable: true
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - gasLimit
+      - referenceBlockId
+      title: Flow Network Specific
+    Amount:
+      description: Combines an asset identifier with a decimal string value
+      type: object
+      properties:
+        amount:
+          description: Amount as a decimal string. Amounts never include fees.
+          type: string
+          example: '10.45234733'
+        assetType:
+          description: A unique string identifying a specific asset on a specific blockchain and environment (testnet, mainnet).
+          type: string
+          example: ETH
+      required:
+      - assetType
+      - amount
+    DOTNetworkSpecific:
+      description: Polkadot-specific network parameters for transaction construction. Transactions are immortal by default. Provide mortalEra to make the transaction expire after a certain number of blocks.
+      type: object
+      properties:
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          default: POLKADOT
+          enum:
+          - POLKADOT
+        mortalEra:
+          description: If provided, the transaction expires after a certain number of blocks. If omitted, the transaction is immortal (never expires).
+          type: object
+          additionalProperties: false
+          properties:
+            blockHash:
+              description: Checkpoint block hash for the mortal era
+              type: string
+            blockNumber:
+              description: Block number corresponding to the checkpoint block hash, used to compute the mortal era phase
+              type: integer
+              format: uint64
+            period:
+              description: Number of blocks the transaction is valid for (must be a power of 2, between 4 and 65536)
+              type: integer
+          required:
+          - period
+          - blockNumber
+          - blockHash
+        nonce:
+          description: Account nonce for replay protection
+          type: string
+        specVersion:
+          description: Runtime specification version. Query from the Polkadot node using state_getRuntimeVersion().
+          type: integer
+          format: uint32
+        tip:
+          description: Priority fee in DOT to incentivize inclusion
+          type: string
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - nonce
+      - specVersion
+      title: Polkadot Network Specific
+    TRXNetworkSpecific:
+      description: Tron-specific network parameters for transaction construction. Tron uses block references and timestamps instead of nonces and gas fees.
+      type: object
+      properties:
+        expiration:
+          description: Transaction expiration timestamp in milliseconds since Unix epoch. Must be within 24 hours of the timestamp.
+          type: integer
+          format: int64
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          default: TRON
+          enum:
+          - TRON
+        refBlockBytes:
+          description: Reference block bytes (2 bytes, hex encoded) derived from the latest solidified block height. Extract bytes 6-8 of the block height.
+          type: string
+        refBlockHash:
+          description: Reference block hash (8 bytes, hex encoded) derived from the latest solidified block hash. Extract bytes 8-16 of the block hash.
+          type: string
+        timestamp:
+          description: Transaction creation timestamp in milliseconds since Unix epoch.
+          type: integer
+          format: int64
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - refBlockBytes
+      - refBlockHash
+      - expiration
+      - timestamp
+      title: Tron Network Specific
+    TendermintNetworkSpecific:
+      description: Tendermint/Cosmos SDK-based network parameters for transaction construction. Supports Celestia (TIA), dYdX Chain (DYDX_CHAIN), and other Tendermint-based networks.
+      type: object
+      properties:
+        accountNumber:
+          description: Account number on the chain
+          type: string
+        fee:
+          description: Transaction fee in the native currency of the network
+          type: string
+        gas:
+          description: Gas limit for the transaction
+          type: string
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          enum:
+          - TIA
+          - DYDX_CHAIN
+        sequence:
+          description: Account sequence number for replay protection
+          type: string
+        timeoutHeight:
+          description: Block height after which the transaction is invalid
+          type: integer
+          format: int64
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - sequence
+      - accountNumber
+      - gas
+      - fee
+      title: Tendermint Network Specific
+    TransferNetworkSpecific:
+      description: Network-specific parameters for transfer transaction construction. Use the 'mainnetNetworkId' field to discriminate between different blockchain types.
+      discriminator:
+        propertyName: mainnetNetworkId
+        mapping:
+          BTC: '#/components/schemas/UTXONetworkSpecific'
+          BCH: '#/components/schemas/UTXONetworkSpecific'
+          LTC: '#/components/schemas/UTXONetworkSpecific'
+          DOGE: '#/components/schemas/UTXONetworkSpecific'
+          ETH: '#/components/schemas/ETHNetworkSpecific'
+          AVALANCHE_CCHAIN: '#/components/schemas/ETHNetworkSpecific'
+          BSC: '#/components/schemas/ETHNetworkSpecific'
+          ARBITRUM: '#/components/schemas/ETHNetworkSpecific'
+          BASE: '#/components/schemas/ETHNetworkSpecific'
+          OPTIMISM: '#/components/schemas/ETHNetworkSpecific'
+          ZKSYNC: '#/components/schemas/ETHNetworkSpecific'
+          SEI_SEI: '#/components/schemas/ETHNetworkSpecific'
+          HYPEREVM: '#/components/schemas/ETHNetworkSpecific'
+          TRON: '#/components/schemas/TRXNetworkSpecific'
+          SOL: '#/components/schemas/SOLNetworkSpecific'
+          XLM: '#/components/schemas/XLMNetworkSpecific'
+          XRP: '#/components/schemas/XRPNetworkSpecific'
+          FLOW: '#/components/schemas/FLOWNetworkSpecific'
+          APT: '#/components/schemas/APTNetworkSpecific'
+          SUI: '#/components/schemas/SUINetworkSpecific'
+          FIL: '#/components/schemas/FILNetworkSpecific'
+          CARDANO: '#/components/schemas/ADANetworkSpecific'
+          TIA: '#/components/schemas/TendermintNetworkSpecific'
+          DYDX_CHAIN: '#/components/schemas/TendermintNetworkSpecific'
+          HBAR: '#/components/schemas/HBARNetworkSpecific'
+          NEAR: '#/components/schemas/NEARNetworkSpecific'
+          POLKADOT: '#/components/schemas/DOTNetworkSpecific'
+      oneOf:
+      - $ref: '#/components/schemas/UTXONetworkSpecific'
+      - $ref: '#/components/schemas/ETHNetworkSpecific'
+      - $ref: '#/components/schemas/TRXNetworkSpecific'
+      - $ref: '#/components/schemas/SOLNetworkSpecific'
+      - $ref: '#/components/schemas/XLMNetworkSpecific'
+      - $ref: '#/components/schemas/XRPNetworkSpecific'
+      - $ref: '#/components/schemas/FLOWNetworkSpecific'
+      - $ref: '#/components/schemas/APTNetworkSpecific'
+      - $ref: '#/components/schemas/SUINetworkSpecific'
+      - $ref: '#/components/schemas/FILNetworkSpecific'
+      - $ref: '#/components/schemas/ADANetworkSpecific'
+      - $ref: '#/components/schemas/TendermintNetworkSpecific'
+      - $ref: '#/components/schemas/HBARNetworkSpecific'
+      - $ref: '#/components/schemas/NEARNetworkSpecific'
+      - $ref: '#/components/schemas/DOTNetworkSpecific'
+      title: Transfer Network Specific
+    UTXO:
+      description: An unspent transaction output that can be used as an input for a new transaction
+      type: object
+      properties:
+        address:
+          description: Identifies the key to use to sign the UTXO
+          type: string
+        amount:
+          description: Amount in the native currency
+          type: string
+        txId:
+          description: Hex encoded transaction ID
+          type: string
+        vout:
+          description: Index of the output
+          type: integer
+      additionalProperties: false
+      required:
+      - txId
+      - vout
+      - amount
+      - address
+      title: Unspent Transaction Output
+    ErrorDetails:
+      type: object
+      properties:
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - message
+      title: ErrorDetails
+    SolanaCreateNonceAccountTemplate:
+      description: Template for creating a Solana nonce account transaction
+      type: object
+      properties:
+        authorityAddress:
+          description: The public key address that will have authority over the nonce account
+          type: string
+          example: 3z9vL1zjN6qyAFHhHQdWYRTFAcy69pJydkZmSFBKHg1R
+        computeUnitLimit:
+          description: Maximum compute units the transaction can consume. If not specified, the runtime will compute a default value.
+          type: integer
+          nullable: true
+        computeUnitPrice:
+          description: Price per compute unit in SOL. Used to prioritize transactions.
+          type: string
+          nullable: true
+        nonceAccountAddress:
+          description: The public key address of the nonce account to be created
+          type: string
+          example: 9aE476sH92Vz7DMPyq5WLPkrKWivxeuTKEFKd2sZZcde
+        rent:
+          description: Amount of SOL for rent exemption
+          type: string
+          example: '0.0015'
+        replayProtectionParams:
+          $ref: '#/components/schemas/SOLReplayProtectionParams'
+        type:
+          description: Discriminator field indicating this is a Solana nonce account creation template
+          type: string
+          default: SOLANA_CREATE_NONCE_ACCOUNT
+          enum:
+          - SOLANA_CREATE_NONCE_ACCOUNT
+      additionalProperties: false
+      required:
+      - type
+      - nonceAccountAddress
+      - authorityAddress
+      - rent
+      - replayProtectionParams
+      title: Solana Create Nonce Account Template
+    RippleRequireDestinationTagTemplate:
+      description: 'Template for an AccountSet transaction that sets or clears the asfRequireDest flag.
+
+
+        When enabled (asfRequireDest set), the account rejects incoming payments that do not specify a destination tag.
+
+        When disabled (asfRequireDest cleared), the account accepts incoming payments regardless of whether a destination tag is present.'
+      type: object
+      properties:
+        enable:
+          description: True to set the asfRequireDest flag (require destination tags on incoming payments). False to clear the flag (allow payments without destination tags).
+          type: boolean
+        fee:
+          description: Transaction fee in XRP
+          type: string
+        sequence:
+          description: Sequence number for the source account
+          type: string
+        type:
+          description: Discriminator field indicating this is a Ripple Require Destination Tag template
+          type: string
+          default: RIPPLE_REQUIRE_DESTINATION_TAG
+          enum:
+          - RIPPLE_REQUIRE_DESTINATION_TAG
+      additionalProperties: false
+      required:
+      - type
+      - enable
+      - sequence
+      - fee
+      title: Ripple Require Destination Tag Template
+    XLMNetworkSpecific:
+      description: Stellar-specific network parameters for transaction construction
+      type: object
+      properties:
+        baseFee:
+          description: Transaction base fee in XLM
+          type: string
+        createDestination:
+          description: Whether to create the destination account. Set to true to create a new account with the payment. Set to false to send payment to an existing account. Only applies to native XLM transfers; Stellar classic asset (token) transfers require the destination account to already exist with an established trustline.
+          type: boolean
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          default: XLM
+          enum:
+          - XLM
+        sequenceNumber:
+          description: Sequence number for the source account
+          type: string
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - sequenceNumber
+      - baseFee
+      - createDestination
+      title: Stellar Network Specific
+    NEARNetworkSpecific:
+      description: NEAR-specific network parameters for transaction construction
+      type: object
+      properties:
+        blockHash:
+          description: Recent block hash for replay protection (base58 encoded)
+          type: string
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          default: NEAR
+          enum:
+          - NEAR
+        nonce:
+          description: Access key nonce for the sender
+          type: string
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - nonce
+      - blockHash
+      title: NEAR Network Specific
+    SOLReplayProtectionParams:
+      description: Replay protection parameters for Solana transactions. Use 'replayProtection' field to discriminate between nonce-based and blockhash-based replay protection.
+      discriminator:
+        propertyName: replayProtection
+        mapping:
+          NONCE: '#/components/schemas/SOLNonceReplayProtection'
+          BLOCKHASH: '#/components/schemas/SOLBlockhashReplayProtection'
+      oneOf:
+      - $ref: '#/components/schemas/SOLNonceReplayProtection'
+      - $ref: '#/components/schemas/SOLBlockhashReplayProtection'
+    SOLBlockhashReplayProtection:
+      description: Solana blockhash-based replay protection for standard transactions
+      type: object
+      properties:
+        recentBlockhash:
+          description: Recent blockhash from the Solana network. Transaction must be submitted within approximately 2 minutes.
+          type: string
+        replayProtection:
+          type: string
+          default: BLOCKHASH
+          enum:
+          - BLOCKHASH
+      additionalProperties: false
+      required:
+      - replayProtection
+      - recentBlockhash
+      title: Blockhash-based Replay Protection
+    CryptoDestinationAmount:
+      description: Specifies a destination and the amount to send to it
+      type: object
+      properties:
+        amount:
+          $ref: '#/components/schemas/Amount'
+        clientReferenceId:
+          description: Client-provided reference ID to track this transaction in their internal systems
+          type: string
+          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+          nullable: true
+        destination:
+          $ref: '#/components/schemas/CryptoDestination'
+      additionalProperties: false
+      required:
+      - destination
+      - amount
+    FILNetworkSpecific:
+      description: Filecoin-specific network parameters for transaction construction
+      type: object
+      properties:
+        gasFeeCap:
+          description: Maximum price per gas unit in FIL. The total fee is capped at gasFeeCap * gasLimit.
+          type: string
+        gasLimit:
+          description: Maximum gas units the message can consume.
+          type: string
+        gasPremium:
+          description: Gas premium in FIL. This is the priority fee paid to miners.
+          type: string
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          default: FIL
+          enum:
+          - FIL
+        nonce:
+          description: Sequence number for the source account. Each message from an account must have a unique, incrementing nonce.
+          type: string
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - nonce
+      - gasPremium
+      - gasFeeCap
+      - gasLimit
+      title: Filecoin Network Specific
+    ConstructTransferRequest:
+      description: Request to construct a transfer transaction
+      type: object
+      properties:
+        description:
+          description: Optional free-form string describing the transfer
+          type: string
+          maxLength: 512
+          nullable: true
+        destinationAmounts:
+          description: Multiple destinations and amounts are supported for some assets. Each entry specifies a destination and amount.
+          type: array
+          items:
+            $ref: '#/components/schemas/CryptoDestinationAmount'
+          minItems: 1
+        idempotencyKey:
+          description: Client-provided idempotency key to ensure request is processed only once
+          type: string
+          example: e763a50d-aa82-4ec7-b5a3-89ad0462d248
+          maxLength: 128
+        networkSpecific:
+          description: Network-specific parameters for transaction construction. Use the 'mainnetNetworkId' field to discriminate between different blockchain types.
+          allOf:
+          - $ref: '#/components/schemas/TransferNetworkSpecific'
+        sourceWalletId:
+          description: Globally unique wallet identifier for the wallet that pays the gas fees and submits the transfer on-chain. The wallet which sends the assets can be different from this one. The separation of source and sender is available only for certain assets in the asset-specific parameters.
+          type: string
+      additionalProperties: false
+      required:
+      - sourceWalletId
+      - destinationAmounts
+      - networkSpecific
+    SUINetworkSpecific:
+      description: 'Sui-specific network parameters for transaction construction. Exactly one principal source must be specified: either payPrincipalFromBalance=true or a non-empty objectsForPrincipal array. Exactly one fee source must be specified: payFeeFromBalance=true, payFeeFromPrincipalObjects=true, or a non-empty objectsForFee array.'
+      type: object
+      properties:
+        epoch:
+          description: First epoch for the transaction validity window. Required when payFeeFromBalance is true.
+          type: integer
+          format: uint64
+        gasBudget:
+          description: Maximum gas budget in SUI. The transaction fails if execution cost exceeds this.
+          type: string
+        gasPrice:
+          description: Gas price in SUI. Query the network for the current reference gas price.
+          type: string
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          default: SUI
+          enum:
+          - SUI
+          x-go-type: apimodels.Network
+          x-go-type-import:
+            path: github.com/anchorlabsinc/anchorage/source/go/lib/restapi/apimodels
+            name: apimodels
+        nonce:
+          description: Nonce for transaction replay protection. Required when payFeeFromBalance is true.
+          type: integer
+          format: uint32
+        objectsForFee:
+          description: Coin objects to use for fee payment. Must be empty when payFeeFromBalance or payFeeFromPrincipalObjects is true.
+          type: array
+          items:
+            $ref: '#/components/schemas/SUICoin'
+        objectsForPrincipal:
+          description: Coin objects whose value funds the transfer principal. Must be empty when payPrincipalFromBalance is true. Required when payPrincipalFromBalance is false.
+          type: array
+          items:
+            $ref: '#/components/schemas/SUICoin'
+        payFeeFromBalance:
+          description: When true, the transaction fee is paid from the sender's address balance. Mutually exclusive with payFeeFromPrincipalObjects and objectsForFee.
+          type: boolean
+        payFeeFromPrincipalObjects:
+          description: When true, the principal coin objects are merged into the gas coin and the fee is paid from that merged coin. Requires objectsForPrincipal to be non-empty. Mutually exclusive with payFeeFromBalance and objectsForFee.
+          type: boolean
+        payPrincipalFromBalance:
+          description: When true, the principal amount is paid from the sender's address balance. Mutually exclusive with objectsForPrincipal.
+          type: boolean
+        sender:
+          description: Address of the account that sends the assets. Use this when the sender is different from the source wallet. If not specified, the source wallet is used as both the gas sponsor and the sender of assets.
+          type: string
+          nullable: true
+        sendToBalance:
+          description: When true, funds are deposited into the destination's address balance (send_funds). When false, funds arrive as a coin object (transfer_objects).
+          type: boolean
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - payPrincipalFromBalance
+      - sendToBalance
+      - payFeeFromBalance
+      - payFeeFromPrincipalObjects
+      - gasPrice
+      - gasBudget
+      title: Sui Network Specific
+  securitySchemes:
+    Api-Access-Key:
+      type: apiKey
+      name: Api-Access-Key
+      in: header
+      description: An API key associated with a security role
+x-tagGroups:
+- name: Under Development
+  tags:
+  - Collateral Management
+  - Holds
+  - Deposit Attribution
+  - Onboarding
+  - Trusted Destinations
+  - Atlas Settlement Network
+  - Tax
+- name: API Endpoints
+  tags:
+  - Addresses
+  - Asset Types
+  - Transactions
+  - Transfers
+  - Wallets
+  - Vaults
+  - Vesting
+  - Tagging
+  - Subaccounts
+  - Stablecoins
+  - Webhook Notifications
+  - API Key
+  - Statements
+  - Tax Reporting
+  - Trading
+- name: Models
+  tags:
+  - Transfer Model
+  - Transaction Model
+  - Vault Model
+  - Deposit Attribution Model

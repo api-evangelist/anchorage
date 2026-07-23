@@ -1,0 +1,982 @@
+openapi: 3.0.0
+info:
+  version: 2.0.0
+  title: Anchorage Digital API Reference Addresses Transaction Creation API
+  contact:
+    email: api@anchorage.com
+  description: "# Introduction\n*CONFIDENTIAL: Please do not distribute this documentation externally without prior Anchorage Digital approval.*\n\n\nThe Anchorage Digital REST API v2.0 provides a set of operations and resources that allow Anchorage Digital clients and partners to:\n  - Programmatically transfer funds from an Anchorage Digital vault or wallet without human intervention\n  - Create and list deposit addresses in a vault\n  - Read and monitor vault balances\n  - Query transaction history including deposits\n  - Request quotes from and execute trades with the Anchorage Digital trading desk\n\n\nWant help or to share your opinion on how this API works for you? Please contact api@anchorage.com.\n\n\n# Authentication and Security\n\nThe Anchorage Digital API performs authentication and authorization via a combination of:\n\n\n* An API key, which is a bearer token\n\n* A permission group signed by the user's organization, which is linked to the API key\n\n* An Ed25519 Signature, which comes from a user-generated key and is required for certain requests\n\n\n## Permission Groups\n\n\nA permission group acts as a set of rules for how an organization and its resources can be accessed. Permission groups are created independently of API keys, and new permission groups must be created prior to making an API key.\n\n\nEach permission group has a name, a description and a set of permissions which can be applied to your organization's vaults. Updating, creating and deleting permissions groups require a quorum of approvals. After creation, a permission group can be freely assigned to an unlimited number of API keys.\n\n\nEach API key inherits its permissions from the associated permission group. When the permission group is updated, all API keys associated with it will inherit the updated permission set. If a permission group is deleted, all associated API keys will no longer work.\n\n\nEach organization is created with a default permission group that allows read-only access. This permission group may be modified or deleted at any time, and no API keys are created by default with this permission group.\n\n\n### Permissions\n\n\nPossible vault permissions include the following:\n\n\n<table>\n  <tr>\n    <td><b>Read vault activity (READ)</b></td>\n    <td>See an overview of your vault(s) and wallets. Read vault details, balances, asset types, transaction history and deposit addresses.</td>\n  </tr>\n  <tr>\n    <td><b>Create address (CREATE_DEPOSIT_ADDRESS)</b></td>\n    <td>Receive deposits in the vault from external sources. Create and read deposit addresses.</td>\n  </tr>\n  <tr>\n    <td><b>Transfer funds (TRANSFER)</b></td>\n    <td>This permission is configurable to enable an API key endowed with this permission to either 1) Transfer funds to any Anchorage Digital institutional account, including those outside of your organization or 2) Transfer funds to any blockchain address not custodied by Anchorage Digital that has gone through quorum approval.</td>\n  </tr>\n  <tr>\n    <td><b>Propose and accept settlements (PROPOSE_ACCEPT_SETTLEMENTS)</b></td>\n    <td>This is an Atlas specific permission for initiating settlements.</td>\n  </tr>\n  <tr>\n    <td><b>Authorize settlements (AUTHORIZE_SETTLEMENTS)</b></td>\n    <td>This is an Atlas specific permission for authorizing settlements after they've been proposed or accepted.</td>\n  </tr>\n</table>\n\n\nThere are also special vault permissions for enabled by Anchorage Digital on a per-organization basis:\n\nAdditionally, there are global permissions which apply to the entire organization:\n\n\n<table>\n  <tr>\n    <td><b>Initiate withdrawals (INITIATE_WITHDRAWAL)</b></td>\n    <td>Initiate withdrawals to external destinations. All withdrawals require quorum approval through the Anchorage Digital mobile app.</td>\n  </tr>\n  <tr>\n    <td><b>Execute trades (TRADE)</b></td>\n    <td>Request for quotes (RFQ) from the Anchorage Digital trading desk. Create and accept quotes. Read data of trades and settlements created by this key.</td>\n  </tr>\n  <tr>\n    <td><b>Read trade activity (READ_TRADE)</b></td>\n    <td>Read trade activity and trade settlements data of your organization.</td>\n  </tr>\n  <tr>\n    <td><b>Read lending activity (LENDER_READ)</b></td>\n    <td>Read lending activity of your organization.</td>\n  </tr>\n  <tr>\n    <td><b>Read facility data (FACILITY_ONLY)</b></td>\n    <td>Read lending facility data.</td>\n  </tr>\n  <tr>\n    <td><b>Read deposit attribution activity (READ_DEPOSIT_ATTRIBUTION)</b></td>\n    <td>Read deposit attribution activity of your organization.</td>\n  </tr>\n  <tr>\n    <td><b>Manage deposit attributions (DEPOSIT_ATTRIBUTION)</b></td>\n    <td>Read deposit attribution activity of your organization. Perform deposit attributions.</td>\n  </tr>\n  <tr>\n    <td><b>Initiate Staking and Unstaking (STAKE)</b></td>\n    <td>Initiate staking or unstaking operation. All operations require quorum approval through the Anchorage Digital mobile app.</td>\n  </tr>\n</table>\n\n\n### Example Workflow - Allow transfers from specific vaults\n\nTo create an API key with the ability to transfer funds from an Anchorage Digital vaults or wallet, a permission group must first be created with the **Transfer funds** permission for the desired source vaults. Creating this permission group requires a quorum of approvals on the Anchorage Digital iOS app. Once the creation is confirmed, any number of API keys may be created with this permission group in the Anchorage Digital Web Dashboard under the API 2.0 section.\n\nTo add additional permissions to the API key, update the associated permission group through the Anchorage Digital Web Dashboard. To revoke any permissions, the individual API key may be revoked, or the permission group may be updated or deleted to remove Transfer access.\n\n## API Keys\n\nAll API requests must be made over HTTPS and must include authentication using the following scheme.\n\n<!-- ReDoc-Inject: <security-definitions> -->\n\n### Generating an API Key\n\nIn order to make a valid API request, you must first create an API key. API keys can be created and managed in the Anchorage Digital Web Dashboard under the [API 2.0 tab](https://anchoragelogin.com/api). When you create an API key, there are 3 pieces of information you will need to remember:\n  - API access key\n  - Ed25519 public key (optional for read-only requests)\n  - Ed25519 private/signing key (optional for read-only requests)\n\nYou must generate an Ed25519 signing key pair and save the public portion in the Anchorage Digital Web Dashboard when creating the API access key. The signing key pair is used for added security with sensitive requests.\n\nPlease note, Anchorage Digital cannot recover your API access key or private signing key if you forget them. You may generate a new access key and signing key at any time if you lose access.\n\n### API Key Permissions\n\nEach API key is associated with a permission group. This permission group specifies the permitted actions for all associated API keys. Read more about permission groups [here](#section/Authentication-and-Security/Permission-Groups).\n\n### Creating a request\n\nAll requests must include the `Api-Access-Key` header, which contains your API access key as a string.\n\nEndpoints that require a signature must include the `Api-Signature` and `Api-Timestamp` headers. Read more about signatures [here](#section/Authentication-and-Security/Signatures).\n\nAll request bodies must be valid JSON and have the content type `application/json`.\n\n## Request Signatures\n\nCertain endpoints require an Ed25519 signature to be provided alongside the API key. These endpoints will specify the `Api-Signature` and `Api-Timestamp` headers as additional parameters.\n\nSignatures are optional unless explicitly required, but are encouraged for all requests. If a signature is provided, it will be verified.\n\n### Signing Keys\n\nA signing key pair is generated by the user and the corresponding public key must be provided when creating an API key.\n\nWhen creating an API key, you will be prompted to provide an Ed25519 public key. You must use the associated Ed25519 signing key (private key) when creating signatures for requests from this API key.\n\nPlease note that signing keys (Ed25519 private keys) should be stored securely by the user. The signing key should only be used to derive request signatures and should never be sent in a request. Anchorage Digital will never request you share your private key.\n\n### Generating a Signing Key\n\nThe user must securely generate an Ed25519 key pair on their own hardware and retain both the public and private portions. The Anchorage Digital API accepts a 64-character (32 bytes) hex-encoded Ed25519 public key when creating an API access key.\n\n\n#### Code sample (Python)\n\n*Generate a new signing key pair*\n\n```python\n# https://pypi.org/project/PyNaCl/\n\nimport nacl\nimport nacl.signing\nimport secrets\n\nseed = secrets.token_bytes(32)\n\n# Generate a new random signing key\nsigning_key = nacl.signing.SigningKey(seed)\n\n# Obtain the hex-encoded signing key\nprint('Signing key:')\nprint(signing_key.encode().hex())\n\n# Obtain the hex-encoded verify key for the given signing key\n# Use this in the Anchorage Digital Web Dashboard when creating an API key\nprint('Public key:')\nprint(signing_key.verify_key.encode().hex())\n```\n\n\n### Signing a Request\n\nTo sign a request, generate a request signature using the Ed25519 private (signing) key and provide it alongside the request in the `Api-Signature` header.\n\nTo create a request signature, first concatenate the `timestamp`, `method`, `request path`, and `body` into a string. Then, create a signature of this message using the Ed25519 private key and hex-encode the output. Use this value as the `Api-Signature` header and use the `timestamp` value as the `Api-Timestamp` header.\n\n- The `method` is an uppercase HTTP method (ex. `GET`, `POST`, `DELETE`)\n- The `request path` should contain all query parameters (ex. `/v2/transfers?foo=bar&baz=bang`)\n- The `body` is a stringified HTTP request body\n- The `body` should be omitted if the request does not contain a body (ex. a `GET` or `DELETE` request)\n- The `timestamp` is the same as the `Api-Timestamp` header\n- The `timestamp` is a number of seconds since the Unix Epoch in UTC, and must be within one minute of the API service's time when the request is received\n\n### Reference signature\n\nTo verify your signature generation code is correct, generate a signature for the following request and timestamp using the provided signing key. If the generated signature matches the signature below, your signature generation code is correct.\n\n\n<table>\n  <tr>\n    <td>Timestamp</td>\n    <td>1577880000</td>\n  </tr>\n  <tr>\n    <td>HTTP Method (Uppercase)</td>\n    <td>POST</td>\n  </tr>\n  <tr>\n    <td>HTTP Path + query</td>\n    <td>/v2/transfers?foo=bar&baz=bang</td>\n  </tr>\n  <tr>\n    <td>HTTP Body</td>\n    <td>{\"source\": {\"id\": \"1c920f4241b78a1d483a29f3c24b6c4c\", \"type\": \"VAULT\"}, \"assetType\": \"ETH\", \"destination\": {\"id\": \"55e89d4a644d736b01533a2ea9b32a20\", \"type\": \"VAULT\"}, \"amount\": \"1000.00000000\"}</td>\n  </tr>\n  <tr>\n    <td>Signing Key (Ed25519 Private Key Seed)</td>\n    <td>0101010101010101010101010101010101010101010101010101010101010101</td>\n  </tr>\n  <tr>\n    <td>Public Key</td>\n    <td>8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c</td>\n  </tr>\n  <tr>\n    <td>Signature</td>\n    <td>4bf42054bf7db1f8a2a2bc83d2a108502ee7a9d2ac7a2738adc2f932922446786fb9be1bd1eb475023296c6cba4ddbe28b04baca4b7521b1f1840a4ffd2b4d0d</td>\n  </tr>\n</table>\n\n## Reference clients\n\n### Python (with `requests` library)\n\n*Authorize and sign requests*\n\n```python\n\n# https://pypi.org/project/PyNaCl/\n\nfrom nacl import signing\n\nimport time\n\nimport requests\n\n\nclass AnchorageAuth(requests.auth.AuthBase):\n    ACCESS_KEY_HEADER = \"Api-Access-Key\"\n    SIGNATURE_HEADER = \"Api-Signature\"\n    TIMESTAMP_HEADER = \"Api-Timestamp\"\n\n    access_key: str\n    signing_key: signing.SigningKey\n\n    def __init__(self, access_key: str, signing_key_seed: bytes):\n        self.access_key = access_key\n        self.signing_key = signing.SigningKey(signing_key_seed)\n\n    def __call__(self, r: requests.PreparedRequest):\n        r.headers[self.ACCESS_KEY_HEADER] = self.access_key\n\n        timestamp = str(int(time.time()))\n        method = r.method.upper() if r.method else \"GET\"\n        body: bytes = bytes()\n        if r.body and isinstance(r.body, bytes):\n            body = r.body\n        elif r.body and isinstance(r.body, str):\n            body = bytearray(r.body, \"utf-8\")\n        message = b\"\".join(\n            [bytearray(timestamp, \"utf-8\"), bytearray(method, \"utf-8\"), bytearray(r.path_url, \"utf-8\"), body]\n        )\n        signature = self.signing_key.sign(message).signature.hex()\n        r.headers[self.SIGNATURE_HEADER] = signature\n        r.headers[self.TIMESTAMP_HEADER] = timestamp\n        return r\n\n\n# load secrets\n\n# Use the API key generated in the Anchorage Digital Web Dashboard\n\naccess_key = ...\n\n# Use the Ed25519 signing private key\n\nsigning_key_str = ... # load the raw string\n\nsigning_key = bytes(bytearray.fromhex(signing_key_str))\n\ndata = {}\n\nanchorage_auth = AnchorageAuth(access_key, signing_key)\n\nr = requests.post(\"https://api.anchorage.com/v2/transfers\", data=data, auth=anchorage_auth)\n\n```\n\n### Ruby - Reproduce reference signature\n```ruby\n  require \"ed25519\"\n  require \"net/http\"\n  require \"time\"\n\n  def hex_to_bin(s)\n      [s].pack('H*')\n  end\n\n  def bin_to_hex(s)\n      s.unpack('H*').first\n  end\n\n  private_key_seed_hex = '0101010101010101010101010101010101010101010101010101010101010101'\n  public_key_hex = '8a88e3dd7409f195fd52db2d3cba5d72ca6709bf1d94121bf3748801b40f6f5c'\n  key_pair_hex = private_key_seed_hex + public_key_hex\n\n  key_pair = hex_to_bin(key_pair_hex)\n\n  signing_key = Ed25519::SigningKey.from_keypair(key_pair)\n\n  timestamp = '1577880000' # Time.now.to_i.to_s\n\n  req = Net::HTTP::Post.new('/v2/transfers?foo=bar&baz=bang')\n  req.body = '{\"source\": {\"id\": \"1c920f4241b78a1d483a29f3c24b6c4c\", \"type\": \"VAULT\"}, \"assetType\": \"ETH\", \"destination\": {\"id\": \"55e89d4a644d736b01533a2ea9b32a20\", \"type\": VAULT\"}, \"amount\": \"1000.00000000\"}'\n\n  signature = signing_key.sign(timestamp + req.method + req.path + req.body)\n\n  req['Api-Access-Key'] = 'YOUR_ACCESS_KEY'\n  req['Api-Timestamp'] = timestamp\n  req['Api-Signature'] = bin_to_hex(signature)\n\n  puts bin_to_hex(signature)\n```\n\n# Errors\n\n\nThe Anchorage Digital API returns standard HTTP error codes for each API request.\n\n\n<table>\n  <tr>\n    <th style=\"width: 30%;\">Response Code</th>\n    <th>Description</th>\n  <tr>\n  <tr>\n    <td>200 OK</td>\n    <td>The request was successful.</td>\n  </tr>\n  <tr>\n    <td>400 Bad Request</td>\n    <td>The request was improperly formed and could not be understood by the server, often due to invalid syntax, insufficient funds, or a missing required parameter.</td>\n  </tr>\n  <tr>\n    <td>401 Unauthorized</td>\n    <td>The request was missing a valid API key.</td>\n  </tr>\n  <tr>\n    <td>403 Forbidden</td>\n    <td>The provided API key does not have permission to perform the requested action.</td>\n  </tr>\n  <tr>\n    <td>404 Not Found</td>\n    <td>The requested resource does not exist.</td>\n  </tr>\n  <tr>\n    <td>409 Conflict</td>\n    <td>The requested resource cannot proceed with the requested action because it is not in the required state.</td>\n  </tr>\n   <tr>\n    <td>429 Too Many Requests</td>\n    <td>Too many requests have been sent in a given amount of time.</td>\n  </tr>\n  <tr>\n    <td>\n      500 Internal Server Error\n      <br />\n      502 Bad Gateway\n      <br />\n      503 Service Unavailable\n      <br />\n      504 Gateway Timeout\n    </td>\n    <td>Something went wrong on Anchorage’s side. We have been alerted and are working on it.</td>\n  </tr>\n</table>\n\n\nIn addition to returning HTTP error codes for failed requests, the Anchorage Digital API includes a readable error message describing what went wrong in the response body.\n\n\n<SchemaDefinition schemaRef=\"#/components/schemas/ErrorDetails\" showReadOnly={true} showWriteOnly={true} />\n\n\n# Idempotency\n\n\nCertain endpoints support idempotent requests so that a given request can be safely retried without performing the same operation twice. For example, if a request to transfer funds does not respond due to network issues, you can retry the request using the same idempotent ID to ensure that only one transfer is created.\n\n\nEndpoints that support idempotent requests have an optional `idempotentId` field that can be included in the body of the `POST` request. Provide a unique string using your method of choice (such as a v4 UUID).\n\n\nIf a request is valid, Anchorage Digital will save the request indefinitely. If a subsequent request is received with the same `idempotentId` we will return the previously saved response for that `idempotentId`.\n\n\n# Rate Limits\n\n\nKeys provisioned by an Organization share one common rate limit. API requests are limited to 20 requests per second per Organization, allowing for bursts of up to 100 requests within a single second.\n\n\n# Pagination\n\n\nCursor pagination is used for REST endpoints which return multiple data points. Pagination allows for fetching data after the current page and specifying how many records to return. The `next` cursor is available in responses with the `page` attribute. Requests should use the `next` cursor URL to query subsequent data. Query parameter `afterId` specifies the last record previously retrieved. Some endpoints instead use the `endDate` parameter to specify the end date and older for records to retrieve. Query parameter `limit` specifies the maximum number of records in a response.\n\n## Parameters\n\n<table>\n  <tr>\n    <th style=\"width: 30%;\">Parameter</th>\n    <th>Description</th\n  </tr>\n  <tr>\n    <td>afterId</td>\n    <td>Request page after (older than) this pagination id.</td>\n  </tr>\n  <tr>\n    <td>endDate</td>\n    <td>Request records older than this date (YYYY-MM-DD format). Used for /trading/trades and /trading/settlements resources.</td>\n  </tr>\n  <tr>\n    <td>limit</td>\n    <td>Maximum number of results requested. Default usually 25, but varies depending on resource.</td>\n  </tr>\n</table>\n\n## Example\n\n`GET /v2/transfers?afterId=1968b94b09b8a1a8a381775d1f04978c424d891d50e517774bf984297985b471&limit=100`\n\n## Next cursor\n\nThe `next` cursor is a URL which references the last record in a set of records. When queried, the `next` cursor URL will return subsequent records, but otherwise using the same query parameters."
+servers:
+- url: https://api.anchorage-staging.com/v2
+security:
+- Api-Access-Key: []
+tags:
+- description: Operations for creating transactions with managed fees and replay protection
+  name: Transaction Creation
+paths:
+  /wallet-operations/create/transaction:
+    post:
+      operationId: createTransaction
+      summary: Create Transaction
+      description: 'Permissions required: **Create transaction**
+
+
+        Create and sign a specialized transaction immediately with Anchorage-managed replay protection and fee selection.
+
+
+        This endpoint signs the transaction right away. Use Propose Create Transaction instead if you need
+
+        an approval workflow before signing.
+
+
+        Use Create Transfer Transaction for simple asset transfers instead.
+
+
+        This endpoint returns immediately with a `walletOperationId`. Poll `GET /wallet-operations/{walletOperationId}` to check
+
+        the status and retrieve the signed transaction data once construction is complete. Use the signedTransaction
+
+        field from the response to broadcast to the blockchain.
+
+
+        For operations that create staking positions (create validator, create stake account, split and deactivate stake),
+
+        query `GET /wallets/{walletId}/staking-positions?creatingWalletOperationId={walletOperationId}` after the operation
+
+        completes to find the resulting staking position.'
+      parameters: []
+      requestBody:
+        description: Transaction creation request
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTransactionRequest'
+      responses:
+        '202':
+          description: Transaction request accepted for processing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateWalletOperationResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+      tags:
+      - Transaction Creation
+  /wallet-operations/create/propose-transaction:
+    post:
+      operationId: proposeCreateTransaction
+      summary: Propose Create Transaction
+      description: 'Permissions required: **Propose create transaction**
+
+
+        Create a specialized transaction for approval workflow with Anchorage-managed replay protection and fee selection.
+
+        The transaction will not be signed until it receives the required endorsements.
+
+
+        This endpoint creates the transaction but defers signing. The operation will enter PENDING_ENDORSEMENT status
+
+        and require approval through your organization''s workflow before signing occurs.
+
+
+        Use Create Transaction instead if you want to sign immediately without an approval workflow.
+
+
+        Use Propose Create Transfer Transaction for simple asset transfers with deferred signing instead.
+
+
+        This endpoint returns immediately with a `walletOperationId` in `PENDING_ENDORSEMENT` status. The transaction
+
+        will not be signed until it receives the required endorsements through your approval workflow. Poll
+
+        `GET /wallet-operations/{walletOperationId}` to check the status. Once endorsed and signed, use the
+
+        signedTransaction field from the response to broadcast to the blockchain.
+
+
+        For operations that create staking positions (create validator, create stake account, split and deactivate stake),
+
+        query `GET /wallets/{walletId}/staking-positions?creatingWalletOperationId={walletOperationId}` after the operation
+
+        completes to find the resulting staking position.'
+      parameters: []
+      requestBody:
+        description: Transaction creation request for approval workflow
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTransactionRequest'
+      responses:
+        '202':
+          description: Transaction request accepted for approval workflow
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateWalletOperationResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+      tags:
+      - Transaction Creation
+  /wallet-operations/create/propose-raw-transaction:
+    post:
+      operationId: proposeRawTransaction
+      summary: Propose Raw Transaction
+      description: 'Permissions required: **Propose create transaction**
+
+
+        Propose an off-chain signature or on-chain execution raw transaction for approval workflow.
+
+
+        This endpoint creates a raw transaction but defers signing. The operation will enter PENDING_ENDORSEMENT status
+
+        and require approval through your organization''s workflow before signing occurs.
+
+
+        Supported raw transaction types include Ethereum structured data signing (EIP-712), Ethereum personal message
+
+        signing, Ethereum transaction execution, and Solana raw transaction execution.
+
+
+        This endpoint returns immediately with a `walletOperationId` in `PENDING_ENDORSEMENT` status. The transaction
+
+        will not be signed until it receives the required endorsements through your approval workflow. Poll
+
+        `GET /wallet-operations/{walletOperationId}` to check the status.'
+      parameters: []
+      requestBody:
+        description: Raw transaction creation request for approval workflow
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProposeRawTransactionRequest'
+      responses:
+        '202':
+          description: Raw transaction request accepted for approval workflow
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateWalletOperationResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '401':
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDetails'
+      tags:
+      - Transaction Creation
+components:
+  schemas:
+    EthereumCreateValidatorRequest:
+      description: Request to create an 0x02 Ethereum validator by depositing ETH to the beacon chain deposit contract. In order to retain status as an active validator, it must maintain a minimum of 32 ETH. Validators cannot be merged, if you'd like to increase an existing position instead use ETHEREUM ADD STAKE REQUEST.
+      type: object
+      properties:
+        amount:
+          description: Amount of ETH to deposit for the validator. Must be between 32 and 2048 ETH.
+          type: string
+          example: '33.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        stakingProvider:
+          description: The entity running the validator infrastructure
+          type: string
+          enum:
+          - FIGMENT
+          - BLOCKDAEMON
+        type:
+          description: Discriminator field indicating this is an Ethereum create validator request
+          type: string
+          default: ETHEREUM_CREATE_VALIDATOR
+          enum:
+          - ETHEREUM_CREATE_VALIDATOR
+      required:
+      - type
+      - stakingProvider
+      - amount
+      title: Ethereum Create Validator Request
+    EthSendTransactionRequest:
+      description: Ethereum transaction execution request using the eth_sendTransaction JSON-RPC method. The from address must match the address associated with the source wallet.
+      type: object
+      properties:
+        data:
+          description: Contract calldata (hex encoded with 0x prefix)
+          type: string
+          example: '0xdb006a750000000000000000000000000000000000000000000000000000000000000001'
+        from:
+          description: Sender address (hex encoded with 0x prefix). Must match the address of the source wallet.
+          type: string
+          example: '0xc6690d013b615066edcaa102daa5346cf7587966'
+        to:
+          description: Recipient or contract address (hex encoded with 0x prefix)
+          type: string
+          example: '0x6982508145454ce325ddbe47a25d4ec3d2311933'
+        type:
+          description: Discriminator field indicating this is an Ethereum send transaction request
+          type: string
+          default: ETH_SEND_TRANSACTION
+          enum:
+          - ETH_SEND_TRANSACTION
+        value:
+          description: ETH value to send (hex encoded)
+          type: string
+          example: '0x00'
+      required:
+      - type
+      - from
+      - to
+      title: Ethereum Send Transaction Request
+    AvalanchePChainImportRequest:
+      description: 'Step 2 of a C→P transfer: claim on the P-Chain the AVAX that was exported from the C-Chain (on-chain p_from_c_import), initiated against the P-Chain wallet. The import pulls the funds from shared atomic memory into the P-Chain wallet''s own address, so there is no destination. Explicit amount only — ''all'' is not supported. This operation can''t be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)'
+      type: object
+      properties:
+        amount:
+          description: Amount of AVAX to claim on the P-Chain (decimal string). Explicit amount required.
+          type: string
+          example: '10.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        type:
+          description: Discriminator field indicating this is an Avalanche P-Chain import request (initiated on the P-Chain wallet)
+          type: string
+          default: AVALANCHE_PCHAIN_IMPORT
+          enum:
+          - AVALANCHE_PCHAIN_IMPORT
+      required:
+      - type
+      - amount
+      title: Avalanche P-Chain Import Request
+    HypercoreLinkAccountsRequest:
+      description: Request to link this HyperCore staking wallet to an external trading account. This is permanent and irreversible, and carries no amount. The operation only succeeds if the trading account has already initiated a linking request to this staking wallet. This operation can't be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)
+      type: object
+      properties:
+        linkAddress:
+          description: Address of the external trading account to link to this staking wallet (EVM 0x + 40 hex)
+          type: string
+          example: '0x393d4f2209abcacf57b75a51dafae777f9dd38bc'
+          pattern: ^0x[0-9a-fA-F]{40}$
+        type:
+          description: Discriminator field indicating this is a HyperCore link-accounts request
+          type: string
+          default: HYPERCORE_LINK_ACCOUNTS
+          enum:
+          - HYPERCORE_LINK_ACCOUNTS
+      required:
+      - type
+      - linkAddress
+      title: HyperCore Link Accounts Request
+    CreateWalletOperationResponse:
+      description: Async response with wallet operation ID. Use the walletOperationId with the GET /wallet-operations/{walletOperationId} endpoint to poll for the operation status and retrieve the created transaction details.
+      type: object
+      properties:
+        walletOperationId:
+          description: Wallet operation identifier. Poll the GET /wallet-operations/{walletOperationId} endpoint to check the status and retrieve the transaction data once creation is complete.
+          type: string
+          example: op_550e8400-e29b-41d4-a716-446655440000
+      required:
+      - walletOperationId
+    HypercoreSpotToStakeRequest:
+      description: Request to move spot balance into the stake account as inactive stake, the prerequisite for delegating. This operation can't be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)
+      type: object
+      properties:
+        amount:
+          description: Amount of HYPE to move from spot into the stake account (decimal string). An explicit amount greater than zero is required.
+          type: string
+          example: '100.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        type:
+          description: Discriminator field indicating this is a HyperCore spot-to-stake request
+          type: string
+          default: HYPERCORE_SPOT_TO_STAKE
+          enum:
+          - HYPERCORE_SPOT_TO_STAKE
+      required:
+      - type
+      - amount
+      title: HyperCore Spot To Stake Request
+    SolanaWithdrawStakeRequest:
+      description: Request to withdraw inactive SOL from a Solana stake account. The stake account must be deactivated and cooldown period must have elapsed. Minimum withdrawal is 0.000000001 SOL (1 lamport). Partial withdrawals must leave at least 0.00228288 SOL (rent-exempt reserve) in the stake account.
+      type: object
+      properties:
+        amount:
+          description: Amount of SOL to withdraw (decimal string). Minimum 0.000000001 SOL. For partial withdrawals, must leave at least 0.00228288 SOL in the account.
+          type: string
+          example: '1.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        stakeAccountAddress:
+          description: Address of the stake account to withdraw from
+          type: string
+          example: 7NMw8RfMFLc6WZvyuJQbAF5yVhxFMkH9mKzPP2JVYKjL
+        type:
+          description: Discriminator field indicating this is a Solana withdraw stake request
+          type: string
+          default: SOLANA_WITHDRAW_STAKE
+          enum:
+          - SOLANA_WITHDRAW_STAKE
+      required:
+      - type
+      - stakeAccountAddress
+      - amount
+      title: Solana Withdraw Stake Request
+    EthereumWithdrawStakeRequest:
+      description: Request to withdraw some or all stake from a 0x02 Ethereum validator
+      type: object
+      properties:
+        amount:
+          description: Amount of ETH to withdraw (decimal string), or 'ALL' to withdraw everything and exit the validator. If amount is not 'ALL' but it leaves less than 32 ETH behind, the API will return an error to prevent accidentally inactive stake.
+          type: string
+          example: '1.5'
+          pattern: ^(ALL|[0-9]\d*(\.\d+)?)$
+        type:
+          description: Discriminator field indicating this is an Ethereum withdraw stake request
+          type: string
+          default: ETHEREUM_WITHDRAW_STAKE
+          enum:
+          - ETHEREUM_WITHDRAW_STAKE
+        validatorPublicKey:
+          description: BLS12-381 public key of the validator to add stake to (48 bytes, hex encoded)
+          type: string
+          example: 93247f2209abcacf57b75a51dafae777f9dd38bc7053d1af526f220a7489a6d3a2753e5f3e8b1cfe39b56f43611df74a
+      required:
+      - type
+      - validatorPublicKey
+      - amount
+      title: Ethereum Withdraw Stake Request
+    AvalancheCChainExportRequest:
+      description: 'Step 1 of a C→P transfer: export AVAX from a C-Chain (EVM) wallet toward the P-Chain (on-chain c_to_p_export), initiated against the C-Chain wallet. This is the funding step that precedes P-Chain staking; settle the funds on the P-Chain with a follow-up AVALANCHE_PCHAIN_IMPORT. The destination must be a P-Chain wallet you control. Explicit amount only — ''all'' is not supported. This operation can''t be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)'
+      type: object
+      properties:
+        amount:
+          description: Amount of AVAX to export from the C-Chain (decimal string). Explicit amount required.
+          type: string
+          example: '10.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        destination:
+          description: 'P-Chain address to receive the exported AVAX (format: P-avax1...). Must be an address of a wallet your organization controls.'
+          type: string
+          example: P-avax1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4
+        type:
+          description: Discriminator field indicating this is an Avalanche C-Chain export request (initiated on the C-Chain wallet)
+          type: string
+          default: AVALANCHE_CCHAIN_EXPORT
+          enum:
+          - AVALANCHE_CCHAIN_EXPORT
+      required:
+      - type
+      - destination
+      - amount
+      title: Avalanche C-Chain Export Request
+    ProposeRawTransactionRequest:
+      description: Request to create a raw transaction for approval workflow
+      type: object
+      properties:
+        idempotencyKey:
+          description: Client-provided idempotency key to ensure request is processed only once
+          type: string
+          example: e763a50d-aa82-4ec7-b5a3-89ad0462d248
+          maxLength: 128
+        parameters:
+          description: The raw transaction parameters. Use the 'type' field to discriminate between different raw transaction types.
+          discriminator:
+            propertyName: type
+            mapping:
+              EIP712_ETH_SIGNTYPEDDATA_V4: '#/components/schemas/EIP712SignTypedDataV4Request'
+              ETH_PERSONAL_SIGN: '#/components/schemas/EthPersonalSignRequest'
+              ETH_SEND_TRANSACTION: '#/components/schemas/EthSendTransactionRequest'
+              SOLANA_RAW_TRANSACTION: '#/components/schemas/SolanaRawTransactionRequest'
+          oneOf:
+          - $ref: '#/components/schemas/EIP712SignTypedDataV4Request'
+          - $ref: '#/components/schemas/EthPersonalSignRequest'
+          - $ref: '#/components/schemas/EthSendTransactionRequest'
+          - $ref: '#/components/schemas/SolanaRawTransactionRequest'
+        sourceWalletId:
+          description: Globally unique wallet identifier for the wallet that will pay transaction fees and sign the transaction
+          type: string
+      required:
+      - sourceWalletId
+      - parameters
+    SolanaRawTransactionRequest:
+      description: Solana raw transaction execution request. The transaction field contains a Base64-encoded Solana transaction.
+      type: object
+      properties:
+        transaction:
+          description: Base64-encoded Solana transaction that could be passed to the sendTransaction RPC method
+          type: string
+          example: AX9ymHgILTd01GtdBsbQZ9by5D4z4UWh+1Tsh6LDuPHuZk/Z8LrIwoKZRp3le2RTb5lywL1xcJGQ8u3M3U0tyAgBAAEDXCL+JarHftfP5QgsRxpEsr+/YiRWQeCz7PI3jfzeppEvUc61u+TNHri9ChQdLN2evWGx+1O3MwbPFKV5rIqlxAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAvOdVbvGn3R+uBkugNCq8C/Texc7ILBoYjbn4aVQV0OgBAgIAAQwCAAAAQEIPAAAAAAA=
+        type:
+          description: Discriminator field indicating this is a Solana raw transaction request
+          type: string
+          default: SOLANA_RAW_TRANSACTION
+          enum:
+          - SOLANA_RAW_TRANSACTION
+      required:
+      - type
+      - transaction
+      title: Solana Raw Transaction Request
+    SolanaSplitAndDeactivateStakeRequest:
+      description: Request to split a Solana stake account and deactivate the new account in a single transaction. The specified amount will be split into a new stake account (with a server-generated address) and immediately deactivated. Minimum split amount is 0.01 SOL, and the original stake account must retain at least 0.01 SOL after the split.
+      type: object
+      properties:
+        amount:
+          description: Amount of SOL to split into the new stake account, which will then be deactivated (decimal string). Minimum 1 SOL. The original account must retain at least 1.1 SOL.
+          type: string
+          example: '1.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        stakeAccountAddress:
+          description: Address of the source stake account to split from
+          type: string
+          example: 7NMw8RfMFLc6WZvyuJQbAF5yVhxFMkH9mKzPP2JVYKjL
+        type:
+          description: Discriminator field indicating this is a Solana split and deactivate stake request
+          type: string
+          default: SOLANA_SPLIT_AND_DEACTIVATE_STAKE
+          enum:
+          - SOLANA_SPLIT_AND_DEACTIVATE_STAKE
+      required:
+      - type
+      - stakeAccountAddress
+      - amount
+      title: Solana Split And Deactivate Stake Request
+    HypercoreDelegateStakeRequest:
+      description: Request to delegate inactive stake balance to a validator on HyperCore. Currently only supports a single validator per wallet.
+      type: object
+      properties:
+        amount:
+          description: Amount of HYPE to delegate (decimal string)
+          type: string
+          example: '100.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        type:
+          description: Discriminator field indicating this is a HyperCore delegate stake request
+          type: string
+          default: HYPERCORE_DELEGATE_STAKE
+          enum:
+          - HYPERCORE_DELEGATE_STAKE
+        validatorAddress:
+          description: Address of the validator to delegate to (EVM 0x + 40 hex)
+          type: string
+          example: '0x393d4f2209abcacf57b75a51dafae777f9dd38bc'
+          pattern: ^0x[0-9a-fA-F]{40}$
+      required:
+      - type
+      - validatorAddress
+      - amount
+      title: HyperCore Delegate Stake Request
+    AvalanchePChainStakeRequest:
+      description: Request to create a new Avalanche P-Chain validator (self-stake). Requires BLS proof-of-possession (nodePublicKey + nodeSignature) to register the validator's BLS key. The commission controls what percentage of delegation rewards are kept by the validator. This operation can't be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)
+      type: object
+      properties:
+        amount:
+          description: Amount of AVAX to self-stake (decimal string)
+          type: string
+          example: '2000.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        commission:
+          description: Delegation rewards commission percentage (2–100, up to 2 decimal places). E.g. '5' for 5%.
+          type: string
+          example: '5'
+          pattern: ^[0-9]\d*(\.\d{1,2})?$
+        delegatorRewardsAddress:
+          description: P-Chain address to receive delegator staking rewards
+          type: string
+          example: P-avax1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4
+        duration:
+          description: Staking duration in whole days (e.g. '14'). Must be between 14 and 365 days on mainnet, or 1 and 365 days on testnet/regnet.
+          type: string
+          example: '14'
+          pattern: ^[1-9][0-9]*$
+        nodeId:
+          description: 'Avalanche NodeID of the new validator (format: NodeID-<base58check>)'
+          type: string
+          example: NodeID-7Xhw2mDxuDS44j42TCB6U5579esbSt3Lg
+          pattern: ^NodeID-[1-9A-HJ-NP-Za-km-z]{33}$
+        nodePublicKey:
+          description: BLS12-381 public key for proof-of-possession (48 bytes, 0x-prefixed hex, 96 hex chars)
+          type: string
+          example: '0x93247f2209abcacf57b75a51dafae777f9dd38bc7053d1af526f220a7489a6d3a2753e5f3e8b1cfe39b56f43611df74a'
+          pattern: ^0x[0-9a-fA-F]{96}$
+        nodeSignature:
+          description: BLS12-381 proof-of-possession signature (96 bytes, 0x-prefixed hex, 192 hex chars)
+          type: string
+          example: '0xb3a48349cf17e7c24b23a1b0e9469ebe1c03a4f4e52e5e80ce09caa5c7c7f4f2a5b34fe2e9a2b4c61d3f8e7a56821f8bb3a48349cf17e7c24b23a1b0e9469ebe1c03a4f4e52e5e80ce09caa5c7c7f4f2a5b34fe2e9a2b4c61d3f8e7a56821f8b'
+          pattern: ^0x[0-9a-fA-F]{192}$
+        type:
+          description: Discriminator field indicating this is an Avalanche P-Chain stake (validator creation) request
+          type: string
+          default: AVALANCHE_PCHAIN_STAKE
+          enum:
+          - AVALANCHE_PCHAIN_STAKE
+        validatorRewardsAddress:
+          description: P-Chain address to receive validator staking rewards
+          type: string
+          example: P-avax1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4
+      required:
+      - type
+      - nodeId
+      - nodePublicKey
+      - nodeSignature
+      - commission
+      - duration
+      - amount
+      - validatorRewardsAddress
+      - delegatorRewardsAddress
+      title: Avalanche P-Chain Stake Request
+    SolanaDeactivateStakeRequest:
+      description: Request to deactivate a Solana stake account, beginning the process to unstake. This deactivates the entire balance of the stake account. For partial unstaking, use SOLANA_SPLIT_AND_DEACTIVATE_STAKE instead.
+      type: object
+      properties:
+        stakeAccountAddress:
+          description: Address of the stake account to deactivate. The entire balance will be deactivated.
+          type: string
+          example: 7NMw8RfMFLc6WZvyuJQbAF5yVhxFMkH9mKzPP2JVYKjL
+        type:
+          description: Discriminator field indicating this is a Solana deactivate stake request
+          type: string
+          default: SOLANA_DEACTIVATE_STAKE
+          enum:
+          - SOLANA_DEACTIVATE_STAKE
+      required:
+      - type
+      - stakeAccountAddress
+      title: Solana Deactivate Stake Request
+    SolanaCreateAndActivateStakeAccountRequest:
+      description: Request to create and delegate a new Solana stake account in a single operation. Minimum stake amount is 0.01 SOL.
+      type: object
+      properties:
+        amount:
+          description: Amount of SOL to deposit into the new stake account (decimal string). Minimum 0.01 SOL.
+          type: string
+          example: '2.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        type:
+          description: Discriminator field indicating this is a  Create Stake Account And Stake Request
+          type: string
+          default: SOLANA_CREATE_AND_ACTIVATE_STAKE_ACCOUNT
+          enum:
+          - SOLANA_CREATE_AND_ACTIVATE_STAKE_ACCOUNT
+        voteAccountAddress:
+          description: Vote account address corresponding with the validator to whom we want to stake
+          type: string
+          example: ANCVpxEySGWWLqqkVKw2xWYDE9UP4fmZWMCBr5t96jch
+      required:
+      - type
+      - amount
+      - voteAccountAddress
+      title: Solana Create And Activate Stake Account Request
+    CreateTransactionRequest:
+      description: Request to create a specialized transaction with server-managed replay protection and fees
+      type: object
+      properties:
+        idempotencyKey:
+          description: Client-provided idempotency key to ensure request is processed only once
+          type: string
+          example: e763a50d-aa82-4ec7-b5a3-89ad0462d248
+          maxLength: 128
+        parameters:
+          description: The details of the transaction to perform. Use the 'type' field to discriminate between different transaction types.
+          discriminator:
+            propertyName: type
+            mapping:
+              ETHEREUM_CREATE_VALIDATOR: '#/components/schemas/EthereumCreateValidatorRequest'
+              ETHEREUM_ADD_STAKE: '#/components/schemas/EthereumAddStakeRequest'
+              ETHEREUM_WITHDRAW_STAKE: '#/components/schemas/EthereumWithdrawStakeRequest'
+              SOLANA_CREATE_AND_ACTIVATE_STAKE_ACCOUNT: '#/components/schemas/SolanaCreateAndActivateStakeAccountRequest'
+              SOLANA_DEACTIVATE_STAKE: '#/components/schemas/SolanaDeactivateStakeRequest'
+              SOLANA_WITHDRAW_STAKE: '#/components/schemas/SolanaWithdrawStakeRequest'
+              SOLANA_SPLIT_AND_DEACTIVATE_STAKE: '#/components/schemas/SolanaSplitAndDeactivateStakeRequest'
+              HYPERCORE_DELEGATE_STAKE: '#/components/schemas/HypercoreDelegateStakeRequest'
+              HYPERCORE_SPOT_TO_STAKE: '#/components/schemas/HypercoreSpotToStakeRequest'
+              HYPERCORE_UNDELEGATE_STAKE: '#/components/schemas/HypercoreUndelegateStakeRequest'
+              HYPERCORE_STAKE_TO_SPOT: '#/components/schemas/HypercoreStakeToSpotRequest'
+              HYPERCORE_BRIDGE: '#/components/schemas/HypercoreBridgeRequest'
+              HYPEREVM_BRIDGE: '#/components/schemas/HyperevmBridgeRequest'
+              HYPERCORE_LINK_ACCOUNTS: '#/components/schemas/HypercoreLinkAccountsRequest'
+              AVALANCHE_PCHAIN_DELEGATE_STAKE: '#/components/schemas/AvalanchePChainDelegateStakeRequest'
+              AVALANCHE_PCHAIN_STAKE: '#/components/schemas/AvalanchePChainStakeRequest'
+              AVALANCHE_PCHAIN_EXPORT: '#/components/schemas/AvalanchePChainExportRequest'
+              AVALANCHE_CCHAIN_EXPORT: '#/components/schemas/AvalancheCChainExportRequest'
+              AVALANCHE_PCHAIN_IMPORT: '#/components/schemas/AvalanchePChainImportRequest'
+              AVALANCHE_CCHAIN_IMPORT: '#/components/schemas/AvalancheCChainImportRequest'
+          oneOf:
+          - $ref: '#/components/schemas/EthereumCreateValidatorRequest'
+          - $ref: '#/components/schemas/EthereumAddStakeRequest'
+          - $ref: '#/components/schemas/EthereumWithdrawStakeRequest'
+          - $ref: '#/components/schemas/SolanaCreateAndActivateStakeAccountRequest'
+          - $ref: '#/components/schemas/SolanaDeactivateStakeRequest'
+          - $ref: '#/components/schemas/SolanaWithdrawStakeRequest'
+          - $ref: '#/components/schemas/SolanaSplitAndDeactivateStakeRequest'
+          - $ref: '#/components/schemas/HypercoreDelegateStakeRequest'
+          - $ref: '#/components/schemas/HypercoreSpotToStakeRequest'
+          - $ref: '#/components/schemas/HypercoreUndelegateStakeRequest'
+          - $ref: '#/components/schemas/HypercoreStakeToSpotRequest'
+          - $ref: '#/components/schemas/HypercoreBridgeRequest'
+          - $ref: '#/components/schemas/HyperevmBridgeRequest'
+          - $ref: '#/components/schemas/HypercoreLinkAccountsRequest'
+          - $ref: '#/components/schemas/AvalanchePChainDelegateStakeRequest'
+          - $ref: '#/components/schemas/AvalanchePChainStakeRequest'
+          - $ref: '#/components/schemas/AvalanchePChainExportRequest'
+          - $ref: '#/components/schemas/AvalancheCChainExportRequest'
+          - $ref: '#/components/schemas/AvalanchePChainImportRequest'
+          - $ref: '#/components/schemas/AvalancheCChainImportRequest'
+        sourceWalletId:
+          description: Globally unique wallet identifier for the wallet that will pay transaction fees and sign the transaction
+          type: string
+      additionalProperties: false
+      required:
+      - parameters
+      - sourceWalletId
+    ErrorDetails:
+      type: object
+      properties:
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - message
+      title: ErrorDetails
+    HypercoreBridgeRequest:
+      description: Request to bridge HyperCore spot balance out to the client's HyperEVM wallet. An explicit amount is required ('all' is not supported). This operation can't be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)
+      type: object
+      properties:
+        amount:
+          description: Amount of HYPE to bridge from HyperCore spot to HyperEVM (decimal string). An explicit amount greater than zero is required.
+          type: string
+          example: '100.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        type:
+          description: Discriminator field indicating this is a HyperCore bridge (outbound) request
+          type: string
+          default: HYPERCORE_BRIDGE
+          enum:
+          - HYPERCORE_BRIDGE
+      required:
+      - type
+      - amount
+      title: HyperCore Bridge to HyperEVM Request
+    EthereumAddStakeRequest:
+      description: Request to add stake to an existing 0x02 Ethereum validator by depositing additional ETH. Any validator balance above 2048 ETH will not earn rewards. Beyond that point it is recommended to create a new validator via ETHEREUM CREATE VALIDATOR REQUEST.
+      type: object
+      properties:
+        amount:
+          description: Amount of ETH to add as stake (decimal string)
+          type: string
+          example: '32.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        type:
+          description: Discriminator field indicating this is an Ethereum add stake request
+          type: string
+          default: ETHEREUM_ADD_STAKE
+          enum:
+          - ETHEREUM_ADD_STAKE
+        validatorPublicKey:
+          description: BLS12-381 public key of the validator to add stake to (48 bytes, hex encoded)
+          type: string
+          example: 93247f2209abcacf57b75a51dafae777f9dd38bc7053d1af526f220a7489a6d3a2753e5f3e8b1cfe39b56f43611df74a
+      required:
+      - type
+      - validatorPublicKey
+      - amount
+      title: Ethereum Add Stake Request
+    HypercoreStakeToSpotRequest:
+      description: Request to move inactive stake balance back to spot balance. This is the withdraw-to-spot action; completion is subject to HyperCore's 7-day unstaking queue. This operation can't be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)
+      type: object
+      properties:
+        amount:
+          description: Amount of HYPE to move from the stake account back to spot (decimal string). An explicit amount greater than zero is required.
+          type: string
+          example: '100.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        type:
+          description: Discriminator field indicating this is a HyperCore stake-to-spot request
+          type: string
+          default: HYPERCORE_STAKE_TO_SPOT
+          enum:
+          - HYPERCORE_STAKE_TO_SPOT
+      required:
+      - type
+      - amount
+      title: HyperCore Stake To Spot Request
+    HypercoreUndelegateStakeRequest:
+      description: Request to undelegate funds from a validator on HyperCore, beginning the 1-day delegation lockup before the funds return to the idle stake account. Currently only supports a single validator per wallet.
+      type: object
+      properties:
+        amount:
+          description: Amount of HYPE to undelegate (decimal string), or 'ALL' to undelegate the full delegated balance at the validator
+          type: string
+          example: '100.0'
+          pattern: ^(ALL|[0-9]\d*(\.\d+)?)$
+        type:
+          description: Discriminator field indicating this is a HyperCore undelegate stake request
+          type: string
+          default: HYPERCORE_UNDELEGATE_STAKE
+          enum:
+          - HYPERCORE_UNDELEGATE_STAKE
+        validatorAddress:
+          description: Address of the validator to undelegate from (EVM 0x + 40 hex)
+          type: string
+          example: '0x393d4f2209abcacf57b75a51dafae777f9dd38bc'
+          pattern: ^0x[0-9a-fA-F]{40}$
+      required:
+      - type
+      - validatorAddress
+      - amount
+      title: HyperCore Undelegate Stake Request
+    EIP712SignTypedDataV4Request:
+      description: Ethereum structured data signing request following the EIP-712 specification, using the JSON-RPC method eth_signTypedData_v4. The chainId in the domain must match the chain ID of the source wallet's network.
+      type: object
+      properties:
+        domain:
+          description: EIP-712 domain separator containing fields like name, version, chainId, and verifyingContract
+          type: object
+        message:
+          description: The structured data to sign, conforming to the primaryType definition
+          type: object
+        primaryType:
+          description: The primary type name that the message conforms to, must be defined in the types field
+          type: string
+          example: Permit
+        type:
+          description: Discriminator field indicating this is an EIP-712 sign typed data v4 request
+          type: string
+          default: EIP712_ETH_SIGNTYPEDDATA_V4
+          enum:
+          - EIP712_ETH_SIGNTYPEDDATA_V4
+        types:
+          description: EIP-712 type definitions. Must include the EIP712Domain type and any custom types referenced by primaryType.
+          type: object
+      required:
+      - type
+      - types
+      - primaryType
+      - domain
+      - message
+      title: EIP-712 Sign Typed Data V4 Request
+    AvalancheCChainImportRequest:
+      description: 'Step 2 of a P→C transfer: claim on the C-Chain the AVAX that was exported from the P-Chain (on-chain c_from_p_import), initiated against the C-Chain (EVM) wallet. The funds always credit the initiating wallet''s own C-Chain address, so no destination is supplied. Explicit amount only — ''all'' is not supported. This operation can''t be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)'
+      type: object
+      properties:
+        amount:
+          description: Amount of AVAX to claim on the C-Chain (decimal string). Explicit amount required.
+          type: string
+          example: '10.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        type:
+          description: Discriminator field indicating this is an Avalanche C-Chain import request (initiated on the C-Chain wallet)
+          type: string
+          default: AVALANCHE_CCHAIN_IMPORT
+          enum:
+          - AVALANCHE_CCHAIN_IMPORT
+      required:
+      - type
+      - amount
+      title: Avalanche C-Chain Import Request
+    EthPersonalSignRequest:
+      description: Ethereum personal message signing request using the eth_personalSign JSON-RPC method
+      type: object
+      properties:
+        message:
+          description: Human-readable message to sign
+          type: string
+          example: Please sign to verify wallet ownership
+        type:
+          description: Discriminator field indicating this is an Ethereum personal sign request
+          type: string
+          default: ETH_PERSONAL_SIGN
+          enum:
+          - ETH_PERSONAL_SIGN
+      required:
+      - type
+      - message
+      title: Ethereum Personal Sign Request
+    AvalanchePChainDelegateStakeRequest:
+      description: 'Request to delegate AVAX to a validator on the Avalanche P-Chain for a fixed duration. P-Chain staking is time-locked: there is no early exit, and funds are returned automatically at the end of the staking period. Duration must be between 14 and 365 days on mainnet (1–365 days on testnet).'
+      type: object
+      properties:
+        amount:
+          description: Amount of AVAX to delegate (decimal string)
+          type: string
+          example: '25.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        duration:
+          description: Staking duration in whole days (e.g. '14' for 14 days). Must be between 14 and 365 days on mainnet, or 1 and 365 days on testnet/regnet.
+          type: string
+          example: '14'
+          pattern: ^[1-9][0-9]*$
+        type:
+          description: Discriminator field indicating this is an Avalanche P-Chain delegate stake request
+          type: string
+          default: AVALANCHE_PCHAIN_DELEGATE_STAKE
+          enum:
+          - AVALANCHE_PCHAIN_DELEGATE_STAKE
+        validatorAddress:
+          description: 'Avalanche NodeID of the validator to delegate to (format: NodeID-<base58check>)'
+          type: string
+          example: NodeID-7Xhw2mDxuDS44j42TCB6U5579esbSt3Lg
+          pattern: ^NodeID-[1-9A-HJ-NP-Za-km-z]{33}$
+      required:
+      - type
+      - validatorAddress
+      - amount
+      - duration
+      title: Avalanche P-Chain Delegate Stake Request
+    AvalanchePChainExportRequest:
+      description: 'Step 1 of a P→C transfer: export AVAX from a P-Chain wallet toward the C-Chain (on-chain p_to_c_export), initiated against the P-Chain wallet. Bridging is two steps with no auto-import — settle the funds on the C-Chain with a follow-up AVALANCHE_CCHAIN_IMPORT. The destination must be a C-Chain wallet you control. Explicit amount only — ''all'' is not supported. This operation can''t be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)'
+      type: object
+      properties:
+        amount:
+          description: Amount of AVAX to export (decimal string). Explicit amount required.
+          type: string
+          example: '10.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        destination:
+          description: C-Chain (EVM 0x) address to receive the exported AVAX. Must be an address of a wallet your organization controls.
+          type: string
+          example: '0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed'
+        type:
+          description: Discriminator field indicating this is an Avalanche P-Chain export request
+          type: string
+          default: AVALANCHE_PCHAIN_EXPORT
+          enum:
+          - AVALANCHE_PCHAIN_EXPORT
+      required:
+      - type
+      - destination
+      - amount
+      title: Avalanche P-Chain Export Request
+    HyperevmBridgeRequest:
+      description: Request to bridge HYPE from the client's HyperEVM wallet into HyperCore spot balance, the funding step that precedes staking. This operation is initiated on the HyperEVM (HYPE_HYPEREVM) wallet. An explicit amount is required ('all' is not supported). This operation can't be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)
+      type: object
+      properties:
+        amount:
+          description: Amount of HYPE to bridge from HyperEVM into HyperCore spot (decimal string). An explicit amount greater than zero is required.
+          type: string
+          example: '100.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        type:
+          description: Discriminator field indicating this is a HyperEVM bridge (inbound, HyperEVM -> HyperCore) request
+          type: string
+          default: HYPEREVM_BRIDGE
+          enum:
+          - HYPEREVM_BRIDGE
+      required:
+      - type
+      - amount
+      title: HyperEVM Bridge to HyperCore Request
+  securitySchemes:
+    Api-Access-Key:
+      type: apiKey
+      name: Api-Access-Key
+      in: header
+      description: An API key associated with a security role
+x-tagGroups:
+- name: Under Development
+  tags:
+  - Collateral Management
+  - Holds
+  - Deposit Attribution
+  - Onboarding
+  - Trusted Destinations
+  - Atlas Settlement Network
+  - Tax
+- name: API Endpoints
+  tags:
+  - Addresses
+  - Asset Types
+  - Transactions
+  - Transfers
+  - Wallets
+  - Vaults
+  - Vesting
+  - Tagging
+  - Subaccounts
+  - Stablecoins
+  - Webhook Notifications
+  - API Key
+  - Statements
+  - Tax Reporting
+  - Trading
+- name: Models
+  tags:
+  - Transfer Model
+  - Transaction Model
+  - Vault Model
+  - Deposit Attribution Model

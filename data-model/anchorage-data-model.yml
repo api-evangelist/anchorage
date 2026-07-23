@@ -1,0 +1,101 @@
+generated: '2026-07-17'
+method: derived
+source:
+- openapi/anchorage-v2-openapi-original.yml
+- https://docs.anchorage.com/knowledge-base/platform/developers/account-hierarchy.md
+entities:
+- name: Organization
+  description: Top-level client entity; owns all accounts, users and policies.
+- name: Account
+  description: A client account within an organization.
+- name: Vault
+  description: A container of wallets governed by a quorum policy.
+  id_field: vaultId
+- name: Wallet
+  description: An asset-specific wallet inside a vault, active on one or more networks.
+  id_field: walletId
+- name: Address
+  description: A deposit address provisioned for a wallet.
+  id_field: addressId
+- name: Transaction
+  description: On-chain and off-chain activity (deposits, stakes, transfers).
+  id_field: transactionId
+- name: Transfer
+  description: Movement of funds between wallets or to a trusted destination.
+  id_field: transferId
+- name: TrustedDestination
+  description: Allowlisted external crypto/bank recipient.
+- name: TradingAccount
+  description: Account used to request quotes and place orders.
+  id_field: tradingAccountId
+- name: Order
+  description: A trading order (RFQ or limit/market).
+  id_field: orderId
+- name: Trade
+  description: An executed trade tied to a settlement.
+  id_field: tradeId
+- name: Settlement
+  description: Atlas settlement between participants/counterparties.
+  id_field: settlementId
+- name: Subaccount
+  description: End-client subaccount under a program customer (wealth/B2B2X).
+  id_field: subaccountId
+- name: CollateralPackage
+  description: Atlas collateral management package with exposures.
+  id_field: packageId
+- name: WebhookEndpoint
+  description: Registered endpoint with event subscriptions.
+  id_field: endpointId
+relationships:
+- from: Organization
+  to: Account
+  type: has_many
+- from: Account
+  to: Vault
+  type: has_many
+- from: Vault
+  to: Wallet
+  type: has_many
+  via: vaultId
+- from: Wallet
+  to: Address
+  type: has_many
+  via: walletId
+- from: Wallet
+  to: Transaction
+  type: has_many
+  via: walletId
+- from: Vault
+  to: Transfer
+  type: has_many
+- from: Transfer
+  to: TrustedDestination
+  type: belongs_to
+- from: TradingAccount
+  to: Order
+  type: has_many
+  via: tradingAccountId
+- from: Order
+  to: Trade
+  type: has_many
+  via: orderId
+- from: Trade
+  to: Settlement
+  type: belongs_to
+  via: settlementId
+- from: Settlement
+  to: Trade
+  type: has_many
+- from: Account
+  to: Subaccount
+  type: has_many
+- from: CollateralPackage
+  to: Settlement
+  type: has_many
+- from: WebhookEndpoint
+  to: Transaction
+  type: references
+  via: events
+notes: Entity graph derived from the documented account hierarchy (Organization > Account > Vault > Wallet
+  > Address) plus OpenAPI operation tags and id-reference path parameters. Not an exhaustive schema map
+  of all 375 v2 components.

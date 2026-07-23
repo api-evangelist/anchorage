@@ -1,0 +1,43 @@
+generated: '2026-07-17'
+method: searched
+status: published
+source: https://docs.anchorage.com/knowledge-base/build-with-ai/connect-ai-assistant.md
+servers:
+  - name: anchorage-docs
+    kind: documentation
+    transport: http
+    url: https://docs.anchorage.com/mcp
+    access: public
+    description: >-
+      Hosted, read-only documentation MCP server. Lets AI assistants search and
+      retrieve Anchorage Digital documentation pages. It cannot access account
+      credentials, API keys, or execute asset transfers - those require direct
+      REST API calls with scoped credentials.
+  - name: anchorage-docs-authed
+    kind: documentation
+    transport: http
+    url: https://docs.anchorage.com/authed/mcp
+    access: authenticated
+    description: >-
+      Documentation MCP server that also exposes account-restricted content;
+      requires OAuth sign-in.
+  - name: anchorage-agentic-banking
+    kind: agentic-banking
+    transport: http
+    access: authenticated
+    docs: https://docs.anchorage.com/agentic-banking/guides/connect-an-agent.md
+    description: >-
+      Separate Agentic Banking product surface: an MCP client links to one of
+      your agents so it can spend against pre-authorized budgets on the crypto
+      rail and via linked cards. Distinct from the read-only docs server above.
+install:
+  claude_code: claude mcp add --transport http anchorage-docs https://docs.anchorage.com/mcp
+  cursor:
+    mcpServers:
+      anchorage-docs:
+        url: https://docs.anchorage.com/mcp
+notes: >-
+  Two hosted MCP surfaces are published: a read-only documentation server
+  (public + authed), and the Agentic Banking agent-connection surface. There is
+  no MCP server that wraps the core custody/trading REST API operations - those
+  are called directly with API-key + Ed25519-signed requests.

@@ -1,0 +1,14 @@
+generated: '2026-07-17'
+method: searched
+source: https://docs.anchorage.com/knowledge-base/api-reference/errors-pagination.md
+rate_limits:
+  - scope: organization
+    limit_count: 20
+    interval: second
+    unit: requests
+    burst: 100
+    applies_to: All API keys within an organization share one common rate limit.
+    status_code: 429
+    description: 20 requests/second per organization, with a burst allowance of up to 100 requests within a single second.
+notes: >-
+  When the limit is exceeded the API returns HTTP 429 (errorType TooManyRequests).
