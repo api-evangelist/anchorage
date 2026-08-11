@@ -767,6 +767,8 @@ apis:
   - type: OpenAPI
     url: openapi/anchorage-webhook-notifications-api-openapi.yml
 common:
+- type: Overlay
+  url: overlays/anchorage-v2-overlay.yaml
 - type: DeveloperPortal
   url: https://docs.anchorage.com/
 - type: Documentation
@@ -786,7 +788,7 @@ common:
 - type: Authentication
   url: authentication/anchorage-authentication.yml
 - type: OpenAPI
-  url: openapi/anchorage-v2-openapi-original.yml
+  url: openapi/_original/anchorage-v2-openapi-original.yml
 - type: MCPServer
   url: mcp/anchorage-mcp.yml
 - type: LLMsTxt
