@@ -1,0 +1,64 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Anchorage Digital API Reference Addresses Asset Types & Networks API",
+    "version": "2.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "apikey",
+      "key": "Api-Access-Key",
+      "value": "{{Api-Access-Key}}",
+      "placement": "header"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Asset Types & Networks",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List Asset Types",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.anchorage-staging.com/v2/asset-types",
+            "params": [
+              {
+                "name": "networkId",
+                "value": "",
+                "type": "query",
+                "description": "Filter by specific network ID. Returns only assets on the specified network."
+              }
+            ]
+          },
+          "docs": "Permissions required: **None**\n\nList all supported asset types for your organization."
+        },
+        {
+          "info": {
+            "name": "List Networks",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.anchorage-staging.com/v2/networks",
+            "params": [
+              {
+                "name": "includeCompatibleWith",
+                "value": "",
+                "type": "query",
+                "description": "Include the specified network and all networks compatible with it for wallet key sharing. For example, ?includeCompatibleWith=ETH returns Ethereum and all other networks that can share keys with it."
+              }
+            ]
+          },
+          "docs": "Permissions required: **None**\n\nList all blockchain networks supported by your organization."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

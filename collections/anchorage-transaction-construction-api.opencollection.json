@@ -1,0 +1,105 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Anchorage Digital API Reference Addresses Transaction Construction API",
+    "version": "2.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "apikey",
+      "key": "Api-Access-Key",
+      "value": "{{Api-Access-Key}}",
+      "placement": "header"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Transaction Construction",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List Construct Asset Types",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.anchorage-staging.com/v2/wallet-operations/construct/asset-types",
+            "params": [
+              {
+                "name": "networkId",
+                "value": "",
+                "type": "query",
+                "description": "Filter by specific network ID. Returns only assets on the specified network."
+              }
+            ]
+          },
+          "docs": "Permissions required: **None**\n\nList asset types supported for transaction construction."
+        },
+        {
+          "info": {
+            "name": "Construct Transfer Transaction",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.anchorage-staging.com/v2/wallet-operations/construct/transfer",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Permissions required: **Construct and sign transactions**\n\nConstruct and sign a transfer transaction immediately.\n\nThis endpoint signs the transaction right away. Use Propose Construct Transfer Transaction instead if you need\nan approval workflow before signing.\n\nUse Construct Transaction instead to construct another type of transaction.\n\n> Note: This endpoint does NOT broadcast the transaction to the blockchain.\nAfter construction and signing, the caller is responsible for broadcasting the tran"
+        },
+        {
+          "info": {
+            "name": "Propose Construct Transfer Transaction",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.anchorage-staging.com/v2/wallet-operations/construct/propose-transfer",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Permissions required: **Propose constructed transactions**\n\nConstruct a transfer transaction for approval workflow. The transaction will not be signed until it receives\nthe required endorsements.\n\nThis endpoint constructs the transaction but defers signing. The operation will enter PENDING_ENDORSEMENT status\nand require approval through your organization's workflow before signing occurs.\n\nUse Construct Transfer Transaction instead if you want to sign immediately without an approval workflow.\n\nUs"
+        },
+        {
+          "info": {
+            "name": "Construct Transaction",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.anchorage-staging.com/v2/wallet-operations/construct/transaction",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Permissions required: **Construct and sign transactions**\n\nConstruct and sign a specialized transaction immediately.\n\nThis endpoint signs the transaction right away. Use Propose Construct Transaction instead if you need\nan approval workflow before signing.\n\nUse Construct Transfer Transaction instead to construct a transfer transaction.\n\n> Note: This endpoint does NOT broadcast the transaction to the blockchain.\nAfter construction and signing, the caller is responsible for broadcasting the transa"
+        },
+        {
+          "info": {
+            "name": "Propose Construct Transaction",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.anchorage-staging.com/v2/wallet-operations/construct/propose-transaction",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Permissions required: **Propose constructed transactions**\n\nConstruct a specialized transaction for approval workflow. The transaction will not be signed until it receives\nthe required endorsements.\n\nThis endpoint constructs the transaction but defers signing. The operation will enter PENDING_ENDORSEMENT status\nand require approval through your organization's workflow before signing occurs.\n\nUse Construct Transaction instead if you want to sign immediately without an approval workflow.\n\nUse Prop"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

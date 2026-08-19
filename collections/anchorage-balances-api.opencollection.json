@@ -1,0 +1,107 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Anchorage Digital API Reference Addresses Balances API",
+    "version": "2.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "apikey",
+      "key": "Api-Access-Key",
+      "value": "{{Api-Access-Key}}",
+      "placement": "header"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Balances",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get Wallet Balances",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.anchorage-staging.com/v2/wallets/:walletId/balances",
+            "params": [
+              {
+                "name": "walletId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the wallet"
+              },
+              {
+                "name": "assetType",
+                "value": "ETH",
+                "type": "query",
+                "description": "Filter balances by asset type."
+              }
+            ]
+          },
+          "docs": "Permissions required: **Read vault activity**\n\nGet current balances for a specific wallet. Returns all balance types including wallet-level balances and aggregated staking position balances."
+        },
+        {
+          "info": {
+            "name": "Get Staking Position Balances",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.anchorage-staging.com/v2/wallets/:walletId/staking-positions/:positionId/balances",
+            "params": [
+              {
+                "name": "walletId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier for the wallet"
+              },
+              {
+                "name": "positionId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the staking position (e.g., validator, stake account)"
+              }
+            ]
+          },
+          "docs": "Permissions required: **Read vault activity**\n\nGet current balances for a specific staking position (e.g., validator, stake account)."
+        },
+        {
+          "info": {
+            "name": "Get Wallet Staking Positions",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.anchorage-staging.com/v2/wallets/:walletId/staking-positions",
+            "params": [
+              {
+                "name": "walletId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier for the wallet"
+              },
+              {
+                "name": "after",
+                "value": "",
+                "type": "query",
+                "description": "When paginating this is used to provide the starting point for the page to fetch (retrieved from the previous response body)"
+              },
+              {
+                "name": "first",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of results to return per query"
+              }
+            ]
+          },
+          "docs": "Permissions required: **Read vault activity**\n\nGet staking positions for a specific wallet."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

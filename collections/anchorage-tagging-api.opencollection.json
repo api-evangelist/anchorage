@@ -1,0 +1,149 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Anchorage Digital API Reference Addresses Tagging API",
+    "version": "2.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "apikey",
+      "key": "Api-Access-Key",
+      "value": "{{Api-Access-Key}}",
+      "placement": "header"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Tagging",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List tags",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.anchorage-staging.com/v2/tags",
+            "params": [
+              {
+                "name": "type",
+                "value": "",
+                "type": "query",
+                "description": "Filter tags by ownership type (system, backoffice, client)"
+              },
+              {
+                "name": "entityId",
+                "value": "",
+                "type": "query",
+                "description": "Return tags applied to this entity ID"
+              }
+            ]
+          },
+          "docs": "List tags filtered by ownership type and/or entity. When entityId is provided, returns tags applied to that entity. When type is provided, filters tag definitions by ownership type."
+        },
+        {
+          "info": {
+            "name": "Create a tag",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.anchorage-staging.com/v2/tags",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Create a new tag. Tags are also auto-created on first use via POST /v2/tags/apply, so explicit creation is optional."
+        },
+        {
+          "info": {
+            "name": "Apply tags to an entity",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.anchorage-staging.com/v2/tags/apply",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Apply one or more tags to an entity. Tags are auto-created if they do not exist."
+        },
+        {
+          "info": {
+            "name": "Remove a tag from an entity",
+            "type": "http"
+          },
+          "http": {
+            "method": "DELETE",
+            "url": "https://api.anchorage-staging.com/v2/tags/apply/:entityId/:tagName",
+            "params": [
+              {
+                "name": "entityId",
+                "value": "",
+                "type": "path",
+                "description": "The entity ID to remove the tag from"
+              },
+              {
+                "name": "tagName",
+                "value": "",
+                "type": "path",
+                "description": "The name of the tag to remove (case-insensitive)"
+              }
+            ]
+          },
+          "docs": "Remove a specific tag from an entity. Tag name matching is case-insensitive."
+        },
+        {
+          "info": {
+            "name": "Search entities by tag",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.anchorage-staging.com/v2/tags/search",
+            "params": [
+              {
+                "name": "name",
+                "value": "",
+                "type": "query",
+                "description": "Comma-separated list of tag names to search by"
+              },
+              {
+                "name": "type",
+                "value": "",
+                "type": "query",
+                "description": "Filter results by entity type (e.g. withdrawal, transfer)"
+              },
+              {
+                "name": "cursor",
+                "value": "",
+                "type": "query",
+                "description": "Cursor for pagination (entity_id of last seen result)"
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Number of results to return (default: 20, max: 100)"
+              },
+              {
+                "name": "sort",
+                "value": "",
+                "type": "query",
+                "description": "Sort order by tag application time"
+              }
+            ]
+          },
+          "docs": "Search for entities that have specific tags applied. Supports cursor-based pagination."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

@@ -1,0 +1,94 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Anchorage Digital API Reference Addresses Wallet Operations API",
+    "version": "2.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "apikey",
+      "key": "Api-Access-Key",
+      "value": "{{Api-Access-Key}}",
+      "placement": "header"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Wallet Operations",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get Wallet Operation",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.anchorage-staging.com/v2/wallet-operations/:walletOperationId",
+            "params": [
+              {
+                "name": "walletOperationId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier of the wallet operation"
+              }
+            ]
+          },
+          "docs": "Permissions required: **Read vault activity**\n\nGet details of a specific wallet operation by ID.\n\nWallet operations represent transactions that your organization signed and broadcast on-chain,\nsuch as transfers and staking operations. To see the on-chain confirmation of a wallet operation or get information related to the specific action,\nquery the blockchain-events endpoint using the walletOperationId filter."
+        },
+        {
+          "info": {
+            "name": "List Wallet Operations",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.anchorage-staging.com/v2/wallet-operations",
+            "params": [
+              {
+                "name": "after",
+                "value": "",
+                "type": "query",
+                "description": "When paginating this is used to provide the starting point for the page to fetch (retrieved from the previous response body)"
+              },
+              {
+                "name": "first",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of results to return per query"
+              },
+              {
+                "name": "vaultId",
+                "value": "",
+                "type": "query",
+                "description": "Filter by vault ID"
+              },
+              {
+                "name": "walletId",
+                "value": "",
+                "type": "query",
+                "description": "Filter by wallet ID"
+              },
+              {
+                "name": "networkId",
+                "value": "",
+                "type": "query",
+                "description": "A unique string identifying a combination of blockchain and environment (testnet, mainnet)."
+              },
+              {
+                "name": "status",
+                "value": "",
+                "type": "query",
+                "description": "Filter by wallet operation status (PENDING, COMPLETED, FAILED)"
+              }
+            ]
+          },
+          "docs": "Permissions required: **Read vault activity**\n\nList wallet operations with optional filtering.\n\nWallet operations represent transactions that your organization signed and broadcast on-chain.\nThis includes transfers, staking operations, and other specialized transactions.\n\nTo see the on-chain confirmation status and related events (such as fees) or get information related to the specific action, query the\nblockchain-events endpoint using the walletOperationId filter."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

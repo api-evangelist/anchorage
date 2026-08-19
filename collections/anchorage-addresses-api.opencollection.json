@@ -1,0 +1,186 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Anchorage Digital API Reference Addresses API",
+    "version": "2.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "apikey",
+      "key": "Api-Access-Key",
+      "value": "{{Api-Access-Key}}",
+      "placement": "header"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Addresses",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "List all addresses for an asset",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.anchorage-staging.com/v2/vaults/:vaultId/addresses",
+            "params": [
+              {
+                "name": "vaultId",
+                "value": "",
+                "type": "path",
+                "description": "The ID of the vault containing the asset type"
+              },
+              {
+                "name": "assetType",
+                "value": "",
+                "type": "query",
+                "description": "The asset type to display addresses for"
+              },
+              {
+                "name": "afterId",
+                "value": "",
+                "type": "query",
+                "description": "When paginating this is used to provide the starting point for the page to fetch (retrieved from the previous response body)"
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of results to return per query"
+              }
+            ]
+          },
+          "docs": "Permissions required: **Read vault activity** or **Create address**\n\n\n\nGet all addresses for the asset type within the specified `vaultId`.\n"
+        },
+        {
+          "info": {
+            "name": "Provision a deposit address for a wallet",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.anchorage-staging.com/v2/wallets/:walletId/addresses",
+            "params": [
+              {
+                "name": "walletId",
+                "value": "",
+                "type": "path",
+                "description": "An ID uniquely identifying an Anchorage Digital wallet"
+              }
+            ]
+          },
+          "docs": "Permissions required: **Create address**\n\n\n\n\nThis endpoint allows you to request an asynchronous provision of a signed deposit address for a given wallet. For UTXO-based wallets a new address will always be provisioned upon request. For account-based wallets only one address may be provisioned per wallet and subsequent attempts will return the previously provisioned address.\n\n\nNewly requested addresses may not be available for several minutes once requested.\n"
+        },
+        {
+          "info": {
+            "name": "List Addresses",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.anchorage-staging.com/v2/addresses",
+            "params": [
+              {
+                "name": "after",
+                "value": "",
+                "type": "query",
+                "description": "When paginating this is used to provide the starting point for the page to fetch (retrieved from the previous response body)"
+              },
+              {
+                "name": "address",
+                "value": "",
+                "type": "query",
+                "description": "Filter by specific blockchain address"
+              },
+              {
+                "name": "networkId",
+                "value": "",
+                "type": "query",
+                "description": "A unique string identifying a combination of blockchain and environment (testnet, mainnet)."
+              },
+              {
+                "name": "vaultId",
+                "value": "",
+                "type": "query",
+                "description": "Filter by vault ID"
+              },
+              {
+                "name": "walletId",
+                "value": "",
+                "type": "query",
+                "description": "Filter by wallet ID"
+              },
+              {
+                "name": "batchId",
+                "value": "",
+                "type": "query",
+                "description": "Filter by batch creation ID"
+              },
+              {
+                "name": "publicKey",
+                "value": "",
+                "type": "query",
+                "description": "Filter by public key string"
+              }
+            ]
+          },
+          "docs": "Permissions required: **Read vault activity**\n\nList all addresses across wallets in the organization."
+        },
+        {
+          "info": {
+            "name": "Create Addresses Batch",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.anchorage-staging.com/v2/batch/addresses",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Permissions required: **Create addresses**\n\nCreate multiple blockchain addresses in a single batch operation. This endpoint returns immediately with a batchId.\nPoll GET /batch/addresses/{batchId} to check the status and retrieve results once the batch is complete."
+        },
+        {
+          "info": {
+            "name": "Get Addresses Batch Status",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.anchorage-staging.com/v2/batch/addresses/:batchId",
+            "params": [
+              {
+                "name": "batchId",
+                "value": "",
+                "type": "path",
+                "description": "The unique identifier for the batch operation"
+              }
+            ]
+          },
+          "docs": "Permissions required: **Read vault activity**\n\nGet the status and results of a batch address creation operation."
+        },
+        {
+          "info": {
+            "name": "Validate Destination Address",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.anchorage-staging.com/v2/addresses/validate-destination",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Permissions required: **None**\n\nValidate that a given address for a given networkId is valid as a transfer destination.\nReturns 200 if the address is valid, or an invalid request error if it is not."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

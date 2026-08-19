@@ -1,0 +1,71 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Anchorage Digital API Reference Addresses Transaction Creation API",
+    "version": "2.0.0"
+  },
+  "request": {
+    "auth": {
+      "type": "apikey",
+      "key": "Api-Access-Key",
+      "value": "{{Api-Access-Key}}",
+      "placement": "header"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Transaction Creation",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Create Transaction",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.anchorage-staging.com/v2/wallet-operations/create/transaction",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Permissions required: **Create transaction**\n\nCreate and sign a specialized transaction immediately with Anchorage-managed replay protection and fee selection.\n\nThis endpoint signs the transaction right away. Use Propose Create Transaction instead if you need\nan approval workflow before signing.\n\nUse Create Transfer Transaction for simple asset transfers instead.\n\nThis endpoint returns immediately with a `walletOperationId`. Poll `GET /wallet-operations/{walletOperationId}` to check\nthe status a"
+        },
+        {
+          "info": {
+            "name": "Propose Create Transaction",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.anchorage-staging.com/v2/wallet-operations/create/propose-transaction",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Permissions required: **Propose create transaction**\n\nCreate a specialized transaction for approval workflow with Anchorage-managed replay protection and fee selection.\nThe transaction will not be signed until it receives the required endorsements.\n\nThis endpoint creates the transaction but defers signing. The operation will enter PENDING_ENDORSEMENT status\nand require approval through your organization's workflow before signing occurs.\n\nUse Create Transaction instead if you want to sign immedia"
+        },
+        {
+          "info": {
+            "name": "Propose Raw Transaction",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "https://api.anchorage-staging.com/v2/wallet-operations/create/propose-raw-transaction",
+            "body": {
+              "type": "json",
+              "data": "{}"
+            }
+          },
+          "docs": "Permissions required: **Propose create transaction**\n\nPropose an off-chain signature or on-chain execution raw transaction for approval workflow.\n\nThis endpoint creates a raw transaction but defers signing. The operation will enter PENDING_ENDORSEMENT status\nand require approval through your organization's workflow before signing occurs.\n\nSupported raw transaction types include Ethereum structured data signing (EIP-712), Ethereum personal message\nsigning, Ethereum transaction execution, and Sola"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}
