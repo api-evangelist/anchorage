@@ -3,6 +3,17 @@ info:
   title: Anchorage Digital - Trade via RFQ
   version: 1.0.0
   summary: Request a quote, accept it, and confirm the resulting order and trade.
+  x-realizes-capability-ids:
+  - BC-1370.30
+  x-capability-derivation:
+    method: 'deterministic join: sourceDescriptions -> per-tag OpenAPI -> tag/capability edge. No classification at this step.'
+    min_confidence: 0.7
+    sources:
+    - capability_id: BC-1370.30
+      capability_name: Trading Order Management
+      spec: anchorage-trading-api-openapi.yml
+      confidence: 0.8
+    model: Turbo EA Capabilities by Vincent Verdet — Turbo EA, https://github.com/vincentmakes/turbo-ea-capabilities, CC BY 4.0
 sourceDescriptions:
 - name: tradingApi
   url: ../openapi/anchorage-trading-api-openapi.yml
