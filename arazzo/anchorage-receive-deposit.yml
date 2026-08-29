@@ -4,38 +4,47 @@ info:
   version: 1.0.0
   summary: Create a wallet in a vault, provision a deposit address, and watch for the inbound deposit.
 sourceDescriptions:
-  - name: anchorageV2
-    url: ../openapi/anchorage-v2-openapi-original.yml
-    type: openapi
+- name: addressesApi
+  url: ../openapi/anchorage-addresses-api-openapi.yml
+  type: openapi
+- name: transactionsApi
+  url: ../openapi/anchorage-transactions-api-openapi.yml
+  type: openapi
+- name: vaultsApi
+  url: ../openapi/anchorage-vaults-api-openapi.yml
+  type: openapi
+- name: walletsApi
+  url: ../openapi/anchorage-wallets-api-openapi.yml
+  type: openapi
 workflows:
-  - workflowId: receiveCryptoDeposit
-    summary: Provision a deposit address and track the inbound deposit.
-    inputs:
-      type: object
-      properties:
-        vaultId: { type: string }
-    steps:
-      - stepId: listVaults
-        operationId: getVaults
-        successCriteria:
-          - condition: $statusCode == 200
-      - stepId: createWallet
-        operationId: createVaultWallet
-        parameters:
-          - name: vaultId
-            in: path
-            value: $inputs.vaultId
-        outputs:
-          walletId: $response.body#/walletId
-      - stepId: provisionAddress
-        operationId: provisionWalletAddress
-        parameters:
-          - name: walletId
-            in: path
-            value: $steps.createWallet.outputs.walletId
-        outputs:
-          address: $response.body#/address
-      - stepId: pollTransactions
-        operationId: getTransactions
-        successCriteria:
-          - condition: $statusCode == 200
+- workflowId: receiveCryptoDeposit
+  summary: Provision a deposit address and track the inbound deposit.
+  inputs:
+    type: object
+    properties:
+      vaultId: {type: string}
+  steps:
+  - stepId: listVaults
+    operationId: getVaults
+    successCriteria:
+    - condition: $statusCode == 200
+  - stepId: createWallet
+    operationId: createVaultWallet
+    parameters:
+    - name: vaultId
+      in: path
+      value: $inputs.vaultId
+    outputs:
+      walletId: $response.body#/walletId
+  - stepId: provisionAddress
+    operationId: provisionWalletAddress
+    parameters:
+    - name: walletId
+      in: path
+      value: $steps.createWallet.outputs.walletId
+    outputs:
+      address: $response.body#/address
+  - stepId: pollTransactions
+    operationId: getTransactions
+    successCriteria:
+    - condition: $statusCode == 200
