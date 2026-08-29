@@ -1,0 +1,114 @@
+slug: anchorage
+provider: Anchorage Digital
+generated_by: planning/capability-mapping/scripts/classify_capabilities.py
+model: claude-opus-5
+frame:
+- Banking & Capital Markets
+min_confidence: 0.7
+capability_model:
+  source: https://github.com/vincentmakes/turbo-ea-capabilities
+  license: CC-BY-4.0
+  attribution: Turbo EA Capabilities by Vincent Verdet — Turbo EA, https://github.com/vincentmakes/turbo-ea-capabilities,
+    CC BY 4.0
+  notice: NOTICE
+edge_count: 9
+edges:
+- tag: Collateral Management
+  spec_file: anchorage-collateral-management-api-openapi.yml
+  capability_id: BC-1380.50
+  capability_id_l1: BC-1380
+  capability_name: Collateral Management
+  confidence: 0.95
+  evidence: POST /collateral_management/packages  createCMPackage  Create a new collateral package; POST
+    /collateral_management/packages/{packageId}/requests/margin-return  Request a margin return; schema
+    CMAcceleratedMarginCall
+  reason: Explicit collateral packages, exposures, margin calls, margin returns and pay-ups — textbook
+    collateral and margining management.
+- tag: Atlas Settlement Network
+  spec_file: anchorage-atlas-settlement-network-api-openapi.yml
+  capability_id: BC-1380.30
+  capability_id_l1: BC-1380
+  capability_name: Settlement Management
+  confidence: 0.9
+  evidence: POST /atlas/settlements  proposeSNSettlement  Propose a settlement; POST /atlas/settlements/{settlementId}/authorize  Authorize
+    a settlement; GET /atlas/directory/counterparties  List trusted counterparties
+  reason: Operations propose, accept, reject and authorise bilateral settlements between trusted counterparties/participants
+    on a settlement network — post-trade settlement processing, i.e. Settlement Management.
+- tag: Fiat Banking Operations
+  spec_file: anchorage-fiat-banking-operations-api-openapi.yml
+  capability_id: BC-1340
+  capability_id_l1: BC-1340
+  capability_name: Payments & Card Management
+  confidence: 0.9
+  evidence: POST /fiat/banks/payments/wire  createWire  Create a wire transfer; POST /fiat/banks/payments/ach  createACH  Create
+    an ACH transfer; POST /fiat/banks/payments/book  createBook  Create a book transfer
+  reason: Operations create and query wire, ACH and book transfers plus virtual account owners — fiat
+    payment initiation and processing. L1 Payments given the surface spans initiation, ACH clearing rails
+    and account plumbing without a single dominant sub-capability.
+- tag: Trading
+  spec_file: anchorage-trading-api-openapi.yml
+  capability_id: BC-1370.30
+  capability_id_l1: BC-1370
+  capability_name: Trading Order Management
+  confidence: 0.8
+  evidence: POST /trading/quote requestQuote Request a quote; POST /trading/order newOrderSingle Place
+    an order; GET /trading/orders getOrdersStatus List orders; GET /trading/positions getTradingPositions
+    List outstanding trading positions
+  reason: RFQ, order placement, execution reports, trades and positions against a trading desk — clearly
+    capital-markets trading. Order capture/execution is the dominant surface, so Trading Order Management;
+    position and settlement endpoints add slight sub-capability ambiguity.
+- tag: AML
+  spec_file: anchorage-aml-api-openapi.yml
+  capability_id: BC-1400
+  capability_id_l1: BC-1400
+  capability_name: Financial Crime Management
+  confidence: 0.72
+  evidence: POST /aml/submit-info submitAMLInfo Submit AML information; schemas AMLOriginator, AMLBeneficiary,
+    AMLTxIntent, AMLSelfHostedInfo
+  reason: Submission of originator/beneficiary and transaction-intent information for AML (travel-rule
+    style) compliance on transfers is financial crime management. Single endpoint does not identify whether
+    it is monitoring, screening or CDD, so no L2 chosen.
+- tag: Onboarding
+  spec_file: anchorage-onboarding-api-openapi.yml
+  capability_id: BC-1300.20
+  capability_id_l1: BC-1300
+  capability_name: KYC & Customer Due Diligence Management
+  confidence: 0.7
+  evidence: POST /onboarding/customers  createKYCApplication  Begin new customer onboarding application;
+    POST /onboarding/customers/{customerId}/submit  submitKYCApplication  Submit a completed customer
+    onboarding application
+  reason: All operations and schemas are KYC applications, KYC documents and agreement questionnaires
+    for onboarding institutional customers and subaccounts — customer due diligence within banking customer
+    onboarding. Sub-capability choice between KYC/CDD and Customer Onboarding is somewhat ambiguous.
+- tag: Tax
+  spec_file: anchorage-tax-api-openapi.yml
+  capability_id: BC-220.40
+  capability_id_l1: BC-220
+  capability_name: Tax Reporting & Compliance
+  confidence: 0.7
+  evidence: PATCH /tax/transaction/{transactionId} updateTaxTransaction Update Transaction Cost Basis;
+    GET /tax/gains/summary/{subaccountId} getTaxGains List Gains; GET /tax/subaccounts/{subaccountId}/forms
+    getSubaccountTaxForms Get Subaccount Tax Forms
+  reason: Operations manage cost basis, tax lots, realised gains and tax form retrieval — tax computation
+    and reporting outputs. Maps to Tax Management / Tax Reporting & Compliance; some ambiguity because
+    it is a client-facing reporting service rather than the vendor's own tax filing.
+- tag: Tax Reporting
+  spec_file: anchorage-tax-reporting-api-openapi.yml
+  capability_id: BC-220.40
+  capability_id_l1: BC-220
+  capability_name: Tax Reporting & Compliance
+  confidence: 0.7
+  evidence: GET /tax/accounts getTaxAccounts List Tax Accounts; PATCH /tax/accounts/{accountId}/transactions/{transactionId}
+    updateTransactionCostBasis Update Deposit Transaction Cost Basis
+  reason: Tax accounts, taxable transaction lots and cost-basis maintenance — the data foundation for
+    tax reporting. Same tax-compliance/reporting capability as the sibling Tax tag.
+- tag: Transfers
+  spec_file: anchorage-transfers-api-openapi.yml
+  capability_id: BC-1340.10
+  capability_id_l1: BC-1340
+  capability_name: Payment Initiation Management
+  confidence: 0.7
+  evidence: POST /transfers createTransfer Create a transfer request; DELETE /transfers/{transferId} cancelTransfer
+    Cancel a transfer request; schemas WithdrawalParametersForFiatTrustedDestination
+  reason: Capture, tracking and cancellation of fiat and crypto transfer instructions — payment instruction
+    capture and authorisation lifecycle.

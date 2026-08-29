@@ -785,6 +785,9 @@ apis:
   - type: OpenAPI
     url: openapi/anchorage-webhook-notifications-api-openapi.yml
 common:
+- type: CapabilityMap
+  url: capabilities/anchorage-capability-edges.yml
+  name: Anchorage Digital Business Capability Map
 - type: Overlay
   url: overlays/anchorage-v2-overlay.yaml
 - type: DeveloperPortal
