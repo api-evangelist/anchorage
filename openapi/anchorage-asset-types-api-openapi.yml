@@ -143,6 +143,55 @@ paths:
         None: present
 components:
   schemas:
+    AssetTypesResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssetTypeDetails'
+          example:
+          - assetType: BTC
+            name: Bitcoin
+            decimals: 8
+            featureSupport:
+            - TRANSFERS
+            - HOLDS
+            networkId: BTC
+          - assetType: ETH
+            name: Ethereum
+            decimals: 18
+            featureSupport:
+            - TRANSFERS
+            - HOLDS
+            networkId: ETH
+          - assetType: USDC
+            name: USD Coin
+            decimals: 6
+            featureSupport:
+            - TRANSFERS
+            - HOLDS
+            networkId: ETH
+      required:
+      - data
+      title: AssetTypesResponse
+    ErrorType:
+      description: The type of error returned.
+      type: string
+      enum:
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
     AssetTypeDetails:
       description: A representation of the details a given crypto-asset
       type: object
@@ -192,62 +241,6 @@ components:
       - decimals
       - featureSupport
       title: AssetTypeDetails
-    AssetTypesResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/AssetTypeDetails'
-          example:
-          - assetType: BTC
-            name: Bitcoin
-            decimals: 8
-            featureSupport:
-            - TRANSFERS
-            - HOLDS
-            networkId: BTC
-          - assetType: ETH
-            name: Ethereum
-            decimals: 18
-            featureSupport:
-            - TRANSFERS
-            - HOLDS
-            networkId: ETH
-          - assetType: USDC
-            name: USD Coin
-            decimals: 6
-            featureSupport:
-            - TRANSFERS
-            - HOLDS
-            networkId: ETH
-      required:
-      - data
-      title: AssetTypesResponse
-    SupportedFeature:
-      description: A string describing a particular unit of API functionality
-      type: string
-      enum:
-      - TRANSFERS
-      - HOLDS
-      title: SupportedFeature
-    ErrorType:
-      description: The type of error returned.
-      type: string
-      enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
     ErrorDetails:
       type: object
       properties:
@@ -261,6 +254,13 @@ components:
       - errorType
       - message
       title: ErrorDetails
+    SupportedFeature:
+      description: A string describing a particular unit of API functionality
+      type: string
+      enum:
+      - TRANSFERS
+      - HOLDS
+      title: SupportedFeature
   securitySchemes:
     Api-Access-Key:
       type: apiKey

@@ -149,17 +149,16 @@ components:
             $ref: '#/components/schemas/Network'
       required:
       - data
-    ListAssetTypesResponse:
-      description: Response containing a list of supported asset types
+    ErrorDetails:
       type: object
       properties:
-        data:
-          description: Array of asset type details
-          type: array
-          items:
-            $ref: '#/components/schemas/AssetType'
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
       required:
-      - data
+      - message
+      title: ErrorDetails
     Network:
       description: Details about a blockchain network, including its key family identifier for wallet activation compatibility
       type: object
@@ -211,16 +210,17 @@ components:
       - name
       - decimals
       - networkId
-    ErrorDetails:
+    ListAssetTypesResponse:
+      description: Response containing a list of supported asset types
       type: object
       properties:
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
+        data:
+          description: Array of asset type details
+          type: array
+          items:
+            $ref: '#/components/schemas/AssetType'
       required:
-      - message
-      title: ErrorDetails
+      - data
   securitySchemes:
     Api-Access-Key:
       type: apiKey

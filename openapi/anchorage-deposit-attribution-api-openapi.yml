@@ -348,21 +348,66 @@ paths:
         Deposit Attribution: present
 components:
   schemas:
-    PerformDepositAttributionResponse:
+    ErrorType:
+      description: The type of error returned.
+      type: string
+      enum:
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
+    PerformDepositAttributionRequest:
       type: object
       properties:
-        data:
-          type: object
-          properties:
-            depositTransactionId:
-              description: The transactionId where the transactionType is `DEPOSIT`.
-              type: string
-              example: 0e2b2f9d-8d10-4f1e-960b-28567255045f
-            status:
-              description: The confirmation status once the attribution is performed.
-              type: string
-              enum:
-              - UNDER_REVIEW
+        notes:
+          description: Additional notes for the deposit attribution.
+          type: string
+          example: US
+        originatorCountry:
+          description: The country code ([ISO 3166-1 alpha-2](https://www.iso.org/iso-3166-country-codes.html)) of the originator of this deposit. This field is required in order to perform an attribution.
+          type: string
+          example: US
+          maxLength: 2
+          minLength: 2
+        originatorName:
+          description: The name of the originator of this deposit. This field is required in order to perform an attribution.
+          type: string
+          example: John Doe
+          minLength: 1
+        sourceWalletType:
+          description: "The type of wallet being used by the deposit originator:\n\n * `CUSTODIAL` - The wallet owner does not have complete control over the wallet as they do not have the private key; a third party does. This key is needed to conduct transfers. Examples of custodial wallets include: Binance, Coinbase, Kraken, and Bitgo.\n * `SELF_HOSTED` - The wallet owner has complete control over the wallet as they have the private key. Examples of self-hosted wallets include: Metamask, Trust Wallet, Ledger Nano X, Trezor One, Electrum, Exodus, and Phantom.\n\n This field is required in order to perform an attribution.\n"
+          type: string
+          example: CUSTODIAL
+          enum:
+          - CUSTODIAL
+          - SELF_HOSTED
+          minLength: 1
+      required:
+      - originatorName
+      - originatorCountry
+      - sourceWalletType
+    ErrorDetails:
+      type: object
+      properties:
+        errorType:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - errorType
+      - message
+      title: ErrorDetails
     DepositAttribution:
       type: object
       properties:
@@ -448,48 +493,6 @@ components:
       - createdAt
       - blockchainTxId
       - assetType
-    PerformDepositAttributionRequest:
-      type: object
-      properties:
-        notes:
-          description: Additional notes for the deposit attribution.
-          type: string
-          example: US
-        originatorCountry:
-          description: The country code ([ISO 3166-1 alpha-2](https://www.iso.org/iso-3166-country-codes.html)) of the originator of this deposit. This field is required in order to perform an attribution.
-          type: string
-          example: US
-          maxLength: 2
-          minLength: 2
-        originatorName:
-          description: The name of the originator of this deposit. This field is required in order to perform an attribution.
-          type: string
-          example: John Doe
-          minLength: 1
-        sourceWalletType:
-          description: "The type of wallet being used by the deposit originator:\n\n * `CUSTODIAL` - The wallet owner does not have complete control over the wallet as they do not have the private key; a third party does. This key is needed to conduct transfers. Examples of custodial wallets include: Binance, Coinbase, Kraken, and Bitgo.\n * `SELF_HOSTED` - The wallet owner has complete control over the wallet as they have the private key. Examples of self-hosted wallets include: Metamask, Trust Wallet, Ledger Nano X, Trezor One, Electrum, Exodus, and Phantom.\n\n This field is required in order to perform an attribution.\n"
-          type: string
-          example: CUSTODIAL
-          enum:
-          - CUSTODIAL
-          - SELF_HOSTED
-          minLength: 1
-      required:
-      - originatorName
-      - originatorCountry
-      - sourceWalletType
-    Page:
-      description: Pagination info
-      type: object
-      properties:
-        next:
-          description: URL to use to query for the next page or null if no additional results are available
-          type:
-          - string
-          - 'null'
-          example: <next page url>
-          x-omitempty: false
-      title: Page
     DepositAttributionResponse:
       type: object
       properties:
@@ -503,36 +506,33 @@ components:
       - data
       - page
       title: DepositAttributionResponse
-    ErrorType:
-      description: The type of error returned.
-      type: string
-      enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
-    ErrorDetails:
+    PerformDepositAttributionResponse:
       type: object
       properties:
-        errorType:
-          $ref: '#/components/schemas/ErrorType'
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - errorType
-      - message
-      title: ErrorDetails
+        data:
+          type: object
+          properties:
+            depositTransactionId:
+              description: The transactionId where the transactionType is `DEPOSIT`.
+              type: string
+              example: 0e2b2f9d-8d10-4f1e-960b-28567255045f
+            status:
+              description: The confirmation status once the attribution is performed.
+              type: string
+              enum:
+              - UNDER_REVIEW
+    Page:
+      description: Pagination info
+      type: object
+      properties:
+        next:
+          description: URL to use to query for the next page or null if no additional results are available
+          type:
+          - string
+          - 'null'
+          example: <next page url>
+          x-omitempty: false
+      title: Page
   securitySchemes:
     Api-Access-Key:
       type: apiKey

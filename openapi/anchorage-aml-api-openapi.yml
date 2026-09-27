@@ -81,151 +81,28 @@ paths:
       - AML
 components:
   schemas:
-    AMLTxIntent:
-      description: The intent of the transaction.
-      type: string
-      enum:
-      - TRUSTED_DESTINATION_ADD
-      - WITHDRAWAL
-      - EXTERNAL_TRANSFER
-      title: AMLTxIntent
-    AMLCustodialInfo:
-      description: Information about a custodial VASP destination.
+    AMLBeneficiary:
+      description: The recipient of the transaction.
       type: object
       properties:
-        countryCode:
-          description: ISO 3166-1 alpha-2 country code.
-          type: string
-        name:
-          description: Name of the custodial institution.
-          type: string
+        destination:
+          $ref: '#/components/schemas/AMLBeneficiaryDestinationInfo'
+        entity:
+          $ref: '#/components/schemas/AMLBeneficiaryEntityInfo'
+        individual:
+          $ref: '#/components/schemas/AMLBeneficiaryIndividualInfo'
+        type:
+          $ref: '#/components/schemas/AMLBeneficiaryType'
       required:
-      - name
-      - countryCode
-      title: AMLCustodialInfo
-    AMLSubmitInfoResponse:
-      type: object
-      properties:
-        submissionId:
-          description: Unique identifier for this AML submission.
-          type: string
-      required:
-      - submissionId
-      title: AMLSubmitInfoResponse
-    AMLBeneficiaryType:
-      description: Type of beneficiary.
+      - type
+      title: AMLBeneficiary
+    AMLWalletOwnerType:
+      description: Indicates who owns the self-hosted wallet.
       type: string
       enum:
-      - PERSON
-      - ENTITY
-      - DESTINATION
       - MY_ORGANIZATION
-      title: AMLBeneficiaryType
-    AMLPurpose:
-      description: The purpose of the transaction.
-      type: string
-      enum:
-      - TRADING_SETTLEMENT
-      - LENDING
-      - INVESTMENT
-      - EXPENSES
-      - FEE_PAYMENT
-      - GRANT_PAYMENT
-      - PRIZE_AWARD
-      - GIFT
-      - REIMBURSEMENT
-      - REBALANCE
-      - INTRA_COMPANY
-      - REWARDS_DISTRIBUTION
-      title: AMLPurpose
-    AMLBeneficiaryIndividualInfo:
-      description: Beneficiary information when the beneficiary is a natural person.
-      type: object
-      properties:
-        city:
-          description: City.
-          type: string
-        countryCode:
-          description: ISO 3166-1 alpha-2 country code.
-          type: string
-        firstName:
-          description: First name.
-          type: string
-        knowsFullAddress:
-          description: Whether the full address is known.
-          type: boolean
-        lastName:
-          description: Last name.
-          type: string
-        postalCode:
-          description: Postal code.
-          type: string
-        stateProvince:
-          description: State or province.
-          type: string
-        street:
-          description: Street address.
-          type: string
-      required:
-      - firstName
-      - lastName
-      - countryCode
-      title: AMLBeneficiaryIndividualInfo
-    AMLBeneficiaryDestinationInfo:
-      description: Beneficiary information when the beneficiary is the destination VASP itself.
-      type: object
-      properties:
-        countryCode:
-          description: ISO 3166-1 alpha-2 country code.
-          type: string
-        name:
-          description: Name of the destination.
-          type: string
-      required:
-      - name
-      - countryCode
-      title: AMLBeneficiaryDestinationInfo
-    AMLDestinationType:
-      description: Type of destination.
-      type: string
-      enum:
-      - FINANCIAL_INSTITUTION
-      - SELF_HOSTED_WALLET
-      title: AMLDestinationType
-    AMLSubmitInfoRequest:
-      type: object
-      properties:
-        addressText:
-          description: The blockchain address for this transaction.
-          type: string
-        answers:
-          $ref: '#/components/schemas/AMLStructuredSubmission'
-        assetTypeId:
-          description: The asset type for this transaction.
-          type: string
-        intent:
-          $ref: '#/components/schemas/AMLTxIntent'
-        operationId:
-          description: The operation associated with this submission.
-          type: string
-        organizationId:
-          description: The organization submitting the AML information.
-          type: string
-        srcVaultId:
-          description: Source vault unique ID (32-character hex identifier), required for withdrawal and external transfer intents.
-          type: string
-        trustedDestinationSubId:
-          description: Trusted destination sub ID. For TRUSTED_DESTINATION_ADD, indicates which trusted destination to add. For WITHDRAWAL and EXTERNAL_TRANSFER, indicates which trusted destination to auto-fill from.
-          type: string
-      additionalProperties: false
-      required:
-      - intent
-      - organizationId
-      - operationId
-      - assetTypeId
-      - addressText
-      - answers
-      title: AMLSubmitInfoRequest
+      - PERSON_OR_ENTITY
+      title: AMLWalletOwnerType
     AMLOriginator:
       description: The organization or client initiating the transaction.
       type: object
@@ -274,34 +151,89 @@ components:
       required:
       - type
       title: AMLDestination
-    AMLStructuredSubmission:
-      description: Structured AML submission data. Required fields are enforced by the server based on the intent.
+    AMLSelfHostedInfo:
+      description: Information about a self-hosted wallet destination.
       type: object
       properties:
-        beneficiary:
-          $ref: '#/components/schemas/AMLBeneficiary'
-        destination:
-          $ref: '#/components/schemas/AMLDestination'
-        originator:
-          $ref: '#/components/schemas/AMLOriginator'
-        purpose:
-          $ref: '#/components/schemas/AMLPurpose'
-      title: AMLStructuredSubmission
-    AMLBeneficiary:
-      description: The recipient of the transaction.
-      type: object
-      properties:
-        destination:
-          $ref: '#/components/schemas/AMLBeneficiaryDestinationInfo'
-        entity:
-          $ref: '#/components/schemas/AMLBeneficiaryEntityInfo'
-        individual:
-          $ref: '#/components/schemas/AMLBeneficiaryIndividualInfo'
-        type:
-          $ref: '#/components/schemas/AMLBeneficiaryType'
+        description:
+          description: Description of the self-hosted wallet.
+          type: string
+        ownerType:
+          $ref: '#/components/schemas/AMLWalletOwnerType'
       required:
-      - type
-      title: AMLBeneficiary
+      - description
+      title: AMLSelfHostedInfo
+    AMLBeneficiaryType:
+      description: Type of beneficiary.
+      type: string
+      enum:
+      - PERSON
+      - ENTITY
+      - DESTINATION
+      - MY_ORGANIZATION
+      title: AMLBeneficiaryType
+    AMLCustodialInfo:
+      description: Information about a custodial VASP destination.
+      type: object
+      properties:
+        countryCode:
+          description: ISO 3166-1 alpha-2 country code.
+          type: string
+        name:
+          description: Name of the custodial institution.
+          type: string
+      required:
+      - name
+      - countryCode
+      title: AMLCustodialInfo
+    AMLDestinationType:
+      description: Type of destination.
+      type: string
+      enum:
+      - FINANCIAL_INSTITUTION
+      - SELF_HOSTED_WALLET
+      title: AMLDestinationType
+    AMLBeneficiaryIndividualInfo:
+      description: Beneficiary information when the beneficiary is a natural person.
+      type: object
+      properties:
+        city:
+          description: City.
+          type: string
+        countryCode:
+          description: ISO 3166-1 alpha-2 country code.
+          type: string
+        firstName:
+          description: First name.
+          type: string
+        knowsFullAddress:
+          description: Whether the full address is known.
+          type: boolean
+        lastName:
+          description: Last name.
+          type: string
+        postalCode:
+          description: Postal code.
+          type: string
+        stateProvince:
+          description: State or province.
+          type: string
+        street:
+          description: Street address.
+          type: string
+      required:
+      - firstName
+      - lastName
+      - countryCode
+      title: AMLBeneficiaryIndividualInfo
+    AMLTxIntent:
+      description: The intent of the transaction.
+      type: string
+      enum:
+      - TRUSTED_DESTINATION_ADD
+      - WITHDRAWAL
+      - EXTERNAL_TRANSFER
+      title: AMLTxIntent
     AMLOriginatorExtraInfo:
       description: Additional optional information about the originator.
       type: object
@@ -314,6 +246,23 @@ components:
           description: ISO 3166-1 alpha-2 country code of incorporation.
           type: string
       title: AMLOriginatorExtraInfo
+    AMLPurpose:
+      description: The purpose of the transaction.
+      type: string
+      enum:
+      - TRADING_SETTLEMENT
+      - LENDING
+      - INVESTMENT
+      - EXPENSES
+      - FEE_PAYMENT
+      - GRANT_PAYMENT
+      - PRIZE_AWARD
+      - GIFT
+      - REIMBURSEMENT
+      - REBALANCE
+      - INTRA_COMPANY
+      - REWARDS_DISTRIBUTION
+      title: AMLPurpose
     AMLBeneficiaryEntityInfo:
       description: Beneficiary information when the beneficiary is an entity.
       type: object
@@ -347,18 +296,6 @@ components:
       - countryCode
       - isNaturalPerson
       title: AMLBeneficiaryEntityInfo
-    AMLSelfHostedInfo:
-      description: Information about a self-hosted wallet destination.
-      type: object
-      properties:
-        description:
-          description: Description of the self-hosted wallet.
-          type: string
-        ownerType:
-          $ref: '#/components/schemas/AMLWalletOwnerType'
-      required:
-      - description
-      title: AMLSelfHostedInfo
     ErrorDetails:
       type: object
       properties:
@@ -369,13 +306,49 @@ components:
       required:
       - message
       title: ErrorDetails
-    AMLWalletOwnerType:
-      description: Indicates who owns the self-hosted wallet.
-      type: string
-      enum:
-      - MY_ORGANIZATION
-      - PERSON_OR_ENTITY
-      title: AMLWalletOwnerType
+    AMLSubmitInfoResponse:
+      type: object
+      properties:
+        submissionId:
+          description: Unique identifier for this AML submission.
+          type: string
+      required:
+      - submissionId
+      title: AMLSubmitInfoResponse
+    AMLSubmitInfoRequest:
+      type: object
+      properties:
+        addressText:
+          description: The blockchain address for this transaction.
+          type: string
+        answers:
+          $ref: '#/components/schemas/AMLStructuredSubmission'
+        assetTypeId:
+          description: The asset type for this transaction.
+          type: string
+        intent:
+          $ref: '#/components/schemas/AMLTxIntent'
+        operationId:
+          description: The operation associated with this submission.
+          type: string
+        organizationId:
+          description: The organization submitting the AML information.
+          type: string
+        srcVaultId:
+          description: Source vault unique ID (32-character hex identifier), required for withdrawal and external transfer intents.
+          type: string
+        trustedDestinationSubId:
+          description: Trusted destination sub ID. For TRUSTED_DESTINATION_ADD, indicates which trusted destination to add. For WITHDRAWAL and EXTERNAL_TRANSFER, indicates which trusted destination to auto-fill from.
+          type: string
+      additionalProperties: false
+      required:
+      - intent
+      - organizationId
+      - operationId
+      - assetTypeId
+      - addressText
+      - answers
+      title: AMLSubmitInfoRequest
     AMLOriginatorType:
       description: Type of originator.
       type: string
@@ -383,6 +356,33 @@ components:
       - MY_ORGANIZATION
       - MY_CLIENT
       title: AMLOriginatorType
+    AMLStructuredSubmission:
+      description: Structured AML submission data. Required fields are enforced by the server based on the intent.
+      type: object
+      properties:
+        beneficiary:
+          $ref: '#/components/schemas/AMLBeneficiary'
+        destination:
+          $ref: '#/components/schemas/AMLDestination'
+        originator:
+          $ref: '#/components/schemas/AMLOriginator'
+        purpose:
+          $ref: '#/components/schemas/AMLPurpose'
+      title: AMLStructuredSubmission
+    AMLBeneficiaryDestinationInfo:
+      description: Beneficiary information when the beneficiary is the destination VASP itself.
+      type: object
+      properties:
+        countryCode:
+          description: ISO 3166-1 alpha-2 country code.
+          type: string
+        name:
+          description: Name of the destination.
+          type: string
+      required:
+      - name
+      - countryCode
+      title: AMLBeneficiaryDestinationInfo
   securitySchemes:
     Api-Access-Key:
       type: apiKey

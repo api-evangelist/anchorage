@@ -493,191 +493,23 @@ paths:
         Transfer funds: present
 components:
   schemas:
-    TransfersResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/TransferDetails'
-        page:
-          $ref: '#/components/schemas/Page'
-      required:
-      - data
-      - page
-      title: TransfersResponse
-    TransferDetails:
-      type: object
-      properties:
-        amount:
-          $ref: '#/components/schemas/Amount'
-        assetType:
-          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
-
-
-            Use `/asset-types` to list all of the supported asset types for your organization.
-
-            '
-          type: string
-          example: BTC
-        blockchainTxId:
-          description: The blockchain transaction ID, if applicable
-          type: string
-        createdAt:
-          description: The timestamp when the transfer request was created
-          type: string
-          format: date-time
-          example: '2019-01-02T12:34:56.000Z'
-        destination:
-          $ref: '#/components/schemas/ResourceDetails'
-        endedAt:
-          description: The timestamp when the transfer request reached a final state - completion or failure (optional)
-          type:
-          - string
-          - 'null'
-          format: date-time
-          example: '2019-01-03T12:34:56.000Z'
-        error:
-          $ref: '#/components/schemas/ErrorDetails'
-        fee:
-          $ref: '#/components/schemas/Amount'
-        source:
-          $ref: '#/components/schemas/SourceResourceDetails'
-        status:
-          $ref: '#/components/schemas/TransferStatus'
-        transferId:
-          description: The transfer ID which can be used to reference this transfer in other queries
-          type: string
-        transferMemo:
-          description: A user-supplied description that will become the description of the subsequent transfer operation (optional)
-          type:
-          - string
-          - 'null'
-      example:
-        transferId: 008d3ec72558ce907571886df63ef51594b5bd8cf106a0b7fa8f12a30dfc867f
-        amount:
-          quantity: '1000.00000000'
-          assetType: USDC
-          currentPrice: '1.00'
-          currentUSDValue: '1000.00'
-        fee:
-          quantity: '0.0002207155625'
-          assetType: ETH
-        assetType: USDC
-        source:
-          id: 1c920f4241b78a1d483a29f3c24b6c4c
-          type: WALLET
-        destination:
-          id: 55e89d4a644d736b01533a2ea9b32a20
-          type: WALLET
-        transferMemo: 'Internal ID: #12838927347'
-        status: COMPLETED
-        createdAt: '2019-01-02T12:34:56.000Z'
-        endedAt: '2019-01-03T12:34:56.000Z'
-      required:
-      - transferId
-      - status
-      - amount
-      - assetType
-      - createdAt
-      title: TransferDetails
-    WithdrawalParametersForATOM:
-      description: Additional parameters to be provided exclusively when `assetType` is "ATOM". This field is deprecated, please migrate to using `assetParametersCosmos` instead. When using a Trusted Destination, these parameters must not be provided — the memo is inherited from the trusted destination. Set `destination.type` to `TRUSTED_DESTINATION` and `destination.id` to the trusted destination ID instead.
-      type: object
-      properties:
-        memo:
-          description: An alphanumeric string often used to uniquely identify the recipient of the transaction, commonly used when transferring funds to custodial wallets, exchanges or other situations where the `destinationAddress` is multi-purpose. Must be included whenever provided by the recipient of the transaction.
-          type: string
-          example: w3mp19cqp2
-          maxLength: 256
-      required:
-      - memo
-      title: WithdrawalParametersForATOM
-    WithdrawalParametersForCosmos:
-      description: Additional parameters to be provided exclusively when `assetType` is for a Cosmos blockchain. When using a Trusted Destination, these parameters must not be provided — the memo is inherited from the trusted destination. Set `destination.type` to `TRUSTED_DESTINATION` and `destination.id` to the trusted destination ID instead.
-      type: object
-      properties:
-        memo:
-          description: An alphanumeric string often used to uniquely identify the recipient of the transaction, commonly used when transferring funds to custodial wallets, exchanges or other situations where the `destinationAddress` is multi-purpose. Must be included whenever provided by the recipient of the transaction.
-          type: string
-          example: w3mp19cqp2
-          maxLength: 256
-      required:
-      - memo
-      title: WithdrawalParametersForCosmos
-    SourceResourceDetails:
-      description: "An object representing a resource capable of sending funds.\n\n\nConstruction example:\n  ```\n  {\n    \"id\":\"1c920f4241b78a1d483a29f3c24b6c4c\",\n    \"type\":\"WALLET\"\n  }\n  ```\n"
-      type: object
-      properties:
-        id:
-          description: The identifier of the resource
-          type: string
-          example: 1c920f4241b78a1d483a29f3c24b6c4c
-        type:
-          $ref: '#/components/schemas/SourceResourceType'
-      required:
-      - id
-      - type
-      title: SourceResource
-    WithdrawalParametersExtra:
-      description: Extra parameters, to be provided for assets. When using a Trusted Destination, these parameters must not be provided — the memo is inherited from the trusted destination. Set `destination.type` to `TRUSTED_DESTINATION` and `destination.id` to the trusted destination ID instead.
-      type: object
-      properties:
-        value:
-          description: An alphanumeric string often used to uniquely identify the recipient of the transaction, commonly used when transferring funds to custodial wallets, exchanges or other situations where the `destinationAddress` is multi-purpose. Must be included whenever provided by the recipient of the transaction.
-          type: string
-          example: w3mp19cqp2
-          maxLength: 256
-      required:
-      - value
-      title: WithdrawalParametersExtra
-    TransferStatus:
-      description: 'A string describing the status of the given transfer
-
-
-
-        * IN_PROGRESS - This transfer is in progress and is not final.
-
-
-
-        * COMPLETED - This transfer has been completed and is confirmed on the blockchain.
-
-
-
-        * FAILED - This transfer has failed. Funds were not successfully transferred.
-
-
-
-        * QUEUED - This transfer has been queued behind another transfer of the same asset.
-
-        '
+    ErrorType:
+      description: The type of error returned.
       type: string
       enum:
-      - IN_PROGRESS
-      - COMPLETED
-      - FAILED
-      - QUEUED
-      title: TransferStatus
-    TransfersResponse2:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/TransferDetails'
-      required:
-      - data
-      title: TransfersResponse2
-    Page:
-      description: Pagination info
-      type: object
-      properties:
-        next:
-          description: URL to use to query for the next page or null if no additional results are available
-          type:
-          - string
-          - 'null'
-          example: <next page url>
-          x-omitempty: false
-      title: Page
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
     WithdrawalParametersForXLM:
       description: Additional parameters to be provided exclusively when `assetType` is "XLM". When using a Trusted Destination, these parameters must not be provided — the memo is inherited from the trusted destination. Set `destination.type` to `TRUSTED_DESTINATION` and `destination.id` to the trusted destination ID instead.
       type: object
@@ -690,69 +522,6 @@ components:
       required:
       - memo
       title: WithdrawalParametersForXLM
-    SourceResourceType:
-      description: The type of the resource being referenced. Note that the VAULT type has been deprecated and WALLET should be used instead.
-      type: string
-      enum:
-      - VAULT
-      - WALLET
-      title: SourceResourceType
-    Amount:
-      description: 'An amount of a crypto-asset represented by quantity, assetType, current unit price and current USD value.
-
-
-
-        Fee amounts will be estimates if a transaction is not final.
-
-
-
-        NOTE: price and USD value information is recent but does not reflect real-time data.
-
-        '
-      type: object
-      properties:
-        assetType:
-          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
-
-
-            Use `/asset-types` to list all of the supported asset types for your organization.
-
-            '
-          type: string
-          example: BTC
-        currentPrice:
-          description: A recent assessment of the intra-day USD value of 1 unit of this asset type. This value is provided for convenience for such use cases as estimating point-in-time portfolio balances. This value does not represent authoritative pricing information used by Anchorage Digital for any purpose. The price is fetched as of the present, and may be omitted in certain contexts where more structured pricing information is provided (e.g. quotes and trades).
-          type: string
-          example: '9751.01'
-        currentUSDValue:
-          description: The result of `quantity * currentPrice`, rounded to the nearest cent. A unitless number implicitly denominated in dollars. See `currentPrice` for methodology and disclaimers.
-          type: string
-          example: '101920.94'
-        quantity:
-          description: The numeric value of this amount, excluding units
-          type: string
-          example: '10.45234733'
-      example:
-        quantity: '10.45234733'
-        assetType: BTC
-        currentPrice: '9751.01'
-        currentUSDValue: '101920.94'
-      required:
-      - quantity
-      - assetType
-      title: Amount
-    WithdrawalParametersForXRP:
-      description: Additional parameters to be provided exclusively when `assetType` is "XRP". When using a Trusted Destination, these parameters must not be provided — the destination tag is inherited from the trusted destination. Set `destination.type` to `TRUSTED_DESTINATION` and `destination.id` to the trusted destination ID instead.
-      type: object
-      properties:
-        destinationTag:
-          description: A number often used to uniquely identify the recipient of the transaction, commonly used when transferring funds to custodial wallets, exchanges or other situations where the `destinationAddress` is multi-purpose. Must be included whenever provided by the recipient of the transaction.
-          type: integer
-          format: uint32
-          example: 23874
-      required:
-      - destinationTag
-      title: WithdrawalParametersForXRP
     TransfersRequest:
       type: object
       properties:
@@ -829,85 +598,58 @@ components:
       - assetType
       - amount
       title: TransfersRequest
-    Data3:
+    TransferStatus:
+      description: 'A string describing the status of the given transfer
+
+
+
+        * IN_PROGRESS - This transfer is in progress and is not final.
+
+
+
+        * COMPLETED - This transfer has been completed and is confirmed on the blockchain.
+
+
+
+        * FAILED - This transfer has failed. Funds were not successfully transferred.
+
+
+
+        * QUEUED - This transfer has been queued behind another transfer of the same asset.
+
+        '
+      type: string
+      enum:
+      - IN_PROGRESS
+      - COMPLETED
+      - FAILED
+      - QUEUED
+      title: TransferStatus
+    Page:
+      description: Pagination info
       type: object
       properties:
-        status:
-          $ref: '#/components/schemas/TransferStatus'
-        transferId:
-          description: The ID of this transfer, which can be used to retrieve further details
-          type: string
-          example: 008d3ec72558ce907571886df63ef51594b5bd8cf106a0b7fa8f12a30dfc867f
-      required:
-      - transferId
-      - status
-      title: Data3
-    WithdrawalParametersForFiatTrustedDestination:
-      description: Additional parameters to be provided exclusively when the destination is a Trusted Destination and `assetType` is fiat.
-      type: object
-      properties:
-        memo:
-          description: Note to Beneficiary. If not provided, the memo on the Trusted Destination will be used by default.
-          type: string
-          example: Invoice 123
-          maxLength: 140
-        purpose:
-          description: "The purpose of the funds being withdrawn.\n\n * `TRADING_SETTLEMENT` - Trading Settlement\n * `LENDING` - Lending\n * `INVESTMENT` - Investment\n * `EXPENSES` - Expenses\n * `FEE_PAYMENT` - Fee Payment\n * `GRANT_PAYMENT` - Grant Payment\n * `PRIZE_AWARD` - Prize Award\n * `GIFT` - Gift\n * `REIMBURSEMENT` - Reimbursement\n * `REBALANCE` - Rebalance\n * `INTRA_COMPANY` - Intra Company"
-          type: string
-          example: TRADING_SETTLEMENT
-          enum:
-          - TRADING_SETTLEMENT
-          - LENDING
-          - INVESTMENT
-          - EXPENSES
-          - FEE_PAYMENT
-          - GRANT_PAYMENT
-          - PRIZE_AWARD
-          - GIFT
-          - REIMBURSEMENT
-          - REBALANCE
-          - INTRA_COMPANY
-      required:
-      - purpose
-      title: WithdrawalParametersForFiatTrustedDestination
-    TransfersResponse1:
+        next:
+          description: URL to use to query for the next page or null if no additional results are available
+          type:
+          - string
+          - 'null'
+          example: <next page url>
+          x-omitempty: false
+      title: Page
+    TransfersResponse:
       type: object
       properties:
         data:
-          $ref: '#/components/schemas/Data3'
+          type: array
+          items:
+            $ref: '#/components/schemas/TransferDetails'
+        page:
+          $ref: '#/components/schemas/Page'
       required:
       - data
-      title: TransfersResponse1
-    ErrorType:
-      description: The type of error returned.
-      type: string
-      enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
-    ErrorDetails:
-      type: object
-      properties:
-        errorType:
-          $ref: '#/components/schemas/ErrorType'
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - errorType
-      - message
-      title: ErrorDetails
+      - page
+      title: TransfersResponse
     TransferAMLQuestionnaire:
       description: Anti-money laundering questionnaire submission
       type: object
@@ -1033,6 +775,213 @@ components:
       required:
       - purpose
       title: AMLQuestionnaire
+    TransfersResponse2:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/TransferDetails'
+      required:
+      - data
+      title: TransfersResponse2
+    WithdrawalParametersForCosmos:
+      description: Additional parameters to be provided exclusively when `assetType` is for a Cosmos blockchain. When using a Trusted Destination, these parameters must not be provided — the memo is inherited from the trusted destination. Set `destination.type` to `TRUSTED_DESTINATION` and `destination.id` to the trusted destination ID instead.
+      type: object
+      properties:
+        memo:
+          description: An alphanumeric string often used to uniquely identify the recipient of the transaction, commonly used when transferring funds to custodial wallets, exchanges or other situations where the `destinationAddress` is multi-purpose. Must be included whenever provided by the recipient of the transaction.
+          type: string
+          example: w3mp19cqp2
+          maxLength: 256
+      required:
+      - memo
+      title: WithdrawalParametersForCosmos
+    TransferDetails:
+      type: object
+      properties:
+        amount:
+          $ref: '#/components/schemas/Amount'
+        assetType:
+          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
+
+
+            Use `/asset-types` to list all of the supported asset types for your organization.
+
+            '
+          type: string
+          example: BTC
+        blockchainTxId:
+          description: The blockchain transaction ID, if applicable
+          type: string
+        createdAt:
+          description: The timestamp when the transfer request was created
+          type: string
+          format: date-time
+          example: '2019-01-02T12:34:56.000Z'
+        destination:
+          $ref: '#/components/schemas/ResourceDetails'
+        endedAt:
+          description: The timestamp when the transfer request reached a final state - completion or failure (optional)
+          type:
+          - string
+          - 'null'
+          format: date-time
+          example: '2019-01-03T12:34:56.000Z'
+        error:
+          $ref: '#/components/schemas/ErrorDetails'
+        fee:
+          $ref: '#/components/schemas/Amount'
+        source:
+          $ref: '#/components/schemas/SourceResourceDetails'
+        status:
+          $ref: '#/components/schemas/TransferStatus'
+        transferId:
+          description: The transfer ID which can be used to reference this transfer in other queries
+          type: string
+        transferMemo:
+          description: A user-supplied description that will become the description of the subsequent transfer operation (optional)
+          type:
+          - string
+          - 'null'
+      example:
+        transferId: 008d3ec72558ce907571886df63ef51594b5bd8cf106a0b7fa8f12a30dfc867f
+        amount:
+          quantity: '1000.00000000'
+          assetType: USDC
+          currentPrice: '1.00'
+          currentUSDValue: '1000.00'
+        fee:
+          quantity: '0.0002207155625'
+          assetType: ETH
+        assetType: USDC
+        source:
+          id: 1c920f4241b78a1d483a29f3c24b6c4c
+          type: WALLET
+        destination:
+          id: 55e89d4a644d736b01533a2ea9b32a20
+          type: WALLET
+        transferMemo: 'Internal ID: #12838927347'
+        status: COMPLETED
+        createdAt: '2019-01-02T12:34:56.000Z'
+        endedAt: '2019-01-03T12:34:56.000Z'
+      required:
+      - transferId
+      - status
+      - amount
+      - assetType
+      - createdAt
+      title: TransferDetails
+    SourceResourceType:
+      description: The type of the resource being referenced. Note that the VAULT type has been deprecated and WALLET should be used instead.
+      type: string
+      enum:
+      - VAULT
+      - WALLET
+      title: SourceResourceType
+    ErrorDetails:
+      type: object
+      properties:
+        errorType:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - errorType
+      - message
+      title: ErrorDetails
+    WithdrawalParametersForXRP:
+      description: Additional parameters to be provided exclusively when `assetType` is "XRP". When using a Trusted Destination, these parameters must not be provided — the destination tag is inherited from the trusted destination. Set `destination.type` to `TRUSTED_DESTINATION` and `destination.id` to the trusted destination ID instead.
+      type: object
+      properties:
+        destinationTag:
+          description: A number often used to uniquely identify the recipient of the transaction, commonly used when transferring funds to custodial wallets, exchanges or other situations where the `destinationAddress` is multi-purpose. Must be included whenever provided by the recipient of the transaction.
+          type: integer
+          format: uint32
+          example: 23874
+      required:
+      - destinationTag
+      title: WithdrawalParametersForXRP
+    WithdrawalParametersForATOM:
+      description: Additional parameters to be provided exclusively when `assetType` is "ATOM". This field is deprecated, please migrate to using `assetParametersCosmos` instead. When using a Trusted Destination, these parameters must not be provided — the memo is inherited from the trusted destination. Set `destination.type` to `TRUSTED_DESTINATION` and `destination.id` to the trusted destination ID instead.
+      type: object
+      properties:
+        memo:
+          description: An alphanumeric string often used to uniquely identify the recipient of the transaction, commonly used when transferring funds to custodial wallets, exchanges or other situations where the `destinationAddress` is multi-purpose. Must be included whenever provided by the recipient of the transaction.
+          type: string
+          example: w3mp19cqp2
+          maxLength: 256
+      required:
+      - memo
+      title: WithdrawalParametersForATOM
+    Amount:
+      description: 'An amount of a crypto-asset represented by quantity, assetType, current unit price and current USD value.
+
+
+
+        Fee amounts will be estimates if a transaction is not final.
+
+
+
+        NOTE: price and USD value information is recent but does not reflect real-time data.
+
+        '
+      type: object
+      properties:
+        assetType:
+          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
+
+
+            Use `/asset-types` to list all of the supported asset types for your organization.
+
+            '
+          type: string
+          example: BTC
+        currentPrice:
+          description: A recent assessment of the intra-day USD value of 1 unit of this asset type. This value is provided for convenience for such use cases as estimating point-in-time portfolio balances. This value does not represent authoritative pricing information used by Anchorage Digital for any purpose. The price is fetched as of the present, and may be omitted in certain contexts where more structured pricing information is provided (e.g. quotes and trades).
+          type: string
+          example: '9751.01'
+        currentUSDValue:
+          description: The result of `quantity * currentPrice`, rounded to the nearest cent. A unitless number implicitly denominated in dollars. See `currentPrice` for methodology and disclaimers.
+          type: string
+          example: '101920.94'
+        quantity:
+          description: The numeric value of this amount, excluding units
+          type: string
+          example: '10.45234733'
+      example:
+        quantity: '10.45234733'
+        assetType: BTC
+        currentPrice: '9751.01'
+        currentUSDValue: '101920.94'
+      required:
+      - quantity
+      - assetType
+      title: Amount
+    SourceResourceDetails:
+      description: "An object representing a resource capable of sending funds.\n\n\nConstruction example:\n  ```\n  {\n    \"id\":\"1c920f4241b78a1d483a29f3c24b6c4c\",\n    \"type\":\"WALLET\"\n  }\n  ```\n"
+      type: object
+      properties:
+        id:
+          description: The identifier of the resource
+          type: string
+          example: 1c920f4241b78a1d483a29f3c24b6c4c
+        type:
+          $ref: '#/components/schemas/SourceResourceType'
+      required:
+      - id
+      - type
+      title: SourceResource
+    ResourceType:
+      description: The type of the resource being referenced. Note that the VAULT type has been deprecated and WALLET should be used instead.
+      type: string
+      enum:
+      - VAULT
+      - WALLET
+      - ADDRESS
+      - STANDING_INSTRUCTION
+      - TRUSTED_DESTINATION
+      title: ResourceType
     ResourceDetails:
       description: "An object representing a resource capable of receiving, or holding funds.\n\n\n\nConstruction example:\n\n  ```\n  {\n    \"id\":\"1c920f4241b78a1d483a29f3c24b6c4c\",\n    \"type\":\"WALLET\"\n  }\n  ```\n"
       type: object
@@ -1047,16 +996,67 @@ components:
       - id
       - type
       title: Resource
-    ResourceType:
-      description: The type of the resource being referenced. Note that the VAULT type has been deprecated and WALLET should be used instead.
-      type: string
-      enum:
-      - VAULT
-      - WALLET
-      - ADDRESS
-      - STANDING_INSTRUCTION
-      - TRUSTED_DESTINATION
-      title: ResourceType
+    Data3:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/TransferStatus'
+        transferId:
+          description: The ID of this transfer, which can be used to retrieve further details
+          type: string
+          example: 008d3ec72558ce907571886df63ef51594b5bd8cf106a0b7fa8f12a30dfc867f
+      required:
+      - transferId
+      - status
+      title: Data3
+    TransfersResponse1:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Data3'
+      required:
+      - data
+      title: TransfersResponse1
+    WithdrawalParametersForFiatTrustedDestination:
+      description: Additional parameters to be provided exclusively when the destination is a Trusted Destination and `assetType` is fiat.
+      type: object
+      properties:
+        memo:
+          description: Note to Beneficiary. If not provided, the memo on the Trusted Destination will be used by default.
+          type: string
+          example: Invoice 123
+          maxLength: 140
+        purpose:
+          description: "The purpose of the funds being withdrawn.\n\n * `TRADING_SETTLEMENT` - Trading Settlement\n * `LENDING` - Lending\n * `INVESTMENT` - Investment\n * `EXPENSES` - Expenses\n * `FEE_PAYMENT` - Fee Payment\n * `GRANT_PAYMENT` - Grant Payment\n * `PRIZE_AWARD` - Prize Award\n * `GIFT` - Gift\n * `REIMBURSEMENT` - Reimbursement\n * `REBALANCE` - Rebalance\n * `INTRA_COMPANY` - Intra Company"
+          type: string
+          example: TRADING_SETTLEMENT
+          enum:
+          - TRADING_SETTLEMENT
+          - LENDING
+          - INVESTMENT
+          - EXPENSES
+          - FEE_PAYMENT
+          - GRANT_PAYMENT
+          - PRIZE_AWARD
+          - GIFT
+          - REIMBURSEMENT
+          - REBALANCE
+          - INTRA_COMPANY
+      required:
+      - purpose
+      title: WithdrawalParametersForFiatTrustedDestination
+    WithdrawalParametersExtra:
+      description: Extra parameters, to be provided for assets. When using a Trusted Destination, these parameters must not be provided — the memo is inherited from the trusted destination. Set `destination.type` to `TRUSTED_DESTINATION` and `destination.id` to the trusted destination ID instead.
+      type: object
+      properties:
+        value:
+          description: An alphanumeric string often used to uniquely identify the recipient of the transaction, commonly used when transferring funds to custodial wallets, exchanges or other situations where the `destinationAddress` is multi-purpose. Must be included whenever provided by the recipient of the transaction.
+          type: string
+          example: w3mp19cqp2
+          maxLength: 256
+      required:
+      - value
+      title: WithdrawalParametersExtra
   securitySchemes:
     Api-Access-Key:
       type: apiKey

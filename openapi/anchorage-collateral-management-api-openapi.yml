@@ -901,6 +901,23 @@ paths:
       - Collateral Management
 components:
   schemas:
+    ErrorType:
+      description: The type of error returned.
+      type: string
+      enum:
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
     CMExposuresResponse:
       type: object
       properties:
@@ -913,383 +930,23 @@ components:
       required:
       - data
       - page
-    CMAutoDeleveragingUpdate:
-      description: Auto-deleveraging configuration for updates. All fields are optional.
-      type: object
-      properties:
-        levels:
-          description: Array of deleveraging levels, each specifying a price threshold and corresponding liquidation percentage. If provided, replaces all existing levels.
-          type: array
-          items:
-            $ref: '#/components/schemas/CMDeleveragingLevel'
-    CMPriceSourcesResponse:
-      description: Response containing price sources and their available trading pairs
-      type: object
-      properties:
-        priceSources:
-          description: List of price sources (exchanges) with their available assets
-          type: array
-          items:
-            $ref: '#/components/schemas/CMPriceSourceAssets'
-      required:
-      - priceSources
-    CMOperation:
-      description: In the context of Collateral Management, an operation is a recorded transaction or activity performed on either a Collateral Package or an Exposure. Operations represent specific actions that affect the balance or status of collateral or loan exposures.
-      type: object
-      properties:
-        action:
-          $ref: '#/components/schemas/CMOperationAction'
-        asset:
-          $ref: '#/components/schemas/CMAssetType'
-        createdAt:
-          description: The timestamp of when this record was created not necessarily when the operation was executed.
-          type: string
-          format: date-time
-          example: '2019-01-02T12:34:56.000Z'
-        id:
-          description: Unique identifier for the operation (operationId)
-          type: string
-        liquidationCollateralPackageId:
-          description: The unique identifier of the collateral package that is being liquidated
-          type: string
-        liquidationProceedAsset:
-          $ref: '#/components/schemas/CMAssetType'
-        liquidationProceedQuantity:
-          description: The decimal quantity of the proceeds received from the liquidation
-          type: string
-        notes:
-          description: An optional field for additional comments or contextual information related to the operation.
-          type: string
-        quantity:
-          description: The decimal amount of the asset being added, removed, or modified in the operation, expressed as a string
-          type: string
-        type:
-          $ref: '#/components/schemas/CMOperationType'
-        typeId:
-          description: Contains the unique identifier of either the collateral package (packageId) or exposure (exposureId) that the operation is being performed on, depending on the value in the type field
-          type: string
-        updatedAt:
-          description: The timestamp of when this record was last updated
-          type: string
-          format: date-time
-          example: '2019-01-02T12:34:56.000Z'
-      required:
-      - id
-      - type
-      - typeId
-      - action
-      - asset
-      - quantity
-      - createdAt
-      - updatedAt
-    CMAssetTrackingConfig:
-      description: Asset tracking config
-      type: object
-      properties:
-        asset:
-          $ref: '#/components/schemas/CMAssetType'
-        liquidationPriority:
-          description: The priority order for liquidating this asset in the event of a default or margin call
-          type: integer
-        maxStalenessMinutes:
-          description: Optional maximum staleness in minutes assigned to the asset price in the collateral package configuration, expressed as an integer. If not specified, uses the system default configured (3 minutes)
-          type: integer
-        notes:
-          description: Optional additional notes or comments about the asset tracking configuration
-          type: string
-        priceSource:
-          $ref: '#/components/schemas/CMPriceSource'
-        weight:
-          description: The configured weight assigned to the asset in the collateral package configuration, expressed as a decimal string
-          type: string
-      required:
-      - asset
-      - weight
-      - liquidationPriority
-    CMPayUpResponse:
-      description: Response from requesting a pay-up. Pending the secured party's endorsement if pledgor-initiated; already executing if secured-party-initiated.
-      type: object
-      properties:
-        settlementId:
-          description: Settlement network ID for the created two-way settlement. Used to track the settlement through its lifecycle. The settlement is pending the secured party's endorsement.
-          type: string
-      required:
-      - settlementId
-    UpdateCMPackageResponse:
-      $ref: '#/components/schemas/CMPackage'
-    CMUpdateOperationRequest:
-      description: Fields for updating a Collateral Management operation. Any fields left null or omitted will not be updated.
-      type: object
-      properties:
-        action:
-          $ref: '#/components/schemas/CMOperationActionInput'
-        asset:
-          $ref: '#/components/schemas/CMAssetType'
-        notes:
-          description: Optional notes or comments related to the operation. Providing a new value will overwrite existing notes.
-          type: string
-        quantity:
-          description: The quantity of the asset to be used in the operation, expressed as a decimal string.
-          type: string
-        type:
-          $ref: '#/components/schemas/CMOperationTypeInput'
-        typeId:
-          description: The ID of the collateral package (packageId) or exposure (exposureId) for this operation
-          type: string
-    CMCreateExposureResponse:
-      type: object
-      properties:
-        exposureId:
-          type: string
-      required:
-      - exposureId
-    CMDeleveragingLevel:
-      description: A single deleveraging level defining a price trigger and liquidation amount
-      type: object
-      properties:
-        liquidationPercentage:
-          description: The percentage of collateral to liquidate when this price level is reached, expressed as a decimal string (e.g., '25' for 25%)
-          type: string
-        price:
-          description: The price threshold at which this deleveraging level is triggered, expressed as a decimal string
-          type: string
-      required:
-      - price
-      - liquidationPercentage
-    UpdateCMOperationResponse:
-      description: Contains the full, updated operation object.
-      allOf:
-      - $ref: '#/components/schemas/CMOperation'
-    CMCriticalUpdate:
-      description: Critical level configuration for updates. All fields are optional.
-      type: object
-      properties:
-        action:
-          $ref: '#/components/schemas/CMPackageActionCritical'
-        defaultNotice:
-          description: If true, Anchorage Digital will send a default notice to the Pledgor upon entering the critical state
-          type: boolean
-        ltv:
-          description: The LTV threshold at which the Collateral Package will enter into the critical state
-          type: string
-        returnToLtv:
-          description: The LTV that a collateral package must return to before being considered healthy again
-          type: string
-        warningLtv:
-          description: The LTV at which a warning is sent notifying the parties that the collateral package is close to entering critical state
-          type: string
-    CMMarginReturnUpdate:
-      description: Margin Return level configuration for updates. All fields are optional.
-      type: object
-      properties:
-        action:
-          $ref: '#/components/schemas/CMPackageActionMarginReturn'
-        ltv:
-          description: The LTV threshold at which the Collateral Package will enter into this state
-          type: string
-        returnToLtv:
-          description: The LTV that a collateral package must return to before a margin return is fulfilled
-          type: string
-        returnType:
-          description: The type of margin return (e.g., LTV or QUANTITY)
-          type: string
-    CMCollateralAsset:
-      description: A single asset within a collateral package
-      type: object
-      properties:
-        asset:
-          $ref: '#/components/schemas/CMAssetType'
-        price:
-          description: The unweighted current price of the collateral asset, used in the LTV calculation, expressed in USD
-          type: string
-        quantity:
-          description: The quantity of the collateral asset held in the Collateral Package
-          type: string
-        weight:
-          description: The configured weight applied to this collateral asset within the Collateral Package, expressed as a decimal string
-          type: string
-        weightedValue:
-          description: The weighted value of the collateral asset, calculated by applying the `weight` to the asset's value (`price` * `quantity`), expressed in USD
-          type: string
-      required:
-      - asset
-      - weight
-    CMOperationActionInput:
-      description: 'The specific action to be performed in the operation.
-
-
-        Valid actions for exposures are:
-
-        1. `INITIAL_FUNDING`
-
-        2. `PAY_DOWN`
-
-        3. `PAY_UP`
-
-        4. `INTEREST_PAYDOWN`
-
-        5. `INTEREST_ACCRUAL`
-
-
-        Valid actions for collateral packages are:
-
-        1. `INITIAL_DEPOSIT`
-
-        2. `MARGIN_RETURN`,
-
-        3. `TOP_UP`
-
-        4. `CLOSE_RETURN`.
-
-        5. `REHYPE_IN`
-
-        6. `REHYPE_OUT`
-
-        '
+    CMOperationTypeInput:
+      description: The type of entity the operation is being performed on. This can be either a `COLLATERAL_PACKAGE` or an `EXPOSURE`.
       type: string
       enum:
-      - INITIAL_DEPOSIT
-      - INITIAL_FUNDING
-      - MARGIN_RETURN
-      - PAY_DOWN
-      - PAY_UP
-      - INTEREST_PAYDOWN
-      - INTEREST_ACCRUAL
-      - TOP_UP
-      - CLOSE_RETURN
-      - REHYPE_IN
-      - REHYPE_OUT
-    CMExposureType:
-      description: Type of exposure
-      type: string
-      enum:
-      - LOAN
-    CMExposure:
-      description: In Collateral Management, an Exposure represents a financial obligation secured by collateral assets. It refers to the amount at risk in transactions between a Pledgor (providing collateral) and a Secured Party (receiving security). Exposures can be loans, repos, or other credit arrangements, and are used to calculate risk metrics like the Loan-to-Value (LTV) ratio. Each Exposure links to a Collateral Package containing the pledged assets.
+      - COLLATERAL_PACKAGE
+      - EXPOSURE
+    CMAssetType:
+      description: Asset symbol or ticker (e.g. BTC)
       type: object
       properties:
-        asset:
-          $ref: '#/components/schemas/CMAssetType'
-        clientReferenceId:
-          description: 'Client-provided reference ID for this Expsoure. “For example: client’s internal loan ID'
-          type: string
-        exposureId:
-          description: Unique identifier for the Exposure
-          type: string
-        packageId:
-          description: Identifier of the package of this exposure associated with this exposure
-          type: string
-        price:
-          description: The unweighted current price of the Exposure asset, used in the LTV calculation, expressed in USD
-          type: string
-        quantity:
-          description: The quantity of the collateral asset in the Exposure
-          type: string
-        value:
-          description: The value of the Exposure expressed in USD, calculated as Price * Quantity
-          type: string
-      required:
-      - exposureId
-      - clientReferenceId
-      - packageId
-      - asset
-      - price
-      - quantity
-      - value
-    Page:
-      description: Pagination info
-      type: object
-      properties:
-        next:
-          description: URL to use to query for the next page or null if no additional results are available
-          type:
-          - string
-          - 'null'
-          example: <next page url>
-          x-omitempty: false
-      title: Page
-    CMCreateOperationRequest:
-      type: object
-      properties:
-        action:
-          $ref: '#/components/schemas/CMOperationActionInput'
-        asset:
-          $ref: '#/components/schemas/CMAssetType'
-        idempotentId:
-          description: Idempotency single key
-          type: string
-          maxLength: 128
-        notes:
-          description: Optional notes or comments related to the operation
-          type: string
-        quantity:
-          description: The quantity of the asset to be used in the operation, expressed as a decimal string.
+        assetType:
           type: string
         type:
-          $ref: '#/components/schemas/CMOperationTypeInput'
-        typeId:
-          description: The ID of the collateral package (packageId) or exposure (exposureId) for this operation
-          type: string
+          $ref: '#/components/schemas/CMAssetTypeType'
       required:
       - type
-      - typeId
-      - action
-      - quantity
-      - asset
-    CMAcceleratedMarginCallUpdate:
-      description: Accelerated Margin Call level configuration for updates. All fields are optional.
-      type: object
-      properties:
-        action:
-          $ref: '#/components/schemas/CMPackageActionMarginCall'
-        curePeriod:
-          description: The duration of the cure period, specified in a format such as '1h' for 1 hour or '1m' for 1 minute
-          type: string
-        ltv:
-          description: The LTV threshold at which the Collateral Package will enter into an Accelerated Margin Call state
-          type: string
-    CMPriceSource:
-      description: This field specifies the source from which the price information is derived
-      type: string
-      enum:
-      - COINBASEPRO
-      - KRAKEN
-      - KAMINO
-      - BINANCE
-    CMMarginReturnResponse:
-      description: Response from requesting a margin return.
-      type: object
-      properties:
-        settlementId:
-          description: Settlement network ID for the created two-way settlement. Used to track the settlement through its lifecycle.
-          type: string
-      required:
-      - settlementId
-    CMPackageActionMarginCall:
-      description: The action to be taken when the collateral package transitions into a Margin Call state
-      type: string
-      enum:
-      - NONE
-      - PARTIAL
-      - FULL
-      - SWEEP
-    CMExposureAssetTrackingConfig:
-      description: CM Exposure Asset tracking config
-      type: object
-      properties:
-        asset:
-          $ref: '#/components/schemas/CMAssetType'
-        liquidationPriority:
-          description: The priority order for liquidating this asset in the event of a default or margin call
-          type: integer
-        notes:
-          description: Optional additional notes or comments about the asset tracking configuration
-          type: string
-        priceSource:
-          $ref: '#/components/schemas/CMPriceSource'
-      required:
-      - asset
-      - liquidationPriority
+      - assetType
     CMAcceleratedMarginCall:
       description: Accelerated Margin Call level config
       type: object
@@ -1306,37 +963,26 @@ components:
       - ltv
       - action
       - curePeriod
-    CMMarginCall:
-      description: Margin Call level config
+    CMPriceSourceAssets:
+      description: A price source (exchange) with its available trading pairs and pricing strategies
       type: object
       properties:
-        action:
-          $ref: '#/components/schemas/CMPackageActionMarginCall'
-        curePeriod:
-          description: Time after the margin call that pledgor has to top up collateral and bring the LTV to the ‘returnToLtv’ (healthy state)”. The duration of the cure period, specified in a format such as '1h' for 1 hour or '1m' for 1 minute.
-          type: string
-        curePeriodProtection:
-          description: If activated, it prevents the transition of the collateral package to the critical stage while the cure period of a previous margin call lasts
-          type: boolean
-        ltv:
-          description: The LTV threshold at which the Collateral Package will enter into this state, subject to cure period constraints
-          type: string
-        returnToLtv:
-          description: The LTV that a collateral package must return to before a margin call is considered to be fulfilled and the collateral package is returned to a healthy state
-          type: string
-        topUpType:
-          $ref: '#/components/schemas/CMTopUpType'
-        warningLtv:
-          description: The LTV at which a warning is sent notifying the parties that the collateral package is close to entering a particular state
-          type: string
+        assets:
+          description: List of available trading pairs (e.g., BTC-USD, ETH-USD)
+          type: array
+          items:
+            type: string
+        priceSource:
+          $ref: '#/components/schemas/CMPriceSource'
+        strategies:
+          description: List of available pricing strategies for this exchange
+          type: array
+          items:
+            $ref: '#/components/schemas/CMPriceStrategy'
       required:
-      - ltv
-      - action
-      - warningLtv
-      - returnToLtv
-      - curePeriod
-      - curePeriodProtection
-      - topUpType
+      - priceSource
+      - assets
+      - strategies
     CMCreatePackageRequest:
       description: The request payload for creating a new collateral package.
       type: object
@@ -1372,144 +1018,18 @@ components:
       - securedPartyId
       - collateralAssetsConfig
       - priceStrategy
-    CMAssetTypeType:
-      description: The type of asset held in the Collateral Package. This can be either `ANCHORAGECUSTODY` for assets held in Anchorage custody, or `EXTERNAL` for assets held outside of Anchorage custody.
-      type: string
-      enum:
-      - ANCHORAGECUSTODY
-      - EXTERNAL
-    CMMarginCallUpdate:
-      description: Margin Call level configuration for updates. All fields are optional.
+    CMPackagesResponse:
       type: object
       properties:
-        action:
-          $ref: '#/components/schemas/CMPackageActionMarginCall'
-        curePeriod:
-          description: The duration of the cure period, specified in a format such as '1h' for 1 hour or '1m' for 1 minute
-          type: string
-        curePeriodProtection:
-          description: Indicates whether cure period protection is enabled
-          type: boolean
-        ltv:
-          description: The LTV threshold at which the Collateral Package will enter into this state
-          type: string
-        returnToLtv:
-          description: The LTV that a collateral package must return to before a margin call is fulfilled
-          type: string
-        topUpType:
-          $ref: '#/components/schemas/CMTopUpType'
-        warningLtv:
-          description: The LTV at which a warning is sent notifying the parties that the collateral package is close to entering margin call
-          type: string
-    CMAssetType:
-      description: Asset symbol or ticker (e.g. BTC)
-      type: object
-      properties:
-        assetType:
-          type: string
-        type:
-          $ref: '#/components/schemas/CMAssetTypeType'
-      required:
-      - type
-      - assetType
-    CMPayUpRequest:
-      description: The request payload for requesting a pay-up (exposure increase) on a collateral package.
-      type: object
-      properties:
-        assetAmounts:
-          description: Asset types and amounts to receive from the secured party. The destination wallet is determined from each asset's exposure configuration.
+        data:
           type: array
           items:
-            $ref: '#/components/schemas/CMPayUpAssetAmount'
-          minItems: 1
-        idempotencyKey:
-          description: Idempotency key for ensuring operation uniqueness.
-          type: string
-          maxLength: 128
+            $ref: '#/components/schemas/CMPackage'
+        page:
+          $ref: '#/components/schemas/Page'
       required:
-      - assetAmounts
-      - idempotencyKey
-    CMOperationResponse:
-      type: object
-      properties:
-        operationId:
-          type: string
-      required:
-      - operationId
-    CMPackageActionCritical:
-      description: The action to be taken when the collateral package transitions into a Critical state
-      type: string
-      enum:
-      - NONE
-      - PARTIAL
-      - FULL
-      - SWEEP
-    CMAssetTrackingConfigUpdate:
-      description: Asset tracking configuration for updates. All fields are optional except asset which identifies which asset to update.
-      type: object
-      properties:
-        asset:
-          $ref: '#/components/schemas/CMAssetType'
-        liquidationPriority:
-          description: The priority order for liquidating this asset in the event of a default or margin call
-          type: integer
-        maxStalenessMinutes:
-          description: Optional maximum staleness in minutes assigned to the asset price in the collateral package configuration, expressed as an integer. If not specified, uses the system default configured (3 minutes)
-          type: integer
-        notes:
-          description: Optional additional notes or comments about the asset tracking configuration
-          type: string
-        priceSource:
-          $ref: '#/components/schemas/CMPriceSource'
-        weight:
-          description: The configured weight assigned to the asset in the collateral package configuration, expressed as a decimal string
-          type: string
-      required:
-      - asset
-    CMCritical:
-      description: Critical level config
-      type: object
-      properties:
-        action:
-          $ref: '#/components/schemas/CMPackageActionCritical'
-        defaultNotice:
-          description: A boolean parameter, if marked TRUE Anchorage will send a default notice to the Pledgor upon entering the critical state
-          type: boolean
-        ltv:
-          description: The LTV threshold at which the Collateral Package will enter into this state
-          type: string
-        returnToLtv:
-          description: The LTV that a collateral package must return to before transitioning back to a healthy state. This parameter is only configured if action within Critical Object is set to ‘Partial’
-          type: string
-        warningLtv:
-          description: The LTV at which a warning is sent notifying the parties that the collateral package is close to entering a particular state
-          type: string
-      required:
-      - ltv
-      - action
-      - defaultNotice
-      - warningLtv
-      - returnToLtv
-    CMPriceSourceAssets:
-      description: A price source (exchange) with its available trading pairs and pricing strategies
-      type: object
-      properties:
-        assets:
-          description: List of available trading pairs (e.g., BTC-USD, ETH-USD)
-          type: array
-          items:
-            type: string
-        priceSource:
-          $ref: '#/components/schemas/CMPriceSource'
-        strategies:
-          description: List of available pricing strategies for this exchange
-          type: array
-          items:
-            $ref: '#/components/schemas/CMPriceStrategy'
-      required:
-      - priceSource
-      - assets
-      - strategies
+      - data
+      - page
     CMPackage:
       description: A package of different types of collateral which, together, secure a collection of exposures.
       type: object
@@ -1564,57 +1084,178 @@ components:
       - active
       - collateralAssets
       - critical
-    ErrorType:
-      description: The type of error returned.
+    CMPriceSourcesResponse:
+      description: Response containing price sources and their available trading pairs
+      type: object
+      properties:
+        priceSources:
+          description: List of price sources (exchanges) with their available assets
+          type: array
+          items:
+            $ref: '#/components/schemas/CMPriceSourceAssets'
+      required:
+      - priceSources
+    CMAssetTrackingConfigUpdate:
+      description: Asset tracking configuration for updates. All fields are optional except asset which identifies which asset to update.
+      type: object
+      properties:
+        asset:
+          $ref: '#/components/schemas/CMAssetType'
+        liquidationPriority:
+          description: The priority order for liquidating this asset in the event of a default or margin call
+          type: integer
+        maxStalenessMinutes:
+          description: Optional maximum staleness in minutes assigned to the asset price in the collateral package configuration, expressed as an integer. If not specified, uses the system default configured (3 minutes)
+          type: integer
+        notes:
+          description: Optional additional notes or comments about the asset tracking configuration
+          type: string
+        priceSource:
+          $ref: '#/components/schemas/CMPriceSource'
+        weight:
+          description: The configured weight assigned to the asset in the collateral package configuration, expressed as a decimal string
+          type: string
+      required:
+      - asset
+    CMDeleveragingLevel:
+      description: A single deleveraging level defining a price trigger and liquidation amount
+      type: object
+      properties:
+        liquidationPercentage:
+          description: The percentage of collateral to liquidate when this price level is reached, expressed as a decimal string (e.g., '25' for 25%)
+          type: string
+        price:
+          description: The price threshold at which this deleveraging level is triggered, expressed as a decimal string
+          type: string
+      required:
+      - price
+      - liquidationPercentage
+    Page:
+      description: Pagination info
+      type: object
+      properties:
+        next:
+          description: URL to use to query for the next page or null if no additional results are available
+          type:
+          - string
+          - 'null'
+          example: <next page url>
+          x-omitempty: false
+      title: Page
+    CMUpdateOperationRequest:
+      description: Fields for updating a Collateral Management operation. Any fields left null or omitted will not be updated.
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/CMOperationActionInput'
+        asset:
+          $ref: '#/components/schemas/CMAssetType'
+        notes:
+          description: Optional notes or comments related to the operation. Providing a new value will overwrite existing notes.
+          type: string
+        quantity:
+          description: The quantity of the asset to be used in the operation, expressed as a decimal string.
+          type: string
+        type:
+          $ref: '#/components/schemas/CMOperationTypeInput'
+        typeId:
+          description: The ID of the collateral package (packageId) or exposure (exposureId) for this operation
+          type: string
+    CMOperation:
+      description: In the context of Collateral Management, an operation is a recorded transaction or activity performed on either a Collateral Package or an Exposure. Operations represent specific actions that affect the balance or status of collateral or loan exposures.
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/CMOperationAction'
+        asset:
+          $ref: '#/components/schemas/CMAssetType'
+        createdAt:
+          description: The timestamp of when this record was created not necessarily when the operation was executed.
+          type: string
+          format: date-time
+          example: '2019-01-02T12:34:56.000Z'
+        id:
+          description: Unique identifier for the operation (operationId)
+          type: string
+        liquidationCollateralPackageId:
+          description: The unique identifier of the collateral package that is being liquidated
+          type: string
+        liquidationProceedAsset:
+          $ref: '#/components/schemas/CMAssetType'
+        liquidationProceedQuantity:
+          description: The decimal quantity of the proceeds received from the liquidation
+          type: string
+        notes:
+          description: An optional field for additional comments or contextual information related to the operation.
+          type: string
+        quantity:
+          description: The decimal amount of the asset being added, removed, or modified in the operation, expressed as a string
+          type: string
+        type:
+          $ref: '#/components/schemas/CMOperationType'
+        typeId:
+          description: Contains the unique identifier of either the collateral package (packageId) or exposure (exposureId) that the operation is being performed on, depending on the value in the type field
+          type: string
+        updatedAt:
+          description: The timestamp of when this record was last updated
+          type: string
+          format: date-time
+          example: '2019-01-02T12:34:56.000Z'
+      required:
+      - id
+      - type
+      - typeId
+      - action
+      - asset
+      - quantity
+      - createdAt
+      - updatedAt
+    CMOperationType:
+      description: The type of entity the operation is being performed on. This can be either a `COLLATERAL_PACKAGE` or an `EXPOSURE`.
       type: string
       enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
-    CMCreateExposureRequest:
-      description: The request payload for creating a new collateral exposure.
+      - COLLATERAL_PACKAGE
+      - EXPOSURE
+      - LIQUIDATION
+    UpdateCMOperationResponse:
+      description: Contains the full, updated operation object.
+      allOf:
+      - $ref: '#/components/schemas/CMOperation'
+    CMMarginCallUpdate:
+      description: Margin Call level configuration for updates. All fields are optional.
       type: object
       properties:
-        assetTrackingConfig:
-          $ref: '#/components/schemas/CMExposureAssetTrackingConfig'
-        clientReferenceId:
-          description: 'A reference identifier provided by the client for this collateral exposure. For example: client’s internal loan ID'
+        action:
+          $ref: '#/components/schemas/CMPackageActionMarginCall'
+        curePeriod:
+          description: The duration of the cure period, specified in a format such as '1h' for 1 hour or '1m' for 1 minute
           type: string
-        collateralPackageID:
-          description: ID of the collateral package (packageId)
+        curePeriodProtection:
+          description: Indicates whether cure period protection is enabled
+          type: boolean
+        ltv:
+          description: The LTV threshold at which the Collateral Package will enter into this state
           type: string
-        priceStrategy:
-          $ref: '#/components/schemas/CMPriceStrategy'
-        type:
-          $ref: '#/components/schemas/CMExposureType'
-      required:
-      - type
-      - collateralPackageID
-      - priceStrategy
-      - assetTrackingConfig
-    ErrorDetails:
+        returnToLtv:
+          description: The LTV that a collateral package must return to before a margin call is fulfilled
+          type: string
+        topUpType:
+          $ref: '#/components/schemas/CMTopUpType'
+        warningLtv:
+          description: The LTV at which a warning is sent notifying the parties that the collateral package is close to entering margin call
+          type: string
+    CMAcceleratedMarginCallUpdate:
+      description: Accelerated Margin Call level configuration for updates. All fields are optional.
       type: object
       properties:
-        errorType:
-          $ref: '#/components/schemas/ErrorType'
-        message:
-          description: A human-readable message providing more details about the error.
+        action:
+          $ref: '#/components/schemas/CMPackageActionMarginCall'
+        curePeriod:
+          description: The duration of the cure period, specified in a format such as '1h' for 1 hour or '1m' for 1 minute
           type: string
-          example: Missing required field 'amount'.
-      required:
-      - errorType
-      - message
-      title: ErrorDetails
+        ltv:
+          description: The LTV threshold at which the Collateral Package will enter into an Accelerated Margin Call state
+          type: string
     CMOperationAction:
       description: 'The specific action to be performed in the operation.
 
@@ -1662,18 +1303,38 @@ components:
       - REHYPE_IN
       - REHYPE_OUT
       - GAS_FEE
-    CMPackagesResponse:
+    CMCollateralAsset:
+      description: A single asset within a collateral package
       type: object
       properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/CMPackage'
-        page:
-          $ref: '#/components/schemas/Page'
+        asset:
+          $ref: '#/components/schemas/CMAssetType'
+        price:
+          description: The unweighted current price of the collateral asset, used in the LTV calculation, expressed in USD
+          type: string
+        quantity:
+          description: The quantity of the collateral asset held in the Collateral Package
+          type: string
+        weight:
+          description: The configured weight applied to this collateral asset within the Collateral Package, expressed as a decimal string
+          type: string
+        weightedValue:
+          description: The weighted value of the collateral asset, calculated by applying the `weight` to the asset's value (`price` * `quantity`), expressed in USD
+          type: string
       required:
-      - data
-      - page
+      - asset
+      - weight
+    CMPackageState:
+      description: Current state of the Collateral Package
+      type: string
+      enum:
+      - MARGIN_RETURN
+      - HEALTHY
+      - MARGIN_CALL
+      - CRITICAL
+      - CLOSED
+      - CURE_PERIOD_EXPIRED
+      - DEFAULTED
     CMMarginReturnRequest:
       description: The request payload for requesting a margin return on a collateral package.
       type: object
@@ -1695,29 +1356,286 @@ components:
       required:
       - assetAmounts
       - idempotencyKey
+    CMMarginReturnAssetAmount:
+      description: An asset type and amount pair for a margin return.
+      type: object
+      properties:
+        assetTypeID:
+          description: The asset type ID (e.g. BTC, ETH) for this amount.
+          type: string
+        value:
+          description: The amount of the asset to return, expressed as a decimal string.
+          type: string
+      required:
+      - assetTypeID
+      - value
+    CMMarginCall:
+      description: Margin Call level config
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/CMPackageActionMarginCall'
+        curePeriod:
+          description: Time after the margin call that pledgor has to top up collateral and bring the LTV to the ‘returnToLtv’ (healthy state)”. The duration of the cure period, specified in a format such as '1h' for 1 hour or '1m' for 1 minute.
+          type: string
+        curePeriodProtection:
+          description: If activated, it prevents the transition of the collateral package to the critical stage while the cure period of a previous margin call lasts
+          type: boolean
+        ltv:
+          description: The LTV threshold at which the Collateral Package will enter into this state, subject to cure period constraints
+          type: string
+        returnToLtv:
+          description: The LTV that a collateral package must return to before a margin call is considered to be fulfilled and the collateral package is returned to a healthy state
+          type: string
+        topUpType:
+          $ref: '#/components/schemas/CMTopUpType'
+        warningLtv:
+          description: The LTV at which a warning is sent notifying the parties that the collateral package is close to entering a particular state
+          type: string
+      required:
+      - ltv
+      - action
+      - warningLtv
+      - returnToLtv
+      - curePeriod
+      - curePeriodProtection
+      - topUpType
+    UpdateCMPackageResponse:
+      $ref: '#/components/schemas/CMPackage'
+    CMCriticalUpdate:
+      description: Critical level configuration for updates. All fields are optional.
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/CMPackageActionCritical'
+        defaultNotice:
+          description: If true, Anchorage Digital will send a default notice to the Pledgor upon entering the critical state
+          type: boolean
+        ltv:
+          description: The LTV threshold at which the Collateral Package will enter into the critical state
+          type: string
+        returnToLtv:
+          description: The LTV that a collateral package must return to before being considered healthy again
+          type: string
+        warningLtv:
+          description: The LTV at which a warning is sent notifying the parties that the collateral package is close to entering critical state
+          type: string
+    CMMarginReturnResponse:
+      description: Response from requesting a margin return.
+      type: object
+      properties:
+        settlementId:
+          description: Settlement network ID for the created two-way settlement. Used to track the settlement through its lifecycle.
+          type: string
+      required:
+      - settlementId
+    CMPayUpAssetAmount:
+      description: An asset type and amount pair for a pay-up.
+      type: object
+      properties:
+        assetTypeID:
+          description: The asset type ID (e.g. BTC, ETH) for this amount.
+          type: string
+        sourceWalletID:
+          description: The wallet that funds this leg. Required when the secured party initiates the pay-up; must be omitted when the pledgor initiates (the secured party picks their own source wallet at settlement-endorsement time).
+          type: string
+        value:
+          description: The amount of the asset to receive, expressed as a decimal string.
+          type: string
+      required:
+      - assetTypeID
+      - value
+    CMOperationResponse:
+      type: object
+      properties:
+        operationId:
+          type: string
+      required:
+      - operationId
+    CMAssetTrackingConfig:
+      description: Asset tracking config
+      type: object
+      properties:
+        asset:
+          $ref: '#/components/schemas/CMAssetType'
+        liquidationPriority:
+          description: The priority order for liquidating this asset in the event of a default or margin call
+          type: integer
+        maxStalenessMinutes:
+          description: Optional maximum staleness in minutes assigned to the asset price in the collateral package configuration, expressed as an integer. If not specified, uses the system default configured (3 minutes)
+          type: integer
+        notes:
+          description: Optional additional notes or comments about the asset tracking configuration
+          type: string
+        priceSource:
+          $ref: '#/components/schemas/CMPriceSource'
+        weight:
+          description: The configured weight assigned to the asset in the collateral package configuration, expressed as a decimal string
+          type: string
+      required:
+      - asset
+      - weight
+      - liquidationPriority
+    CMPackageActionCritical:
+      description: The action to be taken when the collateral package transitions into a Critical state
+      type: string
+      enum:
+      - NONE
+      - PARTIAL
+      - FULL
+      - SWEEP
     CMTopUpType:
       description: Option on how to satisfy a Margin Call. If ‘LTV’ is selected, the requirement to cure the margin call is to bring the LTV below the ‘returnToLtv’ (healthy state). If ‘QUANTITY’ is selected, the requirement to cure the margin call is to provide the number of units of collateral asset calculated when the margin call was issued, regardless if LTV fluctuates during a potential cure period
       type: string
       enum:
       - LTV
       - QUANTITY
-    CMPackageState:
-      description: Current state of the Collateral Package
-      type: string
-      enum:
-      - MARGIN_RETURN
-      - HEALTHY
-      - MARGIN_CALL
-      - CRITICAL
-      - CLOSED
-      - CURE_PERIOD_EXPIRED
-      - DEFAULTED
-    CMPackageActionMarginReturn:
-      description: The action to be taken when the collateral package transitions into a Margin Return state
+    ErrorDetails:
+      type: object
+      properties:
+        errorType:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - errorType
+      - message
+      title: ErrorDetails
+    CreateCMPackageResponse:
+      type: object
+      properties:
+        packageId:
+          type: string
+      required:
+      - packageId
+    CMCreateExposureRequest:
+      description: The request payload for creating a new collateral exposure.
+      type: object
+      properties:
+        assetTrackingConfig:
+          $ref: '#/components/schemas/CMExposureAssetTrackingConfig'
+        clientReferenceId:
+          description: 'A reference identifier provided by the client for this collateral exposure. For example: client’s internal loan ID'
+          type: string
+        collateralPackageID:
+          description: ID of the collateral package (packageId)
+          type: string
+        priceStrategy:
+          $ref: '#/components/schemas/CMPriceStrategy'
+        type:
+          $ref: '#/components/schemas/CMExposureType'
+      required:
+      - type
+      - collateralPackageID
+      - priceStrategy
+      - assetTrackingConfig
+    CMCreateExposureResponse:
+      type: object
+      properties:
+        exposureId:
+          type: string
+      required:
+      - exposureId
+    CMPackageActionMarginCall:
+      description: The action to be taken when the collateral package transitions into a Margin Call state
       type: string
       enum:
       - NONE
+      - PARTIAL
+      - FULL
       - SWEEP
+    CMAutoDeleveragingUpdate:
+      description: Auto-deleveraging configuration for updates. All fields are optional.
+      type: object
+      properties:
+        levels:
+          description: Array of deleveraging levels, each specifying a price threshold and corresponding liquidation percentage. If provided, replaces all existing levels.
+          type: array
+          items:
+            $ref: '#/components/schemas/CMDeleveragingLevel'
+    CMPayUpResponse:
+      description: Response from requesting a pay-up. Pending the secured party's endorsement if pledgor-initiated; already executing if secured-party-initiated.
+      type: object
+      properties:
+        settlementId:
+          description: Settlement network ID for the created two-way settlement. Used to track the settlement through its lifecycle. The settlement is pending the secured party's endorsement.
+          type: string
+      required:
+      - settlementId
+    CMMarginReturn:
+      description: Margin Return level config
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/CMPackageActionMarginReturn'
+        ltv:
+          description: The LTV threshold at which the Collateral Package will be eligible for a Margin Return
+          type: string
+        returnToLtv:
+          description: The LTV that a collateral package must return to before a margin return is considered to be fulfilled and the collateral package is returned to a healthy state
+          type: string
+      required:
+      - ltv
+      - action
+      - returnToLtv
+    CMExposure:
+      description: In Collateral Management, an Exposure represents a financial obligation secured by collateral assets. It refers to the amount at risk in transactions between a Pledgor (providing collateral) and a Secured Party (receiving security). Exposures can be loans, repos, or other credit arrangements, and are used to calculate risk metrics like the Loan-to-Value (LTV) ratio. Each Exposure links to a Collateral Package containing the pledged assets.
+      type: object
+      properties:
+        asset:
+          $ref: '#/components/schemas/CMAssetType'
+        clientReferenceId:
+          description: 'Client-provided reference ID for this Expsoure. “For example: client’s internal loan ID'
+          type: string
+        exposureId:
+          description: Unique identifier for the Exposure
+          type: string
+        packageId:
+          description: Identifier of the package of this exposure associated with this exposure
+          type: string
+        price:
+          description: The unweighted current price of the Exposure asset, used in the LTV calculation, expressed in USD
+          type: string
+        quantity:
+          description: The quantity of the collateral asset in the Exposure
+          type: string
+        value:
+          description: The value of the Exposure expressed in USD, calculated as Price * Quantity
+          type: string
+      required:
+      - exposureId
+      - clientReferenceId
+      - packageId
+      - asset
+      - price
+      - quantity
+      - value
+    CMCritical:
+      description: Critical level config
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/CMPackageActionCritical'
+        defaultNotice:
+          description: A boolean parameter, if marked TRUE Anchorage will send a default notice to the Pledgor upon entering the critical state
+          type: boolean
+        ltv:
+          description: The LTV threshold at which the Collateral Package will enter into this state
+          type: string
+        returnToLtv:
+          description: The LTV that a collateral package must return to before transitioning back to a healthy state. This parameter is only configured if action within Critical Object is set to ‘Partial’
+          type: string
+        warningLtv:
+          description: The LTV at which a warning is sent notifying the parties that the collateral package is close to entering a particular state
+          type: string
+      required:
+      - ltv
+      - action
+      - defaultNotice
+      - warningLtv
+      - returnToLtv
     CMUpdatePackageRequest:
       description: The request payload for updating an existing collateral package. All fields are optional - only provide the fields you want to update.
       type: object
@@ -1748,6 +1666,29 @@ components:
           $ref: '#/components/schemas/CMMarginReturnUpdate'
         priceStrategy:
           $ref: '#/components/schemas/CMPriceStrategy'
+    CMAssetTypeType:
+      description: The type of asset held in the Collateral Package. This can be either `ANCHORAGECUSTODY` for assets held in Anchorage custody, or `EXTERNAL` for assets held outside of Anchorage custody.
+      type: string
+      enum:
+      - ANCHORAGECUSTODY
+      - EXTERNAL
+    CMExposureAssetTrackingConfig:
+      description: CM Exposure Asset tracking config
+      type: object
+      properties:
+        asset:
+          $ref: '#/components/schemas/CMAssetType'
+        liquidationPriority:
+          description: The priority order for liquidating this asset in the event of a default or margin call
+          type: integer
+        notes:
+          description: Optional additional notes or comments about the asset tracking configuration
+          type: string
+        priceSource:
+          $ref: '#/components/schemas/CMPriceSource'
+      required:
+      - asset
+      - liquidationPriority
     CMPriceStrategy:
       description: This field specifies the pricing strategy to be used for the collateral package. To be implemented in the future
       type: string
@@ -1757,64 +1698,21 @@ components:
       - ASK
       - MID
       - LAST
-    CMMarginReturnAssetAmount:
-      description: An asset type and amount pair for a margin return.
-      type: object
-      properties:
-        assetTypeID:
-          description: The asset type ID (e.g. BTC, ETH) for this amount.
-          type: string
-        value:
-          description: The amount of the asset to return, expressed as a decimal string.
-          type: string
-      required:
-      - assetTypeID
-      - value
-    CMMarginReturn:
-      description: Margin Return level config
+    CMMarginReturnUpdate:
+      description: Margin Return level configuration for updates. All fields are optional.
       type: object
       properties:
         action:
           $ref: '#/components/schemas/CMPackageActionMarginReturn'
         ltv:
-          description: The LTV threshold at which the Collateral Package will be eligible for a Margin Return
+          description: The LTV threshold at which the Collateral Package will enter into this state
           type: string
         returnToLtv:
-          description: The LTV that a collateral package must return to before a margin return is considered to be fulfilled and the collateral package is returned to a healthy state
+          description: The LTV that a collateral package must return to before a margin return is fulfilled
           type: string
-      required:
-      - ltv
-      - action
-      - returnToLtv
-    CMOperationTypeInput:
-      description: The type of entity the operation is being performed on. This can be either a `COLLATERAL_PACKAGE` or an `EXPOSURE`.
-      type: string
-      enum:
-      - COLLATERAL_PACKAGE
-      - EXPOSURE
-    CMOperationType:
-      description: The type of entity the operation is being performed on. This can be either a `COLLATERAL_PACKAGE` or an `EXPOSURE`.
-      type: string
-      enum:
-      - COLLATERAL_PACKAGE
-      - EXPOSURE
-      - LIQUIDATION
-    CMPayUpAssetAmount:
-      description: An asset type and amount pair for a pay-up.
-      type: object
-      properties:
-        assetTypeID:
-          description: The asset type ID (e.g. BTC, ETH) for this amount.
+        returnType:
+          description: The type of margin return (e.g., LTV or QUANTITY)
           type: string
-        sourceWalletID:
-          description: The wallet that funds this leg. Required when the secured party initiates the pay-up; must be omitted when the pledgor initiates (the secured party picks their own source wallet at settlement-endorsement time).
-          type: string
-        value:
-          description: The amount of the asset to receive, expressed as a decimal string.
-          type: string
-      required:
-      - assetTypeID
-      - value
     CMOperationsResponse:
       type: object
       properties:
@@ -1827,13 +1725,115 @@ components:
       required:
       - data
       - page
-    CreateCMPackageResponse:
+    CMCreateOperationRequest:
       type: object
       properties:
-        packageId:
+        action:
+          $ref: '#/components/schemas/CMOperationActionInput'
+        asset:
+          $ref: '#/components/schemas/CMAssetType'
+        idempotentId:
+          description: Idempotency single key
+          type: string
+          maxLength: 128
+        notes:
+          description: Optional notes or comments related to the operation
+          type: string
+        quantity:
+          description: The quantity of the asset to be used in the operation, expressed as a decimal string.
+          type: string
+        type:
+          $ref: '#/components/schemas/CMOperationTypeInput'
+        typeId:
+          description: The ID of the collateral package (packageId) or exposure (exposureId) for this operation
           type: string
       required:
-      - packageId
+      - type
+      - typeId
+      - action
+      - quantity
+      - asset
+    CMPriceSource:
+      description: This field specifies the source from which the price information is derived
+      type: string
+      enum:
+      - COINBASEPRO
+      - KRAKEN
+      - KAMINO
+      - BINANCE
+    CMPackageActionMarginReturn:
+      description: The action to be taken when the collateral package transitions into a Margin Return state
+      type: string
+      enum:
+      - NONE
+      - SWEEP
+    CMOperationActionInput:
+      description: 'The specific action to be performed in the operation.
+
+
+        Valid actions for exposures are:
+
+        1. `INITIAL_FUNDING`
+
+        2. `PAY_DOWN`
+
+        3. `PAY_UP`
+
+        4. `INTEREST_PAYDOWN`
+
+        5. `INTEREST_ACCRUAL`
+
+
+        Valid actions for collateral packages are:
+
+        1. `INITIAL_DEPOSIT`
+
+        2. `MARGIN_RETURN`,
+
+        3. `TOP_UP`
+
+        4. `CLOSE_RETURN`.
+
+        5. `REHYPE_IN`
+
+        6. `REHYPE_OUT`
+
+        '
+      type: string
+      enum:
+      - INITIAL_DEPOSIT
+      - INITIAL_FUNDING
+      - MARGIN_RETURN
+      - PAY_DOWN
+      - PAY_UP
+      - INTEREST_PAYDOWN
+      - INTEREST_ACCRUAL
+      - TOP_UP
+      - CLOSE_RETURN
+      - REHYPE_IN
+      - REHYPE_OUT
+    CMPayUpRequest:
+      description: The request payload for requesting a pay-up (exposure increase) on a collateral package.
+      type: object
+      properties:
+        assetAmounts:
+          description: Asset types and amounts to receive from the secured party. The destination wallet is determined from each asset's exposure configuration.
+          type: array
+          items:
+            $ref: '#/components/schemas/CMPayUpAssetAmount'
+          minItems: 1
+        idempotencyKey:
+          description: Idempotency key for ensuring operation uniqueness.
+          type: string
+          maxLength: 128
+      required:
+      - assetAmounts
+      - idempotencyKey
+    CMExposureType:
+      description: Type of exposure
+      type: string
+      enum:
+      - LOAN
   securitySchemes:
     Api-Access-Key:
       type: apiKey

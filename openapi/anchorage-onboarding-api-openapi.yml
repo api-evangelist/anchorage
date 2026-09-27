@@ -1160,15 +1160,27 @@ components:
         data:
           $ref: '#/components/schemas/KYCApplication'
       title: GetKYCApplicationResponse
-    CreateKYCSubaccountApplicationResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/CreateKYCSubaccountApplicationResponseData'
-      required:
-      - data
-      title: CreateKYCSubaccountApplicationResponse
-    UpdateKYCApplicationRequest:
+    ErrorType:
+      description: The type of error returned.
+      type: string
+      enum:
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
+    KYCSubaccountApplication:
+      description: 'Onboarding KYC Customer Account Applications
+
+        '
       type: object
       properties:
         entries:
@@ -1176,30 +1188,68 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/KYCApplicationEntry'
-      required:
-      - entries
-      title: UpdateKYCApplicationRequest
-    CreateKYCSubaccountApplicationRequest:
-      type: object
-      properties:
-        entries:
-          description: A collection of responses for a set of defined relevant questions.
+        errors:
+          description: A collection of errors validating the responses.
           type: array
           items:
-            $ref: '#/components/schemas/KYCApplicationEntry'
+            $ref: '#/components/schemas/KYCApplicationError'
         externalId:
           description: External identifier for the customer subaccount onboarding application. This value has to be unique for each customer subaccount application.
           type: string
         name:
           description: The name of the subaccount.
           type: string
-        submit:
-          description: Optional parameter to try to submit the application if there are no validation errors. This action is irreversible you cannot update the application values after. You can use this to avoid making another api call to POST /v2/onboarding/subaccounts/submit
-          type: boolean
+        status:
+          description: Status of the onboarding application
+          type: string
+        subaccountId:
+          description: Unique identifier for the customer subaccount application
+          type: string
       required:
+      - subaccountId
       - externalId
+      - status
       - entries
-      title: CreateKYCSubaccountApplicationRequest
+      title: KYCSubaccountApplication
+    GetKYCAffiliatesResponse:
+      description: 'Get Onboarding KYC Customer Applications Response
+
+        '
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/KYCAffiliate'
+        page:
+          $ref: '#/components/schemas/Page'
+      title: GetKYCAffiliatesResponse
+    GetKYCSubaccountApplicationResponse:
+      description: 'Get Onboarding KYC Account Application Response
+
+        '
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/KYCSubaccountApplication'
+      title: GetKYCSubaccountApplicationResponse
+    CreateKYCDocumentRequest:
+      type: object
+      properties:
+        documentType:
+          description: Type of document to upload.
+          type: string
+      required:
+      - documentType
+      title: CreateKYCDocumentRequest
+    CreateKYCDocumentResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/CreateKYCDocumentResponseData'
+      required:
+      - data
+      title: CreateKYCDocumentResponse
     CreateKYCApplicationResponseData:
       type: object
       properties:
@@ -1216,40 +1266,18 @@ components:
       - customerId
       - status
       title: CreateKYCApplicationResponseData
-    GetKYCAffiliatesResponse:
-      description: 'Get Onboarding KYC Customer Applications Response
-
-        '
+    Page:
+      description: Pagination info
       type: object
       properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/KYCAffiliate'
-        page:
-          $ref: '#/components/schemas/Page'
-      title: GetKYCAffiliatesResponse
-    UpdateKYCApplicationResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/UpdateKYCApplicationResponseData'
-      required:
-      - data
-      title: UpdateKYCApplicationResponse
-    UpdateKYCSubaccountApplicationResponseData:
-      type: object
-      properties:
-        status:
-          description: Status of the customer onboarding application
-          type: string
-        subaccountId:
-          description: Unique identifier for the customer onboarding application
-          type: string
-      required:
-      - subaccountId
-      - status
-      title: UpdateKYCSubaccountApplicationResponseData
+        next:
+          description: URL to use to query for the next page or null if no additional results are available
+          type:
+          - string
+          - 'null'
+          example: <next page url>
+          x-omitempty: false
+      title: Page
     CreateKYCSubaccountApplicationResponseData:
       type: object
       properties:
@@ -1287,31 +1315,6 @@ components:
       - name
       - customerType
       title: KYCAffiliate
-    Page:
-      description: Pagination info
-      type: object
-      properties:
-        next:
-          description: URL to use to query for the next page or null if no additional results are available
-          type:
-          - string
-          - 'null'
-          example: <next page url>
-          x-omitempty: false
-      title: Page
-    GetKYCSubaccountApplicationsResponse:
-      description: 'Get Onboarding KYC Account Applications Response
-
-        '
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/KYCSubaccountApplicationItem'
-        page:
-          $ref: '#/components/schemas/Page'
-      title: GetKYCSubaccountApplicationsResponse
     KYCApplication:
       description: 'Onboarding KYC Application
 
@@ -1339,217 +1342,14 @@ components:
       - entries
       - status
       title: KYCApplication
-    GetKYCSubaccountApplicationResponse:
-      description: 'Get Onboarding KYC Account Application Response
-
-        '
+    CreateKYCSubaccountApplicationResponse:
       type: object
       properties:
         data:
-          $ref: '#/components/schemas/KYCSubaccountApplication'
-      title: GetKYCSubaccountApplicationResponse
-    CreateKYCAgreementResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/CreateKYCAgreementResponseData'
+          $ref: '#/components/schemas/CreateKYCSubaccountApplicationResponseData'
       required:
       - data
-      title: CreateKYCAgreementResponse
-    UpdateKYCSubaccountApplicationRequest:
-      type: object
-      properties:
-        entries:
-          description: A collection of responses for a set of defined relevant questions.
-          type: array
-          items:
-            $ref: '#/components/schemas/KYCApplicationEntry'
-      required:
-      - entries
-      title: UpdateKYCSubaccountApplicationRequest
-    UpdateKYCApplicationResponseData:
-      type: object
-      properties:
-        customerId:
-          description: Unique identifier for the customer onboarding application
-          type: string
-        id:
-          description: DEPRECATED - Use customerId instead
-          type: string
-        status:
-          description: Status of the customer onboarding application
-          type: string
-      required:
-      - customerId
-      - status
-      title: UpdateKYCApplicationResponseData
-    KYCApplicationEntry:
-      type: object
-      properties:
-        key:
-          description: Identifier of the question.
-          type: string
-        value:
-          description: Answer for the given question.
-          oneOf:
-          - type: string
-          - type: boolean
-          - type: object
-            additionalProperties: true
-          - type: array
-            items:
-              type: object
-              additionalProperties: true
-      required:
-      - key
-      - value
-    GetKYCAgreementsResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/GetKYCAgreementResponseData'
-        page:
-          $ref: '#/components/schemas/Page'
-      title: GetKYCAgreementsResponse
-    CreateKYCAgreementRequest:
-      type: object
-      properties:
-        frameAncestor:
-          description: URL where the terms and conditions link should be embedded
-          type: string
-        legalEntityName:
-          description: Legal entity name of the customer
-          type: string
-        returnUrl:
-          description: URL of the page to return to once the terms and conditions have been accepted
-          type: string
-        signerEmail:
-          description: Email of the signer
-          type: string
-        signerFirstName:
-          description: First name of the signer
-          type: string
-        signerLastName:
-          description: Last name of the signer
-          type: string
-        termsAgreementFormat:
-          description: Terms and Conditions format
-          type: string
-          default: anchorage
-          enum:
-          - anchorage
-          - docusign
-      required:
-      - legalEntityName
-      - signerFirstName
-      - signerLastName
-      - signerEmail
-      title: CreateKYCAgreementRequest
-    KYCSubaccountApplication:
-      description: 'Onboarding KYC Customer Account Applications
-
-        '
-      type: object
-      properties:
-        entries:
-          description: A collection of responses for a set of defined relevant questions.
-          type: array
-          items:
-            $ref: '#/components/schemas/KYCApplicationEntry'
-        errors:
-          description: A collection of errors validating the responses.
-          type: array
-          items:
-            $ref: '#/components/schemas/KYCApplicationError'
-        externalId:
-          description: External identifier for the customer subaccount onboarding application. This value has to be unique for each customer subaccount application.
-          type: string
-        name:
-          description: The name of the subaccount.
-          type: string
-        status:
-          description: Status of the onboarding application
-          type: string
-        subaccountId:
-          description: Unique identifier for the customer subaccount application
-          type: string
-      required:
-      - subaccountId
-      - externalId
-      - status
-      - entries
-      title: KYCSubaccountApplication
-    GetKYCAgreementResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/GetKYCAgreementResponseData'
-      required:
-      - data
-      title: GetKYCAgreementResponse
-    KYCSubaccountApplicationItem:
-      description: 'Onboarding KYC Customer Account Application
-
-        '
-      type: object
-      properties:
-        externalId:
-          description: External identifier for the customer subaccount onboarding application. This value has to be unique for each customer subaccount application.
-          type: string
-        name:
-          description: The name of the subaccount.
-          type: string
-        status:
-          description: Status of the onboarding application
-          type: string
-        subaccountId:
-          description: Unique identifier for the customer subaccount application
-          type: string
-      required:
-      - subaccountId
-      - externalId
-      - status
-      title: KYCSubaccountApplicationItem
-    ErrorType:
-      description: The type of error returned.
-      type: string
-      enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
-    ErrorDetails:
-      type: object
-      properties:
-        errorType:
-          $ref: '#/components/schemas/ErrorType'
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - errorType
-      - message
-      title: ErrorDetails
-    CreateKYCDocumentResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/CreateKYCDocumentResponseData'
-      required:
-      - data
-      title: CreateKYCDocumentResponse
+      title: CreateKYCSubaccountApplicationResponse
     GetKYCAgreementResponseData:
       type: object
       properties:
@@ -1595,6 +1395,51 @@ components:
       - signerEmail
       - termsAgreementFormat
       title: GetKYCAgreementResponseData
+    UpdateKYCApplicationResponseData:
+      type: object
+      properties:
+        customerId:
+          description: Unique identifier for the customer onboarding application
+          type: string
+        id:
+          description: DEPRECATED - Use customerId instead
+          type: string
+        status:
+          description: Status of the customer onboarding application
+          type: string
+      required:
+      - customerId
+      - status
+      title: UpdateKYCApplicationResponseData
+    CreateKYCApplicationResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/CreateKYCApplicationResponseData'
+      required:
+      - data
+      title: CreateKYCApplicationResponse
+    CreateKYCSubaccountApplicationRequest:
+      type: object
+      properties:
+        entries:
+          description: A collection of responses for a set of defined relevant questions.
+          type: array
+          items:
+            $ref: '#/components/schemas/KYCApplicationEntry'
+        externalId:
+          description: External identifier for the customer subaccount onboarding application. This value has to be unique for each customer subaccount application.
+          type: string
+        name:
+          description: The name of the subaccount.
+          type: string
+        submit:
+          description: Optional parameter to try to submit the application if there are no validation errors. This action is irreversible you cannot update the application values after. You can use this to avoid making another api call to POST /v2/onboarding/subaccounts/submit
+          type: boolean
+      required:
+      - externalId
+      - entries
+      title: CreateKYCSubaccountApplicationRequest
     CreateKYCDocumentResponseData:
       type: object
       properties:
@@ -1604,6 +1449,58 @@ components:
       required:
       - url
       title: CreateKYCDocumentResponseData
+    GetKYCSubaccountApplicationsResponse:
+      description: 'Get Onboarding KYC Account Applications Response
+
+        '
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/KYCSubaccountApplicationItem'
+        page:
+          $ref: '#/components/schemas/Page'
+      title: GetKYCSubaccountApplicationsResponse
+    UpdateKYCApplicationResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/UpdateKYCApplicationResponseData'
+      required:
+      - data
+      title: UpdateKYCApplicationResponse
+    GetKYCAgreementsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/GetKYCAgreementResponseData'
+        page:
+          $ref: '#/components/schemas/Page'
+      title: GetKYCAgreementsResponse
+    CreateKYCAgreementResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/CreateKYCAgreementResponseData'
+      required:
+      - data
+      title: CreateKYCAgreementResponse
+    ErrorDetails:
+      type: object
+      properties:
+        errorType:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - errorType
+      - message
+      title: ErrorDetails
     UpdateKYCSubaccountApplicationResponse:
       type: object
       properties:
@@ -1612,15 +1509,164 @@ components:
       required:
       - data
       title: UpdateKYCSubaccountApplicationResponse
-    CreateKYCDocumentRequest:
+    UpdateKYCSubaccountApplicationResponseData:
       type: object
       properties:
-        documentType:
-          description: Type of document to upload.
+        status:
+          description: Status of the customer onboarding application
+          type: string
+        subaccountId:
+          description: Unique identifier for the customer onboarding application
           type: string
       required:
-      - documentType
-      title: CreateKYCDocumentRequest
+      - subaccountId
+      - status
+      title: UpdateKYCSubaccountApplicationResponseData
+    CreateKYCApplicationRequest:
+      type: object
+      properties:
+        applicationType:
+          description: Anchorage Digital provided type of application, RIA_PC_INDIVIDUAL to Onboard RIA Program Customer who is an Individual and RIA_PC_INSTITUTION to Onboard RIA Program Customer that is an Institution.
+          type: string
+          example: RIA_PC_INSTITUTION
+          enum:
+          - RIA_PC_INSTITUTION
+          - RIA_PC_INDIVIDUAL
+        applicationVersion:
+          description: Anchorage Digital version of the application. By default, this value is 0.
+          type: integer
+          format: int32
+          default: 0
+        entries:
+          description: A collection of responses for a set of defined relevant questions.
+          type: array
+          items:
+            $ref: '#/components/schemas/KYCApplicationEntry'
+        externalId:
+          description: External identifier for the customer onboarding application. This value has to be unique for each customer application.
+          type: string
+        submit:
+          description: Optional parameter to try to submit the application if there are no validation errors. This action is irreversible you cannot update the application values after. You can use this to avoid making another api call to POST /v2/onboarding/customers/submit
+          type: boolean
+      required:
+      - entries
+      title: CreateKYCApplicationRequest
+    KYCApplicationError:
+      type: object
+      properties:
+        key:
+          description: Identifier of the question.
+          type: string
+        status:
+          description: Answer error for this type of question.
+          type: string
+          enum:
+          - MISSING
+          - BADFORMAT
+          - UNSIGNED
+        value:
+          description: Error message.
+          type: string
+      required:
+      - key
+      - status
+      title: KYCApplicationError
+    KYCSubaccountApplicationItem:
+      description: 'Onboarding KYC Customer Account Application
+
+        '
+      type: object
+      properties:
+        externalId:
+          description: External identifier for the customer subaccount onboarding application. This value has to be unique for each customer subaccount application.
+          type: string
+        name:
+          description: The name of the subaccount.
+          type: string
+        status:
+          description: Status of the onboarding application
+          type: string
+        subaccountId:
+          description: Unique identifier for the customer subaccount application
+          type: string
+      required:
+      - subaccountId
+      - externalId
+      - status
+      title: KYCSubaccountApplicationItem
+    GetKYCAgreementResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/GetKYCAgreementResponseData'
+      required:
+      - data
+      title: GetKYCAgreementResponse
+    UpdateKYCApplicationRequest:
+      type: object
+      properties:
+        entries:
+          description: A collection of responses for a set of defined relevant questions.
+          type: array
+          items:
+            $ref: '#/components/schemas/KYCApplicationEntry'
+      required:
+      - entries
+      title: UpdateKYCApplicationRequest
+    CreateKYCAgreementRequest:
+      type: object
+      properties:
+        frameAncestor:
+          description: URL where the terms and conditions link should be embedded
+          type: string
+        legalEntityName:
+          description: Legal entity name of the customer
+          type: string
+        returnUrl:
+          description: URL of the page to return to once the terms and conditions have been accepted
+          type: string
+        signerEmail:
+          description: Email of the signer
+          type: string
+        signerFirstName:
+          description: First name of the signer
+          type: string
+        signerLastName:
+          description: Last name of the signer
+          type: string
+        termsAgreementFormat:
+          description: Terms and Conditions format
+          type: string
+          default: anchorage
+          enum:
+          - anchorage
+          - docusign
+      required:
+      - legalEntityName
+      - signerFirstName
+      - signerLastName
+      - signerEmail
+      title: CreateKYCAgreementRequest
+    KYCApplicationEntry:
+      type: object
+      properties:
+        key:
+          description: Identifier of the question.
+          type: string
+        value:
+          description: Answer for the given question.
+          oneOf:
+          - type: string
+          - type: boolean
+          - type: object
+            additionalProperties: true
+          - type: array
+            items:
+              type: object
+              additionalProperties: true
+      required:
+      - key
+      - value
     CreateKYCAgreementResponseData:
       type: object
       properties:
@@ -1667,63 +1713,17 @@ components:
       - signerEmail
       - termsAgreementFormat
       title: CreateKYCAgreementResponseData
-    CreateKYCApplicationRequest:
+    UpdateKYCSubaccountApplicationRequest:
       type: object
       properties:
-        applicationType:
-          description: Anchorage Digital provided type of application, RIA_PC_INDIVIDUAL to Onboard RIA Program Customer who is an Individual and RIA_PC_INSTITUTION to Onboard RIA Program Customer that is an Institution.
-          type: string
-          example: RIA_PC_INSTITUTION
-          enum:
-          - RIA_PC_INSTITUTION
-          - RIA_PC_INDIVIDUAL
-        applicationVersion:
-          description: Anchorage Digital version of the application. By default, this value is 0.
-          type: integer
-          format: int32
-          default: 0
         entries:
           description: A collection of responses for a set of defined relevant questions.
           type: array
           items:
             $ref: '#/components/schemas/KYCApplicationEntry'
-        externalId:
-          description: External identifier for the customer onboarding application. This value has to be unique for each customer application.
-          type: string
-        submit:
-          description: Optional parameter to try to submit the application if there are no validation errors. This action is irreversible you cannot update the application values after. You can use this to avoid making another api call to POST /v2/onboarding/customers/submit
-          type: boolean
       required:
       - entries
-      title: CreateKYCApplicationRequest
-    CreateKYCApplicationResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/CreateKYCApplicationResponseData'
-      required:
-      - data
-      title: CreateKYCApplicationResponse
-    KYCApplicationError:
-      type: object
-      properties:
-        key:
-          description: Identifier of the question.
-          type: string
-        status:
-          description: Answer error for this type of question.
-          type: string
-          enum:
-          - MISSING
-          - BADFORMAT
-          - UNSIGNED
-        value:
-          description: Error message.
-          type: string
-      required:
-      - key
-      - status
-      title: KYCApplicationError
+      title: UpdateKYCSubaccountApplicationRequest
   securitySchemes:
     Api-Access-Key:
       type: apiKey

@@ -446,12 +446,6 @@ paths:
     - url: https://api.anchorage-staging.com/v3
 components:
   schemas:
-    Result:
-      type: string
-      enum:
-      - RETURNING_UNUSED_ADDRESS
-      - RETURNING_USED_ADDRESS
-      title: Result
     WalletsAddressesResponse:
       type: object
       properties:
@@ -460,6 +454,42 @@ components:
       required:
       - data
       title: WalletsAddressesResponse
+    ErrorType:
+      description: The type of error returned.
+      type: string
+      enum:
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
+    ErrorDetails:
+      type: object
+      properties:
+        errorType:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - errorType
+      - message
+      title: ErrorDetails
+    Result:
+      type: string
+      enum:
+      - RETURNING_UNUSED_ADDRESS
+      - RETURNING_USED_ADDRESS
+      title: Result
     SignedAddress:
       type: object
       properties:
@@ -548,36 +578,54 @@ components:
           example: <next page url>
           x-omitempty: false
       title: Page
-    ErrorType:
-      description: The type of error returned.
+    WalletAddressSignatureVersion:
+      description: 'Version of the address signature scheme used.
+
+
+        * `V1` - The original scheme. Verify the `signature` against your organization''s fixed Ed25519 public key (provided by Anchorage Digital out-of-band).
+
+        * `V2` - The newer scheme. Verify the `signature` against the leaf certificate''s public key from the `certChain` field, and verify the certificate chain against the Anchorage Digital Address Signing Root CA.'
       type: string
       enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
-    ErrorDetails:
+      - V1
+      - V2
+    ErrorDetails_2:
       type: object
       properties:
-        errorType:
-          $ref: '#/components/schemas/ErrorType'
         message:
           description: A human-readable message providing more details about the error.
           type: string
           example: Missing required field 'amount'.
       required:
-      - errorType
       - message
       title: ErrorDetails
+    BatchStatusResponse:
+      description: Status of a batch operation
+      type: object
+      properties:
+        batchId:
+          description: The unique identifier for the batch operation
+          type: string
+        status:
+          description: Overall status of the batch operation
+          type: string
+          enum:
+          - PENDING
+          - COMPLETED
+          - FAILED
+      required:
+      - batchId
+      - status
+    CreateBatchResponse:
+      description: Response from creating a batch operation
+      type: object
+      properties:
+        batchId:
+          description: The unique identifier for the batch operation. Poll the corresponding batch status endpoint to retrieve results.
+          type: string
+          example: batch_abc123xyz
+      required:
+      - batchId
     ListAddressesResponse:
       type: object
       properties:
@@ -590,6 +638,25 @@ components:
       required:
       - data
       - page
+    ValidateDestinationAddressRequest:
+      description: Request to validate an address as a transfer destination
+      type: object
+      properties:
+        address:
+          description: A unique string identifying an account on a blockchain. This is sometimes dervied from a public key and sometimes decided by the blockchain.
+          type: string
+        memo:
+          description: Optional memo/tag/destination tag (required by some blockchain networks)
+          type:
+          - string
+          - 'null'
+          maxLength: 256
+        networkId:
+          description: A unique string identifying a combination of blockchain and environment (testnet, mainnet).
+          type: string
+      required:
+      - address
+      - networkId
     CreateAddressesBatchRequest:
       description: Request to create multiple addresses in a batch within a single wallet
       type: object
@@ -610,42 +677,6 @@ components:
       required:
       - walletId
       - count
-    ValidateDestinationAddressRequest:
-      description: Request to validate an address as a transfer destination
-      type: object
-      properties:
-        address:
-          description: A unique string identifying an account on a blockchain. This is sometimes dervied from a public key and sometimes decided by the blockchain.
-          type: string
-        memo:
-          description: Optional memo/tag/destination tag (required by some blockchain networks)
-          type:
-          - string
-          - 'null'
-          maxLength: 256
-        networkId:
-          description: A unique string identifying a combination of blockchain and environment (testnet, mainnet).
-          type: string
-      required:
-      - address
-      - networkId
-    BatchStatusResponse:
-      description: Status of a batch operation
-      type: object
-      properties:
-        batchId:
-          description: The unique identifier for the batch operation
-          type: string
-        status:
-          description: Overall status of the batch operation
-          type: string
-          enum:
-          - PENDING
-          - COMPLETED
-          - FAILED
-      required:
-      - batchId
-      - status
     Page_2:
       description: Pagination info
       type: object
@@ -695,37 +726,6 @@ components:
       - signature
       - walletId
       - signatureVersion
-    WalletAddressSignatureVersion:
-      description: 'Version of the address signature scheme used.
-
-
-        * `V1` - The original scheme. Verify the `signature` against your organization''s fixed Ed25519 public key (provided by Anchorage Digital out-of-band).
-
-        * `V2` - The newer scheme. Verify the `signature` against the leaf certificate''s public key from the `certChain` field, and verify the certificate chain against the Anchorage Digital Address Signing Root CA.'
-      type: string
-      enum:
-      - V1
-      - V2
-    CreateBatchResponse:
-      description: Response from creating a batch operation
-      type: object
-      properties:
-        batchId:
-          description: The unique identifier for the batch operation. Poll the corresponding batch status endpoint to retrieve results.
-          type: string
-          example: batch_abc123xyz
-      required:
-      - batchId
-    ErrorDetails_2:
-      type: object
-      properties:
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - message
-      title: ErrorDetails
   securitySchemes:
     Api-Access-Key:
       type: apiKey

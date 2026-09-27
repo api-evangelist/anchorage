@@ -246,45 +246,67 @@ paths:
         Write Tax: present
 components:
   schemas:
-    TaxTransactionUpdateCostBasisRequest:
-      description: Request to update cost basis for a transaction
+    TaxAccount:
+      description: A tax account for the organization
       type: object
       properties:
-        lots:
-          description: An array of tax lots that are part of this transaction. Each lot specifies the quantity, cost basis and the acquisition date.
-          type: array
-          items:
-            $ref: '#/components/schemas/TaxTransactionInputLot'
-          minItems: 1
-          uniqueItems: true
-      required:
-      - lots
-    TaxTransactionUpdateCostBasisResponse:
-      description: Response after updating transaction cost basis
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/TaxTransactionUpdateCostBasisResponseId'
-      required:
-      - data
-    TaxTransactionLot:
-      description: A tax lot, representing an asset quantity with its associated cost basis and acquisition date
-      type: object
-      properties:
-        acquisitionDatetime:
-          description: ISO-8601 timestamp representing when this lot was originally acquired
+        createdAt:
+          description: ISO-8601 timestamp when the account was created
           type: string
           format: date-time
-        costBasis:
-          description: The cost basis of this lot.
+          example: '2022-07-30T22:15:31.99999Z'
+        id:
+          description: The unique identifier of the tax account
           type: string
-          example: '2500'
-        quantity:
-          description: The quantity of this lot.
+          example: acc_9cd9f4d4-078b-4e44-a308-7662fec0f546
+        name:
+          description: The name of the tax account
           type: string
-          example: '1.0'
+          example: Main Trading Account
       required:
-      - quantity
+      - id
+      - name
+      - createdAt
+    ErrorType:
+      description: The type of error returned.
+      type: string
+      enum:
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
+    TaxTransactionUpdateCostBasisResponseId:
+      description: Response data containing transaction ID
+      type: object
+      properties:
+        transactionId:
+          description: The unique identifier of the transaction
+          type: string
+          example: 9cd9f4d4-078b-4e44-a308-7662fec0f546
+      required:
+      - transactionId
+    ErrorDetails:
+      type: object
+      properties:
+        errorType:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - errorType
+      - message
+      title: ErrorDetails
     TaxAccountsResponse:
       type: object
       properties:
@@ -340,27 +362,52 @@ components:
       required:
       - data
       - page
-    TaxAccount:
-      description: A tax account for the organization
+    TaxTransactionLot:
+      description: A tax lot, representing an asset quantity with its associated cost basis and acquisition date
       type: object
       properties:
-        createdAt:
-          description: ISO-8601 timestamp when the account was created
+        acquisitionDatetime:
+          description: ISO-8601 timestamp representing when this lot was originally acquired
           type: string
           format: date-time
-          example: '2022-07-30T22:15:31.99999Z'
-        id:
-          description: The unique identifier of the tax account
+        costBasis:
+          description: The cost basis of this lot.
           type: string
-          example: acc_9cd9f4d4-078b-4e44-a308-7662fec0f546
-        name:
-          description: The name of the tax account
+          example: '2500'
+        quantity:
+          description: The quantity of this lot.
           type: string
-          example: Main Trading Account
+          example: '1.0'
       required:
-      - id
-      - name
-      - createdAt
+      - quantity
+    TaxTransactionUpdateCostBasisRequest:
+      description: Request to update cost basis for a transaction
+      type: object
+      properties:
+        lots:
+          description: An array of tax lots that are part of this transaction. Each lot specifies the quantity, cost basis and the acquisition date.
+          type: array
+          items:
+            $ref: '#/components/schemas/TaxTransactionInputLot'
+          minItems: 1
+          uniqueItems: true
+      required:
+      - lots
+    TaxTransactionInputLot:
+      description: A tax lot in a cost basis update request, with required cost basis
+      allOf:
+      - $ref: '#/components/schemas/TaxTransactionLot'
+      - required:
+        - costBasis
+        - acquisitionDatetime
+    TaxTransactionUpdateCostBasisResponse:
+      description: Response after updating transaction cost basis
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/TaxTransactionUpdateCostBasisResponseId'
+      required:
+      - data
     Page:
       description: Pagination info
       type: object
@@ -373,53 +420,6 @@ components:
           example: <next page url>
           x-omitempty: false
       title: Page
-    TaxTransactionInputLot:
-      description: A tax lot in a cost basis update request, with required cost basis
-      allOf:
-      - $ref: '#/components/schemas/TaxTransactionLot'
-      - required:
-        - costBasis
-        - acquisitionDatetime
-    TaxTransactionUpdateCostBasisResponseId:
-      description: Response data containing transaction ID
-      type: object
-      properties:
-        transactionId:
-          description: The unique identifier of the transaction
-          type: string
-          example: 9cd9f4d4-078b-4e44-a308-7662fec0f546
-      required:
-      - transactionId
-    ErrorType:
-      description: The type of error returned.
-      type: string
-      enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
-    ErrorDetails:
-      type: object
-      properties:
-        errorType:
-          $ref: '#/components/schemas/ErrorType'
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - errorType
-      - message
-      title: ErrorDetails
   securitySchemes:
     Api-Access-Key:
       type: apiKey

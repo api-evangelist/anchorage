@@ -381,6 +381,23 @@ paths:
       - Statements
 components:
   schemas:
+    ErrorType:
+      description: The type of error returned.
+      type: string
+      enum:
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
     StatementType:
       type: object
       properties:
@@ -393,37 +410,19 @@ components:
       required:
       - id
       - name
-    Statement:
+    ErrorDetails:
       type: object
       properties:
-        correctedAt:
-          description: The time the statement was corrected. This field may be omitted if the statement has not been corrected
-          type:
-          - string
-          - 'null'
-          format: date-time
-          example: '2019-01-02T12:34:56.000Z'
-        createdAt:
+        errorType:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          description: A human-readable message providing more details about the error.
           type: string
-          format: date-time
-          example: '2019-01-02T12:34:56.000Z'
-        customerId:
-          type: string
-          example: 1ac10949bbbf483e8df3c0f8ef97146bc9ce6f5890df40fa8777ea63dc932f7b
-        displayName:
-          type: string
-          example: September 2025 Statement
-        id:
-          type: string
-          example: 3486b413-93d3-4447-afce-2b9c9dc34a32
-        typeId:
-          type: string
-          example: 058da362-31a7-4e2b-ae3e-77b095389a5f
+          example: Missing required field 'amount'.
       required:
-      - id
-      - typeId
-      - createdAt
-      - displayName
+      - errorType
+      - message
+      title: ErrorDetails
     StatementDetails:
       type: object
       properties:
@@ -467,36 +466,37 @@ components:
           example: <next page url>
           x-omitempty: false
       title: Page
-    ErrorType:
-      description: The type of error returned.
-      type: string
-      enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
-    ErrorDetails:
+    Statement:
       type: object
       properties:
-        errorType:
-          $ref: '#/components/schemas/ErrorType'
-        message:
-          description: A human-readable message providing more details about the error.
+        correctedAt:
+          description: The time the statement was corrected. This field may be omitted if the statement has not been corrected
+          type:
+          - string
+          - 'null'
+          format: date-time
+          example: '2019-01-02T12:34:56.000Z'
+        createdAt:
           type: string
-          example: Missing required field 'amount'.
+          format: date-time
+          example: '2019-01-02T12:34:56.000Z'
+        customerId:
+          type: string
+          example: 1ac10949bbbf483e8df3c0f8ef97146bc9ce6f5890df40fa8777ea63dc932f7b
+        displayName:
+          type: string
+          example: September 2025 Statement
+        id:
+          type: string
+          example: 3486b413-93d3-4447-afce-2b9c9dc34a32
+        typeId:
+          type: string
+          example: 058da362-31a7-4e2b-ae3e-77b095389a5f
       required:
-      - errorType
-      - message
-      title: ErrorDetails
+      - id
+      - typeId
+      - createdAt
+      - displayName
   securitySchemes:
     Api-Access-Key:
       type: apiKey

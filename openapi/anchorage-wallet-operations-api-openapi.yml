@@ -193,6 +193,16 @@ paths:
       - Wallet Operations
 components:
   schemas:
+    ErrorDetails:
+      type: object
+      properties:
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - message
+      title: ErrorDetails
     WalletOperationResponse:
       type: object
       properties:
@@ -200,16 +210,6 @@ components:
           $ref: '#/components/schemas/WalletOperation'
       required:
       - walletOperation
-    Page:
-      description: Pagination info
-      type: object
-      properties:
-        endCursor:
-          description: Submit this parameter in the "after" field to fetch the next page.
-          type:
-          - string
-          - 'null'
-      title: Page
     ListWalletOperationsResponse:
       type: object
       properties:
@@ -274,16 +274,16 @@ components:
       - networkId
       - status
       - createdAt
-    ErrorDetails:
+    Page:
+      description: Pagination info
       type: object
       properties:
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - message
-      title: ErrorDetails
+        endCursor:
+          description: Submit this parameter in the "after" field to fetch the next page.
+          type:
+          - string
+          - 'null'
+      title: Page
   securitySchemes:
     Api-Access-Key:
       type: apiKey

@@ -368,6 +368,67 @@ paths:
         Read vault activity: present
 components:
   schemas:
+    TagType:
+      description: The ownership type of a tag.
+      type: string
+      enum:
+      - system
+      - backoffice
+      - client
+      title: TagType
+    DeleteAppliedTagResponse:
+      type: object
+      properties:
+        deleted:
+          description: The name of the tag that was removed
+          type: string
+          example: urgent
+      required:
+      - deleted
+      title: DeleteAppliedTagResponse
+    ErrorType:
+      description: The type of error returned.
+      type: string
+      enum:
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
+    Tag:
+      type: object
+      properties:
+        name:
+          description: The name of the tag (case-insensitive, max 25 chars)
+          type: string
+          example: urgent
+        tagType:
+          $ref: '#/components/schemas/TagType'
+      required:
+      - name
+      - tagType
+      title: Tag
+    ErrorDetails:
+      type: object
+      properties:
+        errorType:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - errorType
+      - message
+      title: ErrorDetails
     SearchTagsResponse:
       type: object
       properties:
@@ -382,25 +443,21 @@ components:
       - data
       - pagination
       title: SearchTagsResponse
-    ApplyTagsResponse:
+    CreateTagRequest:
       type: object
       properties:
-        warnings:
-          description: Warnings encountered during tag application (e.g. TAG_LIMIT_REACHED)
-          type:
-          - array
-          - 'null'
-          items:
-            type: string
-      title: ApplyTagsResponse
-    TagType:
-      description: The ownership type of a tag.
-      type: string
-      enum:
-      - system
-      - backoffice
-      - client
-      title: TagType
+        name:
+          description: Tag name (max 25 chars, letters/numbers/underscores/hyphens only)
+          type: string
+          example: urgent
+          maxLength: 25
+          pattern: ^[a-zA-Z0-9_-]+$
+        tagType:
+          $ref: '#/components/schemas/TagType'
+      required:
+      - name
+      - tagType
+      title: CreateTagRequest
     EntityTagsData:
       type: object
       properties:
@@ -412,16 +469,6 @@ components:
       required:
       - tags
       title: EntityTagsData
-    DeleteAppliedTagResponse:
-      type: object
-      properties:
-        deleted:
-          description: The name of the tag that was removed
-          type: string
-          example: urgent
-      required:
-      - deleted
-      title: DeleteAppliedTagResponse
     CreateTagResponse:
       type: object
       properties:
@@ -440,6 +487,25 @@ components:
       - name
       - tagType
       title: CreateTagResponse
+    ApplyTagsResponse:
+      type: object
+      properties:
+        warnings:
+          description: Warnings encountered during tag application (e.g. TAG_LIMIT_REACHED)
+          type:
+          - array
+          - 'null'
+          items:
+            type: string
+      title: ApplyTagsResponse
+    ListTagsResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/EntityTagsData'
+      required:
+      - data
+      title: ListTagsResponse
     ApplyTagsRequest:
       type: object
       properties:
@@ -465,6 +531,24 @@ components:
       - tagType
       - tags
       title: ApplyTagsRequest
+    TaggingPagination:
+      type: object
+      properties:
+        hasMore:
+          description: Whether there are more results available
+          type: boolean
+        limit:
+          description: Number of results per page
+          type: integer
+        nextCursor:
+          description: Cursor for the next page; null if no more results
+          type:
+          - string
+          - 'null'
+      required:
+      - hasMore
+      - limit
+      title: TaggingPagination
     TaggingResult:
       type: object
       properties:
@@ -491,90 +575,6 @@ components:
       - createdAt
       - tags
       title: TaggingResult
-    Tag:
-      type: object
-      properties:
-        name:
-          description: The name of the tag (case-insensitive, max 25 chars)
-          type: string
-          example: urgent
-        tagType:
-          $ref: '#/components/schemas/TagType'
-      required:
-      - name
-      - tagType
-      title: Tag
-    CreateTagRequest:
-      type: object
-      properties:
-        name:
-          description: Tag name (max 25 chars, letters/numbers/underscores/hyphens only)
-          type: string
-          example: urgent
-          maxLength: 25
-          pattern: ^[a-zA-Z0-9_-]+$
-        tagType:
-          $ref: '#/components/schemas/TagType'
-      required:
-      - name
-      - tagType
-      title: CreateTagRequest
-    ListTagsResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/EntityTagsData'
-      required:
-      - data
-      title: ListTagsResponse
-    ErrorType:
-      description: The type of error returned.
-      type: string
-      enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
-    TaggingPagination:
-      type: object
-      properties:
-        hasMore:
-          description: Whether there are more results available
-          type: boolean
-        limit:
-          description: Number of results per page
-          type: integer
-        nextCursor:
-          description: Cursor for the next page; null if no more results
-          type:
-          - string
-          - 'null'
-      required:
-      - hasMore
-      - limit
-      title: TaggingPagination
-    ErrorDetails:
-      type: object
-      properties:
-        errorType:
-          $ref: '#/components/schemas/ErrorType'
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - errorType
-      - message
-      title: ErrorDetails
   securitySchemes:
     Api-Access-Key:
       type: apiKey

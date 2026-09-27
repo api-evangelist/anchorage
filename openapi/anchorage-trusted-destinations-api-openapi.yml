@@ -331,6 +331,125 @@ paths:
       - Trusted Destinations
 components:
   schemas:
+    TrustedDestinationStatusResponse:
+      type: object
+      properties:
+        status:
+          description: 'A string describing the status of the Trusted Destination creation request
+
+
+            * `Initiated`
+
+            * `Generating Docusign`
+
+            * `Pending DocuSign Signature`
+
+            * `Trusted Destination Operation In Progress`
+
+            * `Needs Quorum Approval`
+
+            * `Anchorage Risk Review`
+
+            * `Linking Trusted Destination`
+
+            * `Complete`
+
+            * `Failed`
+
+            * `Rejected`
+
+            * `Canceled`
+
+            * `Expired`'
+          type: string
+    TrustedDestinationsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrustedDestination'
+        page:
+          $ref: '#/components/schemas/Page'
+      required:
+      - data
+      - page
+    TrustedDestinationData:
+      description: Information of a new Trusted Destination to be created
+      type: object
+      properties:
+        address:
+          description: A crypto address for the intended destination
+          type: string
+          example: 2N19AcihQ1a4MxQW658UFHTioUNnMkiHPkw
+        assetType:
+          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
+
+
+            Use `/asset-types` to list all of the supported asset types for your organization.
+
+            '
+          type: string
+          example: BTC
+        description:
+          description: Description containing details about this Trusted Destination.
+          type: string
+        isNetworkLevel:
+          description: Determines if the created Trusted Destination is Network level or not
+          type: boolean
+          example: true
+          default: false
+        memo:
+          description: An optional string providing more context for this hold.
+          type: string
+          example: Internal trade ID 0xabc123
+          maxLength: 512
+        name:
+          description: The name that will be used to identify this Trusted Destination.
+          type: string
+          maxLength: 32
+        trustedDestinationAmlQuestionnaire:
+          $ref: '#/components/schemas/TrustedDestinationAmlQuestionnaire'
+      required:
+      - assetType
+      - address
+      - name
+      - description
+    ErrorType:
+      description: The type of error returned.
+      type: string
+      enum:
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
+    CreateTrustedDestinationsRequest:
+      type: object
+      properties:
+        idempotentId:
+          description: A client-provided unique ID for idempotent requests
+          type: string
+          example: 1ca86e65-4340-4876-85f4-8334852b9c43
+          maxLength: 128
+          x-nullable: true
+        owner:
+          $ref: '#/components/schemas/TrustedDestinationOwner'
+        trustedDestinations:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrustedDestinationData'
+      required:
+      - idempotentId
+      - trustedDestinations
     TrustedDestinationFiatBeneficiary:
       type: object
       properties:
@@ -378,24 +497,6 @@ components:
       - state
       - zipCode
       - country
-    CreateTrustedDestinationsRequest:
-      type: object
-      properties:
-        idempotentId:
-          description: A client-provided unique ID for idempotent requests
-          type: string
-          example: 1ca86e65-4340-4876-85f4-8334852b9c43
-          maxLength: 128
-          x-nullable: true
-        owner:
-          $ref: '#/components/schemas/TrustedDestinationOwner'
-        trustedDestinations:
-          type: array
-          items:
-            $ref: '#/components/schemas/TrustedDestinationData'
-      required:
-      - idempotentId
-      - trustedDestinations
     TrustedDestinationFiatBank:
       type: object
       properties:
@@ -440,88 +541,29 @@ components:
       - state
       - zipCode
       - country
-    TrustedDestinationStatusResponse:
+    ErrorDetails:
       type: object
       properties:
-        status:
-          description: 'A string describing the status of the Trusted Destination creation request
-
-
-            * `Initiated`
-
-            * `Generating Docusign`
-
-            * `Pending DocuSign Signature`
-
-            * `Trusted Destination Operation In Progress`
-
-            * `Needs Quorum Approval`
-
-            * `Anchorage Risk Review`
-
-            * `Linking Trusted Destination`
-
-            * `Complete`
-
-            * `Failed`
-
-            * `Rejected`
-
-            * `Canceled`
-
-            * `Expired`'
+        errorType:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          description: A human-readable message providing more details about the error.
           type: string
-    TrustedDestinationsResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/TrustedDestination'
-        page:
-          $ref: '#/components/schemas/Page'
+          example: Missing required field 'amount'.
       required:
-      - data
-      - page
-    Page:
-      description: Pagination info
+      - errorType
+      - message
+      title: ErrorDetails
+    CreateTrustedDestinationsResponse:
       type: object
       properties:
-        next:
-          description: URL to use to query for the next page or null if no additional results are available
-          type:
-          - string
-          - 'null'
-          example: <next page url>
-          x-omitempty: false
-      title: Page
-    TrustedDestinationCrypto:
-      type: object
-      properties:
-        address:
-          description: A crypto address for the intended asset
+        creationRequestId:
+          description: The client-provided ID which can be used to specify this request in other operations
           type: string
-          example: 2N19AcihQ1a4MxQW658UFHTioUNnMkiHPkw
-        assetType:
-          description: The asset type of the trusted destination.
-          type: string
-          example: BTC
-        isNetworkLevel:
-          description: Determines if the Trusted Destination is Network level or not
-          type: boolean
-          example: true
-        memo:
-          description: Additional data to be sent along with the transaction on blockchains that support it.
-          type: string
-        networkId:
-          description: The ID of the network this trusted destination belongs to.
-          type: string
-          example: BTC
+          example: 1ca86e65-4340-4876-85f4-8334852b9c43
+          maxLength: 128
       required:
-      - address
-      - networkId
-      - assetType
-      - isNetworkLevel
+      - creationRequestId
     TrustedDestinationFiat:
       type: object
       properties:
@@ -547,57 +589,6 @@ components:
       - usage
       - beneficiary
       - beneficiaryBank
-    CreateTrustedDestinationsResponse:
-      type: object
-      properties:
-        creationRequestId:
-          description: The client-provided ID which can be used to specify this request in other operations
-          type: string
-          example: 1ca86e65-4340-4876-85f4-8334852b9c43
-          maxLength: 128
-      required:
-      - creationRequestId
-    TrustedDestinationData:
-      description: Information of a new Trusted Destination to be created
-      type: object
-      properties:
-        address:
-          description: A crypto address for the intended destination
-          type: string
-          example: 2N19AcihQ1a4MxQW658UFHTioUNnMkiHPkw
-        assetType:
-          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
-
-
-            Use `/asset-types` to list all of the supported asset types for your organization.
-
-            '
-          type: string
-          example: BTC
-        description:
-          description: Description containing details about this Trusted Destination.
-          type: string
-        isNetworkLevel:
-          description: Determines if the created Trusted Destination is Network level or not
-          type: boolean
-          example: true
-          default: false
-        memo:
-          description: An optional string providing more context for this hold.
-          type: string
-          example: Internal trade ID 0xabc123
-          maxLength: 512
-        name:
-          description: The name that will be used to identify this Trusted Destination.
-          type: string
-          maxLength: 32
-        trustedDestinationAmlQuestionnaire:
-          $ref: '#/components/schemas/TrustedDestinationAmlQuestionnaire'
-      required:
-      - assetType
-      - address
-      - name
-      - description
     TrustedDestinationAmlQuestionnaire:
       description: Anti-money laundering questionnaire. Required for Anchorage Digital organizations. Must not be provided for Porto organizations — including this field for Porto organizations will result in an error.
       type: object
@@ -695,6 +686,45 @@ components:
       required:
       - type
       - id
+    TrustedDestinationCrypto:
+      type: object
+      properties:
+        address:
+          description: A crypto address for the intended asset
+          type: string
+          example: 2N19AcihQ1a4MxQW658UFHTioUNnMkiHPkw
+        assetType:
+          description: The asset type of the trusted destination.
+          type: string
+          example: BTC
+        isNetworkLevel:
+          description: Determines if the Trusted Destination is Network level or not
+          type: boolean
+          example: true
+        memo:
+          description: Additional data to be sent along with the transaction on blockchains that support it.
+          type: string
+        networkId:
+          description: The ID of the network this trusted destination belongs to.
+          type: string
+          example: BTC
+      required:
+      - address
+      - networkId
+      - assetType
+      - isNetworkLevel
+    Page:
+      description: Pagination info
+      type: object
+      properties:
+        next:
+          description: URL to use to query for the next page or null if no additional results are available
+          type:
+          - string
+          - 'null'
+          example: <next page url>
+          x-omitempty: false
+      title: Page
     TrustedDestination:
       type: object
       properties:
@@ -719,36 +749,6 @@ components:
       required:
       - id
       - type
-    ErrorType:
-      description: The type of error returned.
-      type: string
-      enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
-    ErrorDetails:
-      type: object
-      properties:
-        errorType:
-          $ref: '#/components/schemas/ErrorType'
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - errorType
-      - message
-      title: ErrorDetails
   securitySchemes:
     Api-Access-Key:
       type: apiKey

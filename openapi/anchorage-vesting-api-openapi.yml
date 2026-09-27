@@ -216,6 +216,23 @@ paths:
         Read vault activity: present
 components:
   schemas:
+    ErrorType:
+      description: The type of error returned.
+      type: string
+      enum:
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
     OffchainVestingSchedulesResponse:
       type: object
       properties:
@@ -229,23 +246,124 @@ components:
       - data
       - page
       title: OffchainVestingSchedulesResponse
-    GetVestingBalancesBatchRequest:
+    ErrorDetails:
       type: object
       properties:
-        allocationIds:
-          description: List of allocation IDs to get vesting balances for
+        errorType:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - errorType
+      - message
+      title: ErrorDetails
+    VestingBalancesBatchResponse:
+      type: object
+      properties:
+        errorCount:
+          description: Number of allocations that failed
+          type: integer
+          example: 1
+        results:
+          description: Per-allocation vesting balance results
           type: array
           items:
-            type: string
-            minLength: 1
-          maxItems: 100
-          minItems: 1
-        stakeholderId:
-          description: The external stakeholder ID (optional, used to retrieve wallet info when no transactions exist yet)
-          type: string
+            $ref: '#/components/schemas/VestingBalancesResult'
+        successCount:
+          description: Number of allocations successfully processed
+          type: integer
+          example: 3
       required:
-      - allocationIds
-      title: GetVestingBalancesBatchRequest
+      - results
+      - successCount
+      - errorCount
+      title: VestingBalancesBatchResponse
+    WalletInfo:
+      type: object
+      properties:
+        address:
+          description: The public address of the wallet associated with this allocation
+          type: string
+          example: 0x1234567890abcdef...
+        walletId:
+          description: The ID of the wallet associated with this allocation
+          type: string
+          example: 3d293c0d64c703023692216e9b4f5280
+      required:
+      - walletId
+      - address
+      title: WalletInfo
+    OffchainVestingHold:
+      type: object
+      properties:
+        endTime:
+          description: End time for this hold in UTC following [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'date-time' format. A valid format example is `2021-01-01T00:00:00Z`.
+          type: string
+          format: date-time
+        holdAmount:
+          description: Amount held by this vesting hold
+          type: string
+        holdId:
+          description: Unique hold identifier
+          type: string
+        holdType:
+          description: Type of vesting hold
+          type: string
+        startTime:
+          description: Start time for this hold in UTC following [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'date-time' format. A valid format example is `2021-01-01T00:00:00Z`.
+          type: string
+          format: date-time
+      required:
+      - holdId
+      - holdAmount
+      - holdType
+      - startTime
+      - endTime
+      title: OffchainVestingHold
+    Page:
+      description: Pagination info
+      type: object
+      properties:
+        next:
+          description: URL to use to query for the next page or null if no additional results are available
+          type:
+          - string
+          - 'null'
+          example: <next page url>
+          x-omitempty: false
+      title: Page
+    VestingBalancesResponse:
+      type: object
+      properties:
+        balance:
+          $ref: '#/components/schemas/VestingBalance'
+        walletInfo:
+          $ref: '#/components/schemas/WalletInfo'
+      required:
+      - walletInfo
+      - balance
+      title: VestingBalancesResponse
+    VestingBalancesResult:
+      type: object
+      properties:
+        allocationId:
+          description: The allocation ID this result corresponds to
+          type: string
+          example: alloc-123
+        balance:
+          $ref: '#/components/schemas/VestingBalance'
+        error:
+          description: Error message if this allocation failed, null on success
+          type:
+          - string
+          - 'null'
+        walletInfo:
+          $ref: '#/components/schemas/WalletInfo'
+      required:
+      - allocationId
+      title: VestingBalancesResult
     OffchainVestingWalletAllocation:
       type: object
       properties:
@@ -269,6 +387,23 @@ components:
       - vestedAmount
       - vestingHolds
       title: OffchainVestingWalletAllocation
+    GetVestingBalancesBatchRequest:
+      type: object
+      properties:
+        allocationIds:
+          description: List of allocation IDs to get vesting balances for
+          type: array
+          items:
+            type: string
+            minLength: 1
+          maxItems: 100
+          minItems: 1
+        stakeholderId:
+          description: The external stakeholder ID (optional, used to retrieve wallet info when no transactions exist yet)
+          type: string
+      required:
+      - allocationIds
+      title: GetVestingBalancesBatchRequest
     OffchainVestingSchedule:
       type: object
       properties:
@@ -326,111 +461,6 @@ components:
       - unstakeable
       - assetType
       title: OffchainVestingSchedule
-    OffchainVestingHold:
-      type: object
-      properties:
-        endTime:
-          description: End time for this hold in UTC following [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'date-time' format. A valid format example is `2021-01-01T00:00:00Z`.
-          type: string
-          format: date-time
-        holdAmount:
-          description: Amount held by this vesting hold
-          type: string
-        holdId:
-          description: Unique hold identifier
-          type: string
-        holdType:
-          description: Type of vesting hold
-          type: string
-        startTime:
-          description: Start time for this hold in UTC following [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'date-time' format. A valid format example is `2021-01-01T00:00:00Z`.
-          type: string
-          format: date-time
-      required:
-      - holdId
-      - holdAmount
-      - holdType
-      - startTime
-      - endTime
-      title: OffchainVestingHold
-    WalletInfo:
-      type: object
-      properties:
-        address:
-          description: The public address of the wallet associated with this allocation
-          type: string
-          example: 0x1234567890abcdef...
-        walletId:
-          description: The ID of the wallet associated with this allocation
-          type: string
-          example: 3d293c0d64c703023692216e9b4f5280
-      required:
-      - walletId
-      - address
-      title: WalletInfo
-    Page:
-      description: Pagination info
-      type: object
-      properties:
-        next:
-          description: URL to use to query for the next page or null if no additional results are available
-          type:
-          - string
-          - 'null'
-          example: <next page url>
-          x-omitempty: false
-      title: Page
-    VestingBalancesResult:
-      type: object
-      properties:
-        allocationId:
-          description: The allocation ID this result corresponds to
-          type: string
-          example: alloc-123
-        balance:
-          $ref: '#/components/schemas/VestingBalance'
-        error:
-          description: Error message if this allocation failed, null on success
-          type:
-          - string
-          - 'null'
-        walletInfo:
-          $ref: '#/components/schemas/WalletInfo'
-      required:
-      - allocationId
-      title: VestingBalancesResult
-    VestingBalancesResponse:
-      type: object
-      properties:
-        balance:
-          $ref: '#/components/schemas/VestingBalance'
-        walletInfo:
-          $ref: '#/components/schemas/WalletInfo'
-      required:
-      - walletInfo
-      - balance
-      title: VestingBalancesResponse
-    VestingBalancesBatchResponse:
-      type: object
-      properties:
-        errorCount:
-          description: Number of allocations that failed
-          type: integer
-          example: 1
-        results:
-          description: Per-allocation vesting balance results
-          type: array
-          items:
-            $ref: '#/components/schemas/VestingBalancesResult'
-        successCount:
-          description: Number of allocations successfully processed
-          type: integer
-          example: 3
-      required:
-      - results
-      - successCount
-      - errorCount
-      title: VestingBalancesBatchResponse
     VestingBalance:
       type: object
       properties:
@@ -466,36 +496,6 @@ components:
       - unvestedBalance
       - lockedBalance
       title: VestingBalance
-    ErrorType:
-      description: The type of error returned.
-      type: string
-      enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
-    ErrorDetails:
-      type: object
-      properties:
-        errorType:
-          $ref: '#/components/schemas/ErrorType'
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - errorType
-      - message
-      title: ErrorDetails
   securitySchemes:
     Api-Access-Key:
       type: apiKey
