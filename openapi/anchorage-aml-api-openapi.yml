@@ -81,21 +81,6 @@ paths:
       - AML
 components:
   schemas:
-    AMLBeneficiary:
-      description: The recipient of the transaction.
-      type: object
-      properties:
-        destination:
-          $ref: '#/components/schemas/AMLBeneficiaryDestinationInfo'
-        entity:
-          $ref: '#/components/schemas/AMLBeneficiaryEntityInfo'
-        individual:
-          $ref: '#/components/schemas/AMLBeneficiaryIndividualInfo'
-        type:
-          $ref: '#/components/schemas/AMLBeneficiaryType'
-      required:
-      - type
-      title: AMLBeneficiary
     AMLWalletOwnerType:
       description: Indicates who owns the self-hosted wallet.
       type: string
@@ -103,6 +88,43 @@ components:
       - MY_ORGANIZATION
       - PERSON_OR_ENTITY
       title: AMLWalletOwnerType
+    ErrorDetails:
+      type: object
+      properties:
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - message
+      title: ErrorDetails
+    AMLTxIntent:
+      description: The intent of the transaction.
+      type: string
+      enum:
+      - TRUSTED_DESTINATION_ADD
+      - WITHDRAWAL
+      - EXTERNAL_TRANSFER
+      title: AMLTxIntent
+    AMLDestinationType:
+      description: Type of destination.
+      type: string
+      enum:
+      - FINANCIAL_INSTITUTION
+      - SELF_HOSTED_WALLET
+      title: AMLDestinationType
+    AMLSelfHostedInfo:
+      description: Information about a self-hosted wallet destination.
+      type: object
+      properties:
+        description:
+          description: Description of the self-hosted wallet.
+          type: string
+        ownerType:
+          $ref: '#/components/schemas/AMLWalletOwnerType'
+      required:
+      - description
+      title: AMLSelfHostedInfo
     AMLOriginator:
       description: The organization or client initiating the transaction.
       type: object
@@ -138,61 +160,6 @@ components:
       - countryCode
       - isNaturalPerson
       title: AMLOriginator
-    AMLDestination:
-      description: The Virtual Asset Service Provider (VASP) or self-hosted wallet receiving the funds.
-      type: object
-      properties:
-        custodial:
-          $ref: '#/components/schemas/AMLCustodialInfo'
-        selfHosted:
-          $ref: '#/components/schemas/AMLSelfHostedInfo'
-        type:
-          $ref: '#/components/schemas/AMLDestinationType'
-      required:
-      - type
-      title: AMLDestination
-    AMLSelfHostedInfo:
-      description: Information about a self-hosted wallet destination.
-      type: object
-      properties:
-        description:
-          description: Description of the self-hosted wallet.
-          type: string
-        ownerType:
-          $ref: '#/components/schemas/AMLWalletOwnerType'
-      required:
-      - description
-      title: AMLSelfHostedInfo
-    AMLBeneficiaryType:
-      description: Type of beneficiary.
-      type: string
-      enum:
-      - PERSON
-      - ENTITY
-      - DESTINATION
-      - MY_ORGANIZATION
-      title: AMLBeneficiaryType
-    AMLCustodialInfo:
-      description: Information about a custodial VASP destination.
-      type: object
-      properties:
-        countryCode:
-          description: ISO 3166-1 alpha-2 country code.
-          type: string
-        name:
-          description: Name of the custodial institution.
-          type: string
-      required:
-      - name
-      - countryCode
-      title: AMLCustodialInfo
-    AMLDestinationType:
-      description: Type of destination.
-      type: string
-      enum:
-      - FINANCIAL_INSTITUTION
-      - SELF_HOSTED_WALLET
-      title: AMLDestinationType
     AMLBeneficiaryIndividualInfo:
       description: Beneficiary information when the beneficiary is a natural person.
       type: object
@@ -226,43 +193,44 @@ components:
       - lastName
       - countryCode
       title: AMLBeneficiaryIndividualInfo
-    AMLTxIntent:
-      description: The intent of the transaction.
-      type: string
-      enum:
-      - TRUSTED_DESTINATION_ADD
-      - WITHDRAWAL
-      - EXTERNAL_TRANSFER
-      title: AMLTxIntent
-    AMLOriginatorExtraInfo:
-      description: Additional optional information about the originator.
+    AMLBeneficiaryDestinationInfo:
+      description: Beneficiary information when the beneficiary is the destination VASP itself.
       type: object
       properties:
-        dateOfIncorporation:
-          description: Date of incorporation.
+        countryCode:
+          description: ISO 3166-1 alpha-2 country code.
           type: string
-          format: date-time
-        placeOfIncorporationCountryCode:
-          description: ISO 3166-1 alpha-2 country code of incorporation.
+        name:
+          description: Name of the destination.
           type: string
-      title: AMLOriginatorExtraInfo
-    AMLPurpose:
-      description: The purpose of the transaction.
+      required:
+      - name
+      - countryCode
+      title: AMLBeneficiaryDestinationInfo
+    AMLBeneficiaryType:
+      description: Type of beneficiary.
       type: string
       enum:
-      - TRADING_SETTLEMENT
-      - LENDING
-      - INVESTMENT
-      - EXPENSES
-      - FEE_PAYMENT
-      - GRANT_PAYMENT
-      - PRIZE_AWARD
-      - GIFT
-      - REIMBURSEMENT
-      - REBALANCE
-      - INTRA_COMPANY
-      - REWARDS_DISTRIBUTION
-      title: AMLPurpose
+      - PERSON
+      - ENTITY
+      - DESTINATION
+      - MY_ORGANIZATION
+      title: AMLBeneficiaryType
+    AMLBeneficiary:
+      description: The recipient of the transaction.
+      type: object
+      properties:
+        destination:
+          $ref: '#/components/schemas/AMLBeneficiaryDestinationInfo'
+        entity:
+          $ref: '#/components/schemas/AMLBeneficiaryEntityInfo'
+        individual:
+          $ref: '#/components/schemas/AMLBeneficiaryIndividualInfo'
+        type:
+          $ref: '#/components/schemas/AMLBeneficiaryType'
+      required:
+      - type
+      title: AMLBeneficiary
     AMLBeneficiaryEntityInfo:
       description: Beneficiary information when the beneficiary is an entity.
       type: object
@@ -296,16 +264,26 @@ components:
       - countryCode
       - isNaturalPerson
       title: AMLBeneficiaryEntityInfo
-    ErrorDetails:
+    AMLStructuredSubmission:
+      description: Structured AML submission data. Required fields are enforced by the server based on the intent.
       type: object
       properties:
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - message
-      title: ErrorDetails
+        beneficiary:
+          $ref: '#/components/schemas/AMLBeneficiary'
+        destination:
+          $ref: '#/components/schemas/AMLDestination'
+        originator:
+          $ref: '#/components/schemas/AMLOriginator'
+        purpose:
+          $ref: '#/components/schemas/AMLPurpose'
+      title: AMLStructuredSubmission
+    AMLOriginatorType:
+      description: Type of originator.
+      type: string
+      enum:
+      - MY_ORGANIZATION
+      - MY_CLIENT
+      title: AMLOriginatorType
     AMLSubmitInfoResponse:
       type: object
       properties:
@@ -349,40 +327,62 @@ components:
       - addressText
       - answers
       title: AMLSubmitInfoRequest
-    AMLOriginatorType:
-      description: Type of originator.
-      type: string
-      enum:
-      - MY_ORGANIZATION
-      - MY_CLIENT
-      title: AMLOriginatorType
-    AMLStructuredSubmission:
-      description: Structured AML submission data. Required fields are enforced by the server based on the intent.
+    AMLOriginatorExtraInfo:
+      description: Additional optional information about the originator.
       type: object
       properties:
-        beneficiary:
-          $ref: '#/components/schemas/AMLBeneficiary'
-        destination:
-          $ref: '#/components/schemas/AMLDestination'
-        originator:
-          $ref: '#/components/schemas/AMLOriginator'
-        purpose:
-          $ref: '#/components/schemas/AMLPurpose'
-      title: AMLStructuredSubmission
-    AMLBeneficiaryDestinationInfo:
-      description: Beneficiary information when the beneficiary is the destination VASP itself.
+        dateOfIncorporation:
+          description: Date of incorporation.
+          type: string
+          format: date-time
+        placeOfIncorporationCountryCode:
+          description: ISO 3166-1 alpha-2 country code of incorporation.
+          type: string
+      title: AMLOriginatorExtraInfo
+    AMLDestination:
+      description: The Virtual Asset Service Provider (VASP) or self-hosted wallet receiving the funds.
+      type: object
+      properties:
+        custodial:
+          $ref: '#/components/schemas/AMLCustodialInfo'
+        selfHosted:
+          $ref: '#/components/schemas/AMLSelfHostedInfo'
+        type:
+          $ref: '#/components/schemas/AMLDestinationType'
+      required:
+      - type
+      title: AMLDestination
+    AMLPurpose:
+      description: The purpose of the transaction.
+      type: string
+      enum:
+      - TRADING_SETTLEMENT
+      - LENDING
+      - INVESTMENT
+      - EXPENSES
+      - FEE_PAYMENT
+      - GRANT_PAYMENT
+      - PRIZE_AWARD
+      - GIFT
+      - REIMBURSEMENT
+      - REBALANCE
+      - INTRA_COMPANY
+      - REWARDS_DISTRIBUTION
+      title: AMLPurpose
+    AMLCustodialInfo:
+      description: Information about a custodial VASP destination.
       type: object
       properties:
         countryCode:
           description: ISO 3166-1 alpha-2 country code.
           type: string
         name:
-          description: Name of the destination.
+          description: Name of the custodial institution.
           type: string
       required:
       - name
       - countryCode
-      title: AMLBeneficiaryDestinationInfo
+      title: AMLCustodialInfo
   securitySchemes:
     Api-Access-Key:
       type: apiKey

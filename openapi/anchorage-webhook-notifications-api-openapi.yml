@@ -623,17 +623,33 @@ paths:
       - Webhook Notifications
 components:
   schemas:
-    CreateWebhookEndpointsResponse:
+    WebhookEndpointSubscription:
       type: object
       properties:
-        data:
+        createdAt:
+          type: string
+          format: date-time
+        eventTypeId:
+          type: string
+      required:
+      - createdAt
+      - eventTypeId
+    WebhookEndpointPatch:
+      type: object
+      properties:
+        description:
+          type: string
+        publicKey:
+          type: string
+        subscriptions:
           type: array
           items:
-            type: string
-            format: uuid
-      required:
-      - data
-      title: CreateWebhookEndpointsResponse
+            $ref: '#/components/schemas/NewWebhookEndpointSubscription'
+        url:
+          type: string
+          format: uri
+      additionalProperties: false
+      title: WebhookEndpointPatch
     ErrorType:
       description: The type of error returned.
       type: string
@@ -651,45 +667,17 @@ components:
       - InsufficientFunds
       - NotImplemented
       title: ErrorType
-    NewWebhookEndpoint:
+    CreateWebhookEndpointsResponse:
       type: object
       properties:
-        description:
-          type: string
-        publicKey:
-          type: string
-        subscriptions:
+        data:
           type: array
           items:
-            $ref: '#/components/schemas/NewWebhookEndpointSubscription'
-        url:
-          description: url of the endpoint, requires http:// prefix
-          type: string
-          format: uri
-      example:
-        url: https://your-domain.com/transaction-webhooks
-        description: Endpoint for receiving transaction event webhooks
-        subscriptions:
-        - eventTypeId: withdrawal.initiated
-        publicKey: '----BEGIN PUBLIC KEY-----
-
-          MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEeg+pxTCsjew/+7IK4+Vw5zyHDnMW7bzn
-
-          sClhuYIKjXF8EJ1lfyZC2VPVullBKgvHRzNMfC1KkF2LIoRp2ibcWQ==
-
-          -----END PUBLIC KEY-----'
-      additionalProperties: false
+            type: string
+            format: uuid
       required:
-      - url
-      title: NewWebhookEndpoint
-    NewWebhookEndpointSubscription:
-      type: object
-      properties:
-        eventTypeId:
-          type: string
-      additionalProperties: false
-      required:
-      - eventTypeId
+      - data
+      title: CreateWebhookEndpointsResponse
     ErrorDetails:
       type: object
       properties:
@@ -740,17 +728,30 @@ components:
       - createdAt
       - url
       title: WebhookEndpoint
-    WebhookEndpointSubscription:
+    NewWebhookEndpointSubscription:
       type: object
       properties:
-        createdAt:
-          type: string
-          format: date-time
         eventTypeId:
           type: string
+      additionalProperties: false
       required:
-      - createdAt
       - eventTypeId
+    CreateWebhookSubscriptionsResponse:
+      type: object
+      properties: {}
+      title: CreateWebhookSubscriptionsResponse
+    Page:
+      description: Pagination info
+      type: object
+      properties:
+        next:
+          description: URL to use to query for the next page or null if no additional results are available
+          type:
+          - string
+          - 'null'
+          example: <next page url>
+          x-omitempty: false
+      title: Page
     WebhookEventType:
       type: object
       properties:
@@ -764,23 +765,7 @@ components:
       required:
       - id
       - description
-    Page:
-      description: Pagination info
-      type: object
-      properties:
-        next:
-          description: URL to use to query for the next page or null if no additional results are available
-          type:
-          - string
-          - 'null'
-          example: <next page url>
-          x-omitempty: false
-      title: Page
-    CreateWebhookSubscriptionsResponse:
-      type: object
-      properties: {}
-      title: CreateWebhookSubscriptionsResponse
-    WebhookEndpointPatch:
+    NewWebhookEndpoint:
       type: object
       properties:
         description:
@@ -792,10 +777,25 @@ components:
           items:
             $ref: '#/components/schemas/NewWebhookEndpointSubscription'
         url:
+          description: url of the endpoint, requires http:// prefix
           type: string
           format: uri
+      example:
+        url: https://your-domain.com/transaction-webhooks
+        description: Endpoint for receiving transaction event webhooks
+        subscriptions:
+        - eventTypeId: withdrawal.initiated
+        publicKey: '----BEGIN PUBLIC KEY-----
+
+          MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEeg+pxTCsjew/+7IK4+Vw5zyHDnMW7bzn
+
+          sClhuYIKjXF8EJ1lfyZC2VPVullBKgvHRzNMfC1KkF2LIoRp2ibcWQ==
+
+          -----END PUBLIC KEY-----'
       additionalProperties: false
-      title: WebhookEndpointPatch
+      required:
+      - url
+      title: NewWebhookEndpoint
   securitySchemes:
     Api-Access-Key:
       type: apiKey

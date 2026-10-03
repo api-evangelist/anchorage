@@ -237,149 +237,6 @@ paths:
       - Balances
 components:
   schemas:
-    StakingPositionsResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/StakingPosition'
-        page:
-          $ref: '#/components/schemas/Page'
-      required:
-      - data
-      - page
-    HyperCoreStakingPositionDetails:
-      description: HyperCore-specific staking position information. HyperCore delegates directly to validators (no third-party staking provider), so the validator address is the position identifier.
-      type: object
-      properties:
-        delegationUnlockAt:
-          description: Timestamp (RFC 3339) until which this delegated position is locked — i.e. when it first becomes eligible to undelegate (HyperCore's ~1-day delegation lock). Present only for actively delegated positions; null for wallet-level UNBOND/UNBONDED positions or when the validator has not reported a lock.
-          type:
-          - string
-          - 'null'
-          format: date-time
-          example: '2026-06-07T12:00:00Z'
-        type:
-          description: Discriminator field
-          type: string
-          default: HYPERCORE
-          enum:
-          - HYPERCORE
-        validatorAddress:
-          description: Address of the validator this stake is delegated to. Empty for wallet-level positions in the unbonding (UNBOND) or unbonded (UNBONDED) states, which HyperCore does not associate with a specific validator.
-          type:
-          - string
-          - 'null'
-          example: '0xa012b9d2a8b1f7b8f8b9b3a1f0c9d8e7f6a5b4c3'
-      required:
-      - type
-      title: HyperCore Staking Position Details
-    WalletBalanceEntry:
-      description: A single balance entry with type and amount
-      type: object
-      properties:
-        amount:
-          $ref: '#/components/schemas/Amount'
-        balanceType:
-          $ref: '#/components/schemas/WalletBalanceType'
-      required:
-      - balanceType
-      - amount
-    AvalanchePChainStakingPositionDetails:
-      description: Avalanche P-Chain-specific staking position information. P-Chain staking is time-locked with no early exit; funds are returned automatically at the end of the staking period.
-      type: object
-      properties:
-        type:
-          description: Discriminator field
-          type: string
-          default: AVALANCHE_PCHAIN
-          enum:
-          - AVALANCHE_PCHAIN
-        validatorAddress:
-          description: Node ID of the validator this stake is delegated to (e.g. NodeID-abc123). Null when the position cannot be correlated to a specific validator.
-          type:
-          - string
-          - 'null'
-          example: NodeID-CaBYJ9kzHvrQFiYCckne1QM8R9zMjgVzp
-      required:
-      - type
-      title: Avalanche P-Chain Staking Position Details
-    StakingPosition:
-      description: High-level information about a staking position
-      type: object
-      properties:
-        networkId:
-          description: A unique string identifying a combination of blockchain and environment (testnet, mainnet).
-          type: string
-        networkSpecific:
-          description: Network-specific staking position details
-          discriminator:
-            propertyName: type
-            mapping:
-              ETHEREUM: '#/components/schemas/EthereumStakingPositionDetails'
-              SOLANA: '#/components/schemas/SolanaStakingPositionDetails'
-              HYPERCORE: '#/components/schemas/HyperCoreStakingPositionDetails'
-              AVALANCHE_PCHAIN: '#/components/schemas/AvalanchePChainStakingPositionDetails'
-          oneOf:
-          - $ref: '#/components/schemas/EthereumStakingPositionDetails'
-          - $ref: '#/components/schemas/SolanaStakingPositionDetails'
-          - $ref: '#/components/schemas/HyperCoreStakingPositionDetails'
-          - $ref: '#/components/schemas/AvalanchePChainStakingPositionDetails'
-        positionId:
-          description: Unique identifier for this staking position
-          type: string
-      required:
-      - positionId
-      - networkId
-      - networkSpecific
-    StakingPositionBalancesResponse:
-      description: Response containing staking position balance details
-      type: object
-      properties:
-        balances:
-          description: Array of balance entries for this staking position
-          type: array
-          items:
-            $ref: '#/components/schemas/StakingPositionBalanceEntry'
-      required:
-      - balances
-    ErrorDetails:
-      type: object
-      properties:
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - message
-      title: ErrorDetails
-    WalletBalanceType:
-      description: 'The type of balance. Includes both wallet-level balances and aggregated staking position balances.
-
-
-        * `AVAILABLE` - Balance available for withdrawal
-
-        * `TOTAL` - Total balance including all states
-
-        * `HELD` - Sum of all holds that apply to the primary address of the wallet, such as pending withdrawals and settlements. This balance is held and not available for withdrawal.
-
-        * `ACTIVE_STAKE` - Sum of all active stake across staking positions
-
-        * `INACTIVE_STAKE` - Sum of all inactive stake across staking positions
-
-        * `ACTIVATING_STAKE` - Sum of all activating stake across staking positions
-
-        * `DEACTIVATING_STAKE` - Sum of all deactivating stake across staking positions'
-      type: string
-      enum:
-      - AVAILABLE
-      - TOTAL
-      - HELD
-      - ACTIVE_STAKE
-      - INACTIVE_STAKE
-      - ACTIVATING_STAKE
-      - DEACTIVATING_STAKE
     EthereumStakingPositionDetails:
       description: Ethereum-specific staking position information
       type: object
@@ -407,48 +264,18 @@ components:
       required:
       - type
       title: Ethereum Staking Position Details
-    Page:
-      description: Pagination info
+    StakingPositionsResponse:
       type: object
       properties:
-        endCursor:
-          description: Submit this parameter in the "after" field to fetch the next page.
-          type:
-          - string
-          - 'null'
-      title: Page
-    StakingPositionBalanceType:
-      description: 'The type of balance for a staking position.
-
-
-        * `ACTIVE_STAKE` - Currently active stake
-
-        * `INACTIVE_STAKE` - Inactive stake
-
-        * `ACTIVATING_STAKE` - Stake that is in the process of activating
-
-        * `DEACTIVATING_STAKE` - Stake that is in the process of deactivating'
-      type: string
-      enum:
-      - ACTIVE_STAKE
-      - INACTIVE_STAKE
-      - ACTIVATING_STAKE
-      - DEACTIVATING_STAKE
-    Amount:
-      description: Combines an asset identifier with a decimal string value
-      type: object
-      properties:
-        amount:
-          description: Amount as a decimal string. Amounts never include fees.
-          type: string
-          example: '10.45234733'
-        assetType:
-          description: A unique string identifying a specific asset on a specific blockchain and environment (testnet, mainnet).
-          type: string
-          example: ETH
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/StakingPosition'
+        page:
+          $ref: '#/components/schemas/Page'
       required:
-      - assetType
-      - amount
+      - data
+      - page
     SolanaStakingPositionDetails:
       description: Solana-specific staking position information
       type: object
@@ -495,17 +322,124 @@ components:
       - withdrawAuthority
       - stakeAuthority
       title: Solana Staking Position Details
-    WalletBalancesResponse:
-      description: Response containing wallet balance details
+    WalletBalanceType:
+      description: 'The type of balance. Includes both wallet-level balances and aggregated staking position balances.
+
+
+        * `AVAILABLE` - Balance available for withdrawal
+
+        * `TOTAL` - Total balance including all states
+
+        * `HELD` - Sum of all holds that apply to the primary address of the wallet, such as pending withdrawals and settlements. This balance is held and not available for withdrawal.
+
+        * `ACTIVE_STAKE` - Sum of all active stake across staking positions
+
+        * `INACTIVE_STAKE` - Sum of all inactive stake across staking positions
+
+        * `ACTIVATING_STAKE` - Sum of all activating stake across staking positions
+
+        * `DEACTIVATING_STAKE` - Sum of all deactivating stake across staking positions'
+      type: string
+      enum:
+      - AVAILABLE
+      - TOTAL
+      - HELD
+      - ACTIVE_STAKE
+      - INACTIVE_STAKE
+      - ACTIVATING_STAKE
+      - DEACTIVATING_STAKE
+    StakingPositionBalanceType:
+      description: 'The type of balance for a staking position.
+
+
+        * `ACTIVE_STAKE` - Currently active stake
+
+        * `INACTIVE_STAKE` - Inactive stake
+
+        * `ACTIVATING_STAKE` - Stake that is in the process of activating
+
+        * `DEACTIVATING_STAKE` - Stake that is in the process of deactivating'
+      type: string
+      enum:
+      - ACTIVE_STAKE
+      - INACTIVE_STAKE
+      - ACTIVATING_STAKE
+      - DEACTIVATING_STAKE
+    WalletBalanceEntry:
+      description: A single balance entry with type and amount
+      type: object
+      properties:
+        amount:
+          $ref: '#/components/schemas/Amount'
+        balanceType:
+          $ref: '#/components/schemas/WalletBalanceType'
+      required:
+      - balanceType
+      - amount
+    ErrorDetails:
+      type: object
+      properties:
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - message
+      title: ErrorDetails
+    StakingPositionBalancesResponse:
+      description: Response containing staking position balance details
       type: object
       properties:
         balances:
-          description: Array of balance entries for this wallet
+          description: Array of balance entries for this staking position
           type: array
           items:
-            $ref: '#/components/schemas/WalletBalanceEntry'
+            $ref: '#/components/schemas/StakingPositionBalanceEntry'
       required:
       - balances
+    StakingPosition:
+      description: High-level information about a staking position
+      type: object
+      properties:
+        networkId:
+          description: A unique string identifying a combination of blockchain and environment (testnet, mainnet).
+          type: string
+        networkSpecific:
+          description: Network-specific staking position details
+          discriminator:
+            propertyName: type
+            mapping:
+              ETHEREUM: '#/components/schemas/EthereumStakingPositionDetails'
+              SOLANA: '#/components/schemas/SolanaStakingPositionDetails'
+              HYPERCORE: '#/components/schemas/HyperCoreStakingPositionDetails'
+              AVALANCHE_PCHAIN: '#/components/schemas/AvalanchePChainStakingPositionDetails'
+          oneOf:
+          - $ref: '#/components/schemas/EthereumStakingPositionDetails'
+          - $ref: '#/components/schemas/SolanaStakingPositionDetails'
+          - $ref: '#/components/schemas/HyperCoreStakingPositionDetails'
+          - $ref: '#/components/schemas/AvalanchePChainStakingPositionDetails'
+        positionId:
+          description: Unique identifier for this staking position
+          type: string
+      required:
+      - positionId
+      - networkId
+      - networkSpecific
+    Amount:
+      description: Combines an asset identifier with a decimal string value
+      type: object
+      properties:
+        amount:
+          description: Amount as a decimal string. Amounts never include fees.
+          type: string
+          example: '10.45234733'
+        assetType:
+          description: A unique string identifying a specific asset on a specific blockchain and environment (testnet, mainnet).
+          type: string
+          example: ETH
+      required:
+      - assetType
+      - amount
     StakingPositionBalanceEntry:
       description: A single balance entry for a staking position
       type: object
@@ -517,6 +451,72 @@ components:
       required:
       - balanceType
       - amount
+    AvalanchePChainStakingPositionDetails:
+      description: Avalanche P-Chain-specific staking position information. P-Chain staking is time-locked with no early exit; funds are returned automatically at the end of the staking period.
+      type: object
+      properties:
+        type:
+          description: Discriminator field
+          type: string
+          default: AVALANCHE_PCHAIN
+          enum:
+          - AVALANCHE_PCHAIN
+        validatorAddress:
+          description: Node ID of the validator this stake is delegated to (e.g. NodeID-abc123). Null when the position cannot be correlated to a specific validator.
+          type:
+          - string
+          - 'null'
+          example: NodeID-CaBYJ9kzHvrQFiYCckne1QM8R9zMjgVzp
+      required:
+      - type
+      title: Avalanche P-Chain Staking Position Details
+    Page:
+      description: Pagination info
+      type: object
+      properties:
+        endCursor:
+          description: Submit this parameter in the "after" field to fetch the next page.
+          type:
+          - string
+          - 'null'
+      title: Page
+    WalletBalancesResponse:
+      description: Response containing wallet balance details
+      type: object
+      properties:
+        balances:
+          description: Array of balance entries for this wallet
+          type: array
+          items:
+            $ref: '#/components/schemas/WalletBalanceEntry'
+      required:
+      - balances
+    HyperCoreStakingPositionDetails:
+      description: HyperCore-specific staking position information. HyperCore delegates directly to validators (no third-party staking provider), so the validator address is the position identifier.
+      type: object
+      properties:
+        delegationUnlockAt:
+          description: Timestamp (RFC 3339) until which this delegated position is locked — i.e. when it first becomes eligible to undelegate (HyperCore's ~1-day delegation lock). Present only for actively delegated positions; null for wallet-level UNBOND/UNBONDED positions or when the validator has not reported a lock.
+          type:
+          - string
+          - 'null'
+          format: date-time
+          example: '2026-06-07T12:00:00Z'
+        type:
+          description: Discriminator field
+          type: string
+          default: HYPERCORE
+          enum:
+          - HYPERCORE
+        validatorAddress:
+          description: Address of the validator this stake is delegated to. Empty for wallet-level positions in the unbonding (UNBOND) or unbonded (UNBONDED) states, which HyperCore does not associate with a specific validator.
+          type:
+          - string
+          - 'null'
+          example: '0xa012b9d2a8b1f7b8f8b9b3a1f0c9d8e7f6a5b4c3'
+      required:
+      - type
+      title: HyperCore Staking Position Details
   securitySchemes:
     Api-Access-Key:
       type: apiKey

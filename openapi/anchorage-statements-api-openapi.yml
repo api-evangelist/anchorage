@@ -398,18 +398,6 @@ components:
       - InsufficientFunds
       - NotImplemented
       title: ErrorType
-    StatementType:
-      type: object
-      properties:
-        id:
-          type: string
-          example: b00e2483-57a1-4db4-8ea1-b91223a76a20
-        name:
-          type: string
-          example: Brokerage Monthly Statement
-      required:
-      - id
-      - name
     ErrorDetails:
       type: object
       properties:
@@ -423,49 +411,6 @@ components:
       - errorType
       - message
       title: ErrorDetails
-    StatementDetails:
-      type: object
-      properties:
-        correctedAt:
-          description: The time the statement was corrected. This field may be omitted if the statement has not been corrected
-          type:
-          - string
-          - 'null'
-          format: date-time
-          example: '2019-01-02T12:34:56.000Z'
-        createdAt:
-          type: string
-          format: date-time
-          example: '2019-01-02T12:34:56.000Z'
-        customerId:
-          type: string
-          example: 1ac10949bbbf483e8df3c0f8ef97146bc9ce6f5890df40fa8777ea63dc932f7b
-        displayName:
-          type: string
-          example: September 2025 Statement
-        id:
-          type: string
-          example: 8de0fc33-7443-4dcf-bbf1-4ca8d0e0509f
-        typeId:
-          type: string
-          example: 058da362-31a7-4e2b-ae3e-77b095389a5f
-      required:
-      - id
-      - typeId
-      - createdAt
-      - displayName
-    Page:
-      description: Pagination info
-      type: object
-      properties:
-        next:
-          description: URL to use to query for the next page or null if no additional results are available
-          type:
-          - string
-          - 'null'
-          example: <next page url>
-          x-omitempty: false
-      title: Page
     Statement:
       type: object
       properties:
@@ -489,6 +434,61 @@ components:
         id:
           type: string
           example: 3486b413-93d3-4447-afce-2b9c9dc34a32
+        typeId:
+          type: string
+          example: 058da362-31a7-4e2b-ae3e-77b095389a5f
+      required:
+      - id
+      - typeId
+      - createdAt
+      - displayName
+    Page:
+      description: Pagination info
+      type: object
+      properties:
+        next:
+          description: URL to use to query for the next page or null if no additional results are available
+          type:
+          - string
+          - 'null'
+          example: <next page url>
+          x-omitempty: false
+      title: Page
+    StatementType:
+      type: object
+      properties:
+        id:
+          type: string
+          example: b00e2483-57a1-4db4-8ea1-b91223a76a20
+        name:
+          type: string
+          example: Brokerage Monthly Statement
+      required:
+      - id
+      - name
+    StatementDetails:
+      type: object
+      properties:
+        correctedAt:
+          description: The time the statement was corrected. This field may be omitted if the statement has not been corrected
+          type:
+          - string
+          - 'null'
+          format: date-time
+          example: '2019-01-02T12:34:56.000Z'
+        createdAt:
+          type: string
+          format: date-time
+          example: '2019-01-02T12:34:56.000Z'
+        customerId:
+          type: string
+          example: 1ac10949bbbf483e8df3c0f8ef97146bc9ce6f5890df40fa8777ea63dc932f7b
+        displayName:
+          type: string
+          example: September 2025 Statement
+        id:
+          type: string
+          example: 8de0fc33-7443-4dcf-bbf1-4ca8d0e0509f
         typeId:
           type: string
           example: 058da362-31a7-4e2b-ae3e-77b095389a5f

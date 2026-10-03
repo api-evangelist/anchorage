@@ -348,23 +348,6 @@ paths:
         Deposit Attribution: present
 components:
   schemas:
-    ErrorType:
-      description: The type of error returned.
-      type: string
-      enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
     PerformDepositAttributionRequest:
       type: object
       properties:
@@ -395,6 +378,36 @@ components:
       - originatorName
       - originatorCountry
       - sourceWalletType
+    ErrorType:
+      description: The type of error returned.
+      type: string
+      enum:
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
+    DepositAttributionResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/DepositAttribution'
+        page:
+          $ref: '#/components/schemas/Page'
+      required:
+      - data
+      - page
+      title: DepositAttributionResponse
     ErrorDetails:
       type: object
       properties:
@@ -408,6 +421,33 @@ components:
       - errorType
       - message
       title: ErrorDetails
+    Page:
+      description: Pagination info
+      type: object
+      properties:
+        next:
+          description: URL to use to query for the next page or null if no additional results are available
+          type:
+          - string
+          - 'null'
+          example: <next page url>
+          x-omitempty: false
+      title: Page
+    PerformDepositAttributionResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            depositTransactionId:
+              description: The transactionId where the transactionType is `DEPOSIT`.
+              type: string
+              example: 0e2b2f9d-8d10-4f1e-960b-28567255045f
+            status:
+              description: The confirmation status once the attribution is performed.
+              type: string
+              enum:
+              - UNDER_REVIEW
     DepositAttribution:
       type: object
       properties:
@@ -493,46 +533,6 @@ components:
       - createdAt
       - blockchainTxId
       - assetType
-    DepositAttributionResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/DepositAttribution'
-        page:
-          $ref: '#/components/schemas/Page'
-      required:
-      - data
-      - page
-      title: DepositAttributionResponse
-    PerformDepositAttributionResponse:
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            depositTransactionId:
-              description: The transactionId where the transactionType is `DEPOSIT`.
-              type: string
-              example: 0e2b2f9d-8d10-4f1e-960b-28567255045f
-            status:
-              description: The confirmation status once the attribution is performed.
-              type: string
-              enum:
-              - UNDER_REVIEW
-    Page:
-      description: Pagination info
-      type: object
-      properties:
-        next:
-          description: URL to use to query for the next page or null if no additional results are available
-          type:
-          - string
-          - 'null'
-          example: <next page url>
-          x-omitempty: false
-      title: Page
   securitySchemes:
     Api-Access-Key:
       type: apiKey

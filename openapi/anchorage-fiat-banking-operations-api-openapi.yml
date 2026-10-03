@@ -1596,18 +1596,392 @@ paths:
       - Fiat Banking Operations
 components:
   schemas:
-    PaymentReturnInfo:
+    VirtualAccountOwnerCreateResponse:
       type: object
       properties:
-        code:
-          description: Return code indicating the reason for the return (e.g., 'R01', 'C01')
-          type: string
-        reason:
-          description: Human-readable description of the return reason
+        id:
+          description: Unique identifier for the virtual account owner
           type: string
       required:
-      - code
-      - reason
+      - id
+    BalanceResponse:
+      type: object
+      properties:
+        accountId:
+          description: Unique identifier of the account
+          type: string
+        balances:
+          description: Array of balance objects. Partner banks return different balance types (current, closing, opening, ledger vs available).
+          type: array
+          items:
+            $ref: '#/components/schemas/BalanceObject'
+      required:
+      - accountId
+      - balances
+    ErrorDetails:
+      type: object
+      properties:
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - message
+      title: ErrorDetails
+    WireCreateRequest:
+      type: object
+      properties:
+        amount:
+          $ref: '#/components/schemas/PaymentAmount'
+        clientRefId:
+          description: A user-defined unique identifier (up to 180 characters) for idempotency and client-side tracking. Submitting the same clientRefId multiple times will not create duplicate resources. Use a unique value (e.g., UUID) for each distinct request.
+          type: string
+        originatingAccountId:
+          description: Unique identifier of the originating account
+          type: string
+        receivingAccount:
+          $ref: '#/components/schemas/WireReceivingAccount'
+      required:
+      - originatingAccountId
+      - receivingAccount
+      - amount
+      - clientRefId
+    WireCreateResponse:
+      type: object
+      properties:
+        id:
+          description: Unique identifier for the wire transfer
+          type: string
+      required:
+      - id
+    BNYBankInfoResponse:
+      type: object
+      properties:
+        bankCode:
+          description: Discriminator field indicating Bank of New York Mellon
+          type: string
+          default: BNY
+          enum:
+          - BNY
+        partyAddress:
+          $ref: '#/components/schemas/PartyAddress'
+        partyName:
+          description: 'Party name for this virtual account. Note: Individual name components (firstName, middleName, lastName) and business name are not returned as currently they cannot be changed after account creation.'
+          type: string
+      required:
+      - bankCode
+      - partyName
+      title: BNY Bank Information Response
+    ListACHTransfersResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ACHResponse'
+        page:
+          $ref: '#/components/schemas/Page'
+      required:
+      - data
+      - page
+    VirtualAccountGetResponse:
+      type: object
+      properties:
+        accountDetails:
+          description: Bank account details. Contains the account number and account number type.
+          type:
+          - object
+          - 'null'
+          allOf:
+          - $ref: '#/components/schemas/AccountDetails'
+        achRoutingDetails:
+          description: ACH routing details for this virtual account. Contains the ABA routing number used for ACH transfers.
+          type:
+          - object
+          - 'null'
+          allOf:
+          - $ref: '#/components/schemas/ACHRoutingDetails'
+        bankKycInfo:
+          description: 'Bank-specific KYC information for this virtual account. Note: Only fields returned by the applicable bank (bankCode and partyName) are included.'
+          discriminator:
+            propertyName: bankCode
+            mapping:
+              BNY: '#/components/schemas/BNYBankInfoResponse'
+              CRB: '#/components/schemas/CRBBankInfoResponse'
+          oneOf:
+          - $ref: '#/components/schemas/BNYBankInfoResponse'
+          - $ref: '#/components/schemas/CRBBankInfoResponse'
+        bankName:
+          description: Name of the financial institution. This field is specific to virtual accounts and not part of the standard routing schemas.
+          type:
+          - string
+          - 'null'
+        createdAt:
+          type: string
+          format: date-time
+        currency:
+          description: Currency code for permitted currency with this virtual account.
+          type: string
+          enum:
+          - USD
+        id:
+          description: Unique identifier for the virtual account
+          type: string
+        liveMode:
+          description: This field will be true if this object exists in the live environment or false if it exists in the test environment.
+          type: boolean
+        object:
+          type: string
+        parentAccountId:
+          description: The parent internal account ID at the bank provider. This is the main account under which this virtual account was created.
+          type:
+          - string
+          - 'null'
+        status:
+          $ref: '#/components/schemas/VirtualAccountStatus'
+        updatedAt:
+          type: string
+          format: date-time
+        wireRoutingDetails:
+          description: Wire routing details for this virtual account. Contains the routing number (ABA or SWIFT) used for wire transfers. If routingNumberType is SWIFT, the routingNumber field contains the SWIFT code. If routingNumberType is ABA, the routingNumber may differ from the ACH routing number.
+          type:
+          - object
+          - 'null'
+          allOf:
+          - $ref: '#/components/schemas/WireRoutingDetails'
+      required:
+      - id
+      - object
+      - liveMode
+      - createdAt
+      - updatedAt
+      - status
+      - bankKycInfo
+      - currency
+    VirtualAccountCreateRequest:
+      type: object
+      properties:
+        bankKycInfo:
+          description: Bank-specific KYC information for this virtual account.
+          discriminator:
+            propertyName: bankCode
+            mapping:
+              BNY: '#/components/schemas/BNYBankInfo'
+              CRB: '#/components/schemas/CRBBankInfo'
+          oneOf:
+          - $ref: '#/components/schemas/BNYBankInfo'
+          - $ref: '#/components/schemas/CRBBankInfo'
+        currency:
+          description: Currency code for permitted currency with this virtual account.
+          type: string
+          enum:
+          - USD
+        parentAccountId:
+          description: The parent internal account ID at the bank provider. This is the main account under which this virtual account will be created.
+          type: string
+      required:
+      - bankKycInfo
+      - currency
+      - parentAccountId
+    BNYBankInfo:
+      type: object
+      properties:
+        bankCode:
+          description: Discriminator field indicating Bank of New York Mellon
+          type: string
+          default: BNY
+          enum:
+          - BNY
+        entityInfo:
+          discriminator:
+            propertyName: type
+            mapping:
+              INDIVIDUAL: '#/components/schemas/BNYIndividual'
+              BUSINESS: '#/components/schemas/BNYBusiness'
+          oneOf:
+          - $ref: '#/components/schemas/BNYIndividual'
+          - $ref: '#/components/schemas/BNYBusiness'
+        partyAddress:
+          $ref: '#/components/schemas/PartyAddress'
+        partyName:
+          description: Party name for this virtual account. If not provided, it will be populated automatically from the entityInfo fields.
+          type: string
+      required:
+      - bankCode
+      - entityInfo
+      title: BNY Bank Information
+    ACHSubtype:
+      description: SEC (Standard Entry Class) code for ACH transactions.
+      type: string
+      enum:
+      - WEB
+      - CCD
+    PaymentStatus:
+      description: 'Status of a payment (wire, ACH, or book transfer). Payments flow through the following lifecycle:
+
+
+        * `APPROVED` - The payment order has been approved and will be sent to the bank
+
+        * `PROCESSING` - Brief transition state while the payment is prepared for bank submission
+
+        * `SENT` - The payment order has been sent to the bank (may remain for a few days depending on payment type)
+
+        * `COMPLETED` - The bank has accepted and executed the payment; funds posted to recipient''s ledger
+
+        * `RETURNED` - The payment was returned by the receiving bank (see associated Return object)
+
+        * `FAILED` - Bank error or invalid parameters caused the payment to fail
+
+        * `CANCELLED` - Terminal state - the payment order was cancelled
+
+        * `OTHER` - Unexpected status received from the banking provider'
+      type: string
+      enum:
+      - APPROVED
+      - PROCESSING
+      - SENT
+      - COMPLETED
+      - RETURNED
+      - FAILED
+      - CANCELLED
+      - OTHER
+    BalanceType:
+      description: Balance type returned from partner banks indicating the nature and timing of the balance.
+      type: string
+      enum:
+      - CLOSING_AVAILABLE
+      - CLOSING_LEDGER
+      - CURRENT_AVAILABLE
+      - CURRENT_LEDGER
+      - OPENING_AVAILABLE
+      - OPENING_AVAILABLE_NEXT_BUSINESS_DAY
+      - OPENING_LEDGER
+      - OTHER
+      - PREVIOUSLY_CLOSED_BOOK
+    AccountDetails:
+      type: object
+      properties:
+        accountNumber:
+          description: Bank account number
+          type: string
+      required:
+      - accountNumber
+      title: Account Details
+    CRBBankInfo:
+      type: object
+      properties:
+        bankCode:
+          description: Discriminator field indicating Cross River Bank
+          type: string
+          default: CRB
+          enum:
+          - CRB
+        partyAddress:
+          $ref: '#/components/schemas/PartyAddress'
+        partyName:
+          description: Party name for this virtual account.
+          type: string
+        virtualAccountOwnerId:
+          description: Virtual account owner ID required by this bank.
+          type: string
+      required:
+      - bankCode
+      - partyName
+      - partyAddress
+      - virtualAccountOwnerId
+      title: CRB Bank Information
+    ListBookTransfersResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/BookResponse'
+        page:
+          $ref: '#/components/schemas/Page'
+      required:
+      - data
+      - page
+    CRBBankInfoResponse:
+      type: object
+      properties:
+        bankCode:
+          description: Discriminator field indicating Cross River Bank
+          type: string
+          default: CRB
+          enum:
+          - CRB
+        partyAddress:
+          $ref: '#/components/schemas/PartyAddress'
+        partyName:
+          description: Party name for this virtual account.
+          type: string
+        virtualAccountOwnerId:
+          description: Virtual account owner ID (legal entity ID) associated with this virtual account.
+          type:
+          - string
+          - 'null'
+      required:
+      - bankCode
+      - partyName
+      title: CRB Bank Information Response
+    VirtualAccountCreateResponse:
+      type: object
+      properties:
+        id:
+          description: Unique identifier for the virtual account
+          type: string
+      required:
+      - id
+    WireResponse:
+      type: object
+      properties:
+        amount:
+          $ref: '#/components/schemas/PaymentAmount'
+        clientRefId:
+          description: A user-defined unique identifier (up to 180 characters) for idempotency and client-side tracking. Submitting the same clientRefId multiple times will not create duplicate resources. Use a unique value (e.g., UUID) for each distinct request.
+          type: string
+        createdAt:
+          description: Timestamp when the wire transfer was created
+          type: string
+          format: date-time
+        id:
+          description: Unique identifier for the wire transfer
+          type: string
+        imad:
+          description: Fedwire Input Message Accountability Data (IMAD) reference (when available)
+          type: string
+        omad:
+          description: Fedwire Output Message Accountability Data (OMAD) reference (when available)
+          type: string
+        originatingAccountId:
+          description: Unique identifier of the originating account
+          type: string
+        receivingAccount:
+          $ref: '#/components/schemas/WireReceivingAccount'
+        returnInfo:
+          description: Return information if the wire was returned by the receiving bank
+          type:
+          - object
+          - 'null'
+          allOf:
+          - $ref: '#/components/schemas/PaymentReturnInfo'
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        swiftMir:
+          description: SWIFT Message Identifier Reference (MIR) - unique identifier for SWIFT messages (when available)
+          type: string
+        swiftUetr:
+          description: SWIFT Unique End-to-End Transaction Reference (UETR) - tracks payment lifecycle (when available)
+          type: string
+      required:
+      - id
+      - originatingAccountId
+      - receivingAccount
+      - amount
+      - clientRefId
+      - status
+      - createdAt
     BookResponse:
       type: object
       properties:
@@ -1646,71 +2020,124 @@ components:
       - clientRefId
       - status
       - createdAt
-    VirtualAccountOwnerCreateResponse:
+    VirtualAccountStatus:
+      description: 'Status of a virtual account (internal account). Virtual accounts can be in the following states:
+
+
+        * `ACTIVE` - Account is open and operational for payments
+
+        * `CLOSED` - Account has been successfully closed
+
+        * `PENDING_CLOSURE` - Account closure has been requested and is being processed
+
+        * `OTHER` - Unexpected status received from the banking provider'
+      type: string
+      enum:
+      - ACTIVE
+      - CLOSED
+      - PENDING_CLOSURE
+      - OTHER
+    VirtualAccountOwnerUpdateRequest:
       type: object
       properties:
-        id:
-          description: Unique identifier for the virtual account owner
+        addressCity:
+          description: Address city.
           type: string
-      required:
-      - id
-    VirtualAccountOwnerIndividual:
-      type: object
-      properties:
-        dateOfBirth:
-          description: Individual's birth date in the form YYYY-MM-DD.
+        addressCountry:
+          description: Address country code. Two letters from the ISO 3166-1 alpha-2 standard.
           type: string
-          format: date
-        firstName:
-          description: Individual's first name.
+          maxLength: 2
+          minLength: 2
+          pattern: ^[A-Z]{2}$
+        addressLine1:
+          description: Address line 1.
           type: string
-        lastName:
-          description: Individual's last name.
+        addressLine2:
+          description: Address line 2. Optional.
           type: string
-        middleName:
-          description: Individual's middle name.
+        addressPostalCode:
+          description: Address postal or zip code. Cannot contain dash or space characters.
           type: string
-        politicallyExposedPerson:
-          description: Whether the individual is a politically exposed person.
-          type: boolean
-        regulationO:
-          description: Pertains to loans issued to executive officers, directors, and principal shareholders of member banks.
-          type: boolean
-        type:
-          description: Discriminator field indicating individual owner type
+          maxLength: 10
+          pattern: ^[A-Za-z0-9]+$
+        addressState:
+          description: Address state or region.
           type: string
-          default: INDIVIDUAL
+        bankCode:
+          description: Bank this virtual account owner is for. Currently only `CRB` for Cross River Bank requires virtual account owners.
+          type: string
           enum:
-          - INDIVIDUAL
-      required:
-      - type
-      - firstName
-      - lastName
-      - dateOfBirth
-      title: Individual Owner
-    ACHCreateResponse:
+          - CRB
+        ownerInfo:
+          discriminator:
+            propertyName: type
+            mapping:
+              INDIVIDUAL: '#/components/schemas/VirtualAccountOwnerIndividual'
+              BUSINESS: '#/components/schemas/VirtualAccountOwnerBusiness'
+          oneOf:
+          - $ref: '#/components/schemas/VirtualAccountOwnerIndividual'
+          - $ref: '#/components/schemas/VirtualAccountOwnerBusiness'
+        riskRating:
+          description: Can be `LOW`, `MEDIUM` or `HIGH`.
+          type: string
+          enum:
+          - LOW
+          - MEDIUM
+          - HIGH
+        taxId:
+          description: Must be 9-20 alphanumeric characters; cannot contain period, dash or space characters.
+          type: string
+          maxLength: 20
+          minLength: 9
+          pattern: ^[A-Za-z0-9]+$
+        taxIdType:
+          description: Can be `SSN`, `EIN`, `ITIN`, `VAT` or `FOREIGN`.
+          type: string
+          enum:
+          - SSN
+          - EIN
+          - ITIN
+          - VAT
+          - FOREIGN
+    TransactionCreateResponse:
       type: object
       properties:
         id:
-          description: Unique identifier for the ACH transfer
+          description: Unique identifier for the transaction
           type: string
       required:
       - id
-    BalanceObject:
+    ACHReceivingAccount:
       type: object
       properties:
-        amount:
-          $ref: '#/components/schemas/PaymentAmount'
-        asOfTime:
-          description: The date and time when this balance became true for the account.
+        achInstructions:
+          discriminator:
+            propertyName: type
+            mapping:
+              PLAID: '#/components/schemas/ACHPlaidToken'
+              BANK: '#/components/schemas/ACHBankInstructions'
+          oneOf:
+          - $ref: '#/components/schemas/ACHPlaidToken'
+          - $ref: '#/components/schemas/ACHBankInstructions'
+      required:
+      - achInstructions
+      title: ACH Instructions
+    ACHPlaidToken:
+      type: object
+      properties:
+        plaidProcessorToken:
+          description: Plaid processor token for the receiving account
           type: string
-          format: date-time
         type:
-          $ref: '#/components/schemas/BalanceType'
+          description: Discriminator field indicating Plaid token type
+          type: string
+          default: PLAID
+          enum:
+          - PLAID
       required:
       - type
-      - amount
-      - asOfTime
+      - plaidProcessorToken
+      title: ACH Plaid Token
     WireReceivingAccount:
       type: object
       properties:
@@ -1757,37 +2184,6 @@ components:
       - routingDetails
       - accountDetails
       title: Wire Instructions
-    PartyAddress:
-      description: Physical address of a party
-      type: object
-      properties:
-        country:
-          description: Country code (e.g., US)
-          type: string
-        line1:
-          description: Street address line 1
-          type: string
-        line2:
-          description: Street address line 2 (optional)
-          type:
-          - string
-          - 'null'
-        locality:
-          description: City or locality
-          type: string
-        postalCode:
-          description: Postal code or ZIP code
-          type: string
-        region:
-          description: State or region
-          type: string
-      required:
-      - line1
-      - locality
-      - region
-      - postalCode
-      - country
-      title: Party Address
     VirtualAccountOwnerBusiness:
       type: object
       properties:
@@ -1809,171 +2205,6 @@ components:
       - businessName
       - dateOfFormation
       title: Business Owner
-    BNYBusiness:
-      type: object
-      properties:
-        businessName:
-          description: Business's name.
-          type: string
-        type:
-          description: Discriminator field indicating business entity type
-          type: string
-          default: BUSINESS
-          enum:
-          - BUSINESS
-      required:
-      - type
-      - businessName
-      title: BNY Business
-    ACHRoutingDetails:
-      type: object
-      properties:
-        routingNumber:
-          description: Bank routing number (ABA routing number for US banks)
-          type: string
-        routingNumberType:
-          description: Type of routing number. ACH transfers only support ABA routing numbers.
-          type: string
-          default: ABA
-          enum:
-          - ABA
-      required:
-      - routingNumber
-      - routingNumberType
-      title: ACH Routing Details
-    Page:
-      description: Pagination info
-      type: object
-      properties:
-        endCursor:
-          description: Submit this parameter in the "after" field to fetch the next page.
-          type:
-          - string
-          - 'null'
-      title: Page
-    WireCreateRequest:
-      type: object
-      properties:
-        amount:
-          $ref: '#/components/schemas/PaymentAmount'
-        clientRefId:
-          description: A user-defined unique identifier (up to 180 characters) for idempotency and client-side tracking. Submitting the same clientRefId multiple times will not create duplicate resources. Use a unique value (e.g., UUID) for each distinct request.
-          type: string
-        originatingAccountId:
-          description: Unique identifier of the originating account
-          type: string
-        receivingAccount:
-          $ref: '#/components/schemas/WireReceivingAccount'
-      required:
-      - originatingAccountId
-      - receivingAccount
-      - amount
-      - clientRefId
-    ACHReceivingAccount:
-      type: object
-      properties:
-        achInstructions:
-          discriminator:
-            propertyName: type
-            mapping:
-              PLAID: '#/components/schemas/ACHPlaidToken'
-              BANK: '#/components/schemas/ACHBankInstructions'
-          oneOf:
-          - $ref: '#/components/schemas/ACHPlaidToken'
-          - $ref: '#/components/schemas/ACHBankInstructions'
-      required:
-      - achInstructions
-      title: ACH Instructions
-    BNYBankInfo:
-      type: object
-      properties:
-        bankCode:
-          description: Discriminator field indicating Bank of New York Mellon
-          type: string
-          default: BNY
-          enum:
-          - BNY
-        entityInfo:
-          discriminator:
-            propertyName: type
-            mapping:
-              INDIVIDUAL: '#/components/schemas/BNYIndividual'
-              BUSINESS: '#/components/schemas/BNYBusiness'
-          oneOf:
-          - $ref: '#/components/schemas/BNYIndividual'
-          - $ref: '#/components/schemas/BNYBusiness'
-        partyAddress:
-          $ref: '#/components/schemas/PartyAddress'
-        partyName:
-          description: Party name for this virtual account. If not provided, it will be populated automatically from the entityInfo fields.
-          type: string
-      required:
-      - bankCode
-      - entityInfo
-      title: BNY Bank Information
-    BNYBankInfoResponse:
-      type: object
-      properties:
-        bankCode:
-          description: Discriminator field indicating Bank of New York Mellon
-          type: string
-          default: BNY
-          enum:
-          - BNY
-        partyAddress:
-          $ref: '#/components/schemas/PartyAddress'
-        partyName:
-          description: 'Party name for this virtual account. Note: Individual name components (firstName, middleName, lastName) and business name are not returned as currently they cannot be changed after account creation.'
-          type: string
-      required:
-      - bankCode
-      - partyName
-      title: BNY Bank Information Response
-    CRBBankInfo:
-      type: object
-      properties:
-        bankCode:
-          description: Discriminator field indicating Cross River Bank
-          type: string
-          default: CRB
-          enum:
-          - CRB
-        partyAddress:
-          $ref: '#/components/schemas/PartyAddress'
-        partyName:
-          description: Party name for this virtual account.
-          type: string
-        virtualAccountOwnerId:
-          description: Virtual account owner ID required by this bank.
-          type: string
-      required:
-      - bankCode
-      - partyName
-      - partyAddress
-      - virtualAccountOwnerId
-      title: CRB Bank Information
-    ACHBankInstructions:
-      type: object
-      properties:
-        accountDetails:
-          $ref: '#/components/schemas/AccountDetails'
-        partyName:
-          description: Name of the account holder or beneficiary
-          type: string
-        routingDetails:
-          $ref: '#/components/schemas/ACHRoutingDetails'
-        type:
-          description: Discriminator field indicating bank account type
-          type: string
-          default: BANK
-          enum:
-          - BANK
-      required:
-      - type
-      - partyName
-      - accountDetails
-      - routingDetails
-      title: ACH Bank Instructions
     VirtualAccountOwnerGetResponse:
       type: object
       properties:
@@ -2063,76 +2294,53 @@ components:
       - addressState
       - addressPostalCode
       - addressCountry
-    BookCreateResponse:
+    PartyAddress:
+      description: Physical address of a party
       type: object
       properties:
-        id:
-          description: Unique identifier for the book transfer
+        country:
+          description: Country code (e.g., US)
+          type: string
+        line1:
+          description: Street address line 1
+          type: string
+        line2:
+          description: Street address line 2 (optional)
+          type:
+          - string
+          - 'null'
+        locality:
+          description: City or locality
+          type: string
+        postalCode:
+          description: Postal code or ZIP code
+          type: string
+        region:
+          description: State or region
           type: string
       required:
-      - id
-    ACHPlaidToken:
+      - line1
+      - locality
+      - region
+      - postalCode
+      - country
+      title: Party Address
+    WireRoutingDetails:
       type: object
       properties:
-        plaidProcessorToken:
-          description: Plaid processor token for the receiving account
+        routingNumber:
+          description: Bank routing number (e.g., ABA routing number for US banks)
           type: string
-        type:
-          description: Discriminator field indicating Plaid token type
+        routingNumberType:
+          description: Type of routing number. ABA routing numbers are 9-digit codes used for US domestic bank transfers. SWIFT codes (also called BIC) are 8 or 11 character codes used for international wire transfers.
           type: string
-          default: PLAID
           enum:
-          - PLAID
+          - ABA
+          - SWIFT
       required:
-      - type
-      - plaidProcessorToken
-      title: ACH Plaid Token
-    TransactionCreateResponse:
-      type: object
-      properties:
-        id:
-          description: Unique identifier for the transaction
-          type: string
-      required:
-      - id
-    ACHCreateRequest:
-      type: object
-      properties:
-        amount:
-          $ref: '#/components/schemas/PaymentAmount'
-        clientRefId:
-          description: A user-defined unique identifier (up to 180 characters) for idempotency and client-side tracking. Submitting the same clientRefId multiple times will not create duplicate resources. Use a unique value (e.g., UUID) for each distinct request.
-          type: string
-        originatingAccountId:
-          description: Unique identifier of the originating account
-          type: string
-        receivingAccount:
-          $ref: '#/components/schemas/ACHReceivingAccount'
-        subtype:
-          $ref: '#/components/schemas/ACHSubtype'
-        type:
-          $ref: '#/components/schemas/ACHType'
-      required:
-      - originatingAccountId
-      - receivingAccount
-      - amount
-      - type
-      - subtype
-      - clientRefId
-    PaymentAmount:
-      type: object
-      properties:
-        amount:
-          description: Payment amount in cents
-          type: integer
-          example: 10000
-        currency:
-          description: Currency code (e.g., USD)
-          type: string
-          example: USD
-      required:
-      - currency
-      - amount
+      - routingNumber
+      - routingNumberType
+      title: Wire Routing Details
     BookCreateRequest:
       type: object
       properties:
@@ -2152,435 +2360,67 @@ components:
       - receivingAccountId
       - amount
       - clientRefId
-    ACHType:
-      description: Type of ACH transaction - CREDIT for funds moving into an account, DEBIT for funds moving out of an account.
-      type: string
-      enum:
-      - CREDIT
-      - DEBIT
-    WireRoutingDetails:
+    BNYBusiness:
       type: object
       properties:
-        routingNumber:
-          description: Bank routing number (e.g., ABA routing number for US banks)
+        businessName:
+          description: Business's name.
           type: string
-        routingNumberType:
-          description: Type of routing number. ABA routing numbers are 9-digit codes used for US domestic bank transfers. SWIFT codes (also called BIC) are 8 or 11 character codes used for international wire transfers.
-          type: string
-          enum:
-          - ABA
-          - SWIFT
-      required:
-      - routingNumber
-      - routingNumberType
-      title: Wire Routing Details
-    VirtualAccountStatus:
-      description: 'Status of a virtual account (internal account). Virtual accounts can be in the following states:
-
-
-        * `ACTIVE` - Account is open and operational for payments
-
-        * `CLOSED` - Account has been successfully closed
-
-        * `PENDING_CLOSURE` - Account closure has been requested and is being processed
-
-        * `OTHER` - Unexpected status received from the banking provider'
-      type: string
-      enum:
-      - ACTIVE
-      - CLOSED
-      - PENDING_CLOSURE
-      - OTHER
-    ErrorDetails:
-      type: object
-      properties:
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - message
-      title: ErrorDetails
-    BalanceResponse:
-      type: object
-      properties:
-        accountId:
-          description: Unique identifier of the account
-          type: string
-        balances:
-          description: Array of balance objects. Partner banks return different balance types (current, closing, opening, ledger vs available).
-          type: array
-          items:
-            $ref: '#/components/schemas/BalanceObject'
-      required:
-      - accountId
-      - balances
-    VirtualAccountCreateResponse:
-      type: object
-      properties:
-        id:
-          description: Unique identifier for the virtual account
-          type: string
-      required:
-      - id
-    TransactionCreateRequest:
-      type: object
-      properties:
-        amount:
-          $ref: '#/components/schemas/PaymentAmount'
-        asOfDate:
-          description: Date the transaction settled, in YYYY-MM-DD format
-          type: string
-          format: date
-        direction:
-          description: Direction of the transaction. Use 'credit' for incoming (deposit) and 'debit' for outgoing.
-          type: string
-          enum:
-          - credit
-          - debit
-        internalAccountId:
-          description: Unique identifier of the internal account to credit
-          type: string
-        posted:
-          description: Whether the transaction has posted
-          type: boolean
         type:
-          description: Type of incoming transaction
+          description: Discriminator field indicating business entity type
           type: string
+          default: BUSINESS
           enum:
-          - ACH
-          - WIRE
-        vendorCode:
-          description: Bank-specific code for the transaction
-          type: string
-        vendorCodeType:
-          description: The type of vendor_code being reported. Required if type is not provided.
-          type: string
-        vendorDescription:
-          description: Optional description for the transaction
-          type: string
+          - BUSINESS
       required:
-      - internalAccountId
-      - amount
-      - direction
-      - asOfDate
-      - posted
-    ACHResponse:
-      type: object
-      properties:
-        amount:
-          $ref: '#/components/schemas/PaymentAmount'
-        clientRefId:
-          description: A user-defined unique identifier (up to 180 characters) for idempotency and client-side tracking. Submitting the same clientRefId multiple times will not create duplicate resources. Use a unique value (e.g., UUID) for each distinct request.
-          type: string
-        createdAt:
-          description: Timestamp when the ACH transfer was created
-          type: string
-          format: date-time
-        id:
-          description: Unique identifier for the ACH transfer
-          type: string
-        originatingAccountId:
-          description: Unique identifier of the originating account
-          type: string
-        receivingAccount:
-          $ref: '#/components/schemas/ACHReceivingAccount'
-        returnInfo:
-          description: Return information if the ACH payment was returned
-          type:
-          - object
-          - 'null'
-          allOf:
-          - $ref: '#/components/schemas/PaymentReturnInfo'
-        status:
-          $ref: '#/components/schemas/PaymentStatus'
-        subtype:
-          $ref: '#/components/schemas/ACHSubtype'
-        type:
-          $ref: '#/components/schemas/ACHType'
-      required:
-      - id
-      - originatingAccountId
-      - receivingAccount
-      - amount
       - type
-      - subtype
-      - clientRefId
-      - status
-      - createdAt
-    ListACHTransfersResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/ACHResponse'
-        page:
-          $ref: '#/components/schemas/Page'
-      required:
-      - data
-      - page
-    AccountDetails:
-      type: object
-      properties:
-        accountNumber:
-          description: Bank account number
-          type: string
-      required:
-      - accountNumber
-      title: Account Details
-    VirtualAccountOwnerUpdateRequest:
-      type: object
-      properties:
-        addressCity:
-          description: Address city.
-          type: string
-        addressCountry:
-          description: Address country code. Two letters from the ISO 3166-1 alpha-2 standard.
-          type: string
-          maxLength: 2
-          minLength: 2
-          pattern: ^[A-Z]{2}$
-        addressLine1:
-          description: Address line 1.
-          type: string
-        addressLine2:
-          description: Address line 2. Optional.
-          type: string
-        addressPostalCode:
-          description: Address postal or zip code. Cannot contain dash or space characters.
-          type: string
-          maxLength: 10
-          pattern: ^[A-Za-z0-9]+$
-        addressState:
-          description: Address state or region.
-          type: string
-        bankCode:
-          description: Bank this virtual account owner is for. Currently only `CRB` for Cross River Bank requires virtual account owners.
-          type: string
-          enum:
-          - CRB
-        ownerInfo:
-          discriminator:
-            propertyName: type
-            mapping:
-              INDIVIDUAL: '#/components/schemas/VirtualAccountOwnerIndividual'
-              BUSINESS: '#/components/schemas/VirtualAccountOwnerBusiness'
-          oneOf:
-          - $ref: '#/components/schemas/VirtualAccountOwnerIndividual'
-          - $ref: '#/components/schemas/VirtualAccountOwnerBusiness'
-        riskRating:
-          description: Can be `LOW`, `MEDIUM` or `HIGH`.
-          type: string
-          enum:
-          - LOW
-          - MEDIUM
-          - HIGH
-        taxId:
-          description: Must be 9-20 alphanumeric characters; cannot contain period, dash or space characters.
-          type: string
-          maxLength: 20
-          minLength: 9
-          pattern: ^[A-Za-z0-9]+$
-        taxIdType:
-          description: Can be `SSN`, `EIN`, `ITIN`, `VAT` or `FOREIGN`.
-          type: string
-          enum:
-          - SSN
-          - EIN
-          - ITIN
-          - VAT
-          - FOREIGN
-    ACHSubtype:
-      description: SEC (Standard Entry Class) code for ACH transactions.
-      type: string
-      enum:
-      - WEB
-      - CCD
-    BalanceType:
-      description: Balance type returned from partner banks indicating the nature and timing of the balance.
-      type: string
-      enum:
-      - CLOSING_AVAILABLE
-      - CLOSING_LEDGER
-      - CURRENT_AVAILABLE
-      - CURRENT_LEDGER
-      - OPENING_AVAILABLE
-      - OPENING_AVAILABLE_NEXT_BUSINESS_DAY
-      - OPENING_LEDGER
-      - OTHER
-      - PREVIOUSLY_CLOSED_BOOK
-    ListBookTransfersResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/BookResponse'
-        page:
-          $ref: '#/components/schemas/Page'
-      required:
-      - data
-      - page
-    VirtualAccountCreateRequest:
-      type: object
-      properties:
-        bankKycInfo:
-          description: Bank-specific KYC information for this virtual account.
-          discriminator:
-            propertyName: bankCode
-            mapping:
-              BNY: '#/components/schemas/BNYBankInfo'
-              CRB: '#/components/schemas/CRBBankInfo'
-          oneOf:
-          - $ref: '#/components/schemas/BNYBankInfo'
-          - $ref: '#/components/schemas/CRBBankInfo'
-        currency:
-          description: Currency code for permitted currency with this virtual account.
-          type: string
-          enum:
-          - USD
-        parentAccountId:
-          description: The parent internal account ID at the bank provider. This is the main account under which this virtual account will be created.
-          type: string
-      required:
-      - bankKycInfo
-      - currency
-      - parentAccountId
-    WireResponse:
-      type: object
-      properties:
-        amount:
-          $ref: '#/components/schemas/PaymentAmount'
-        clientRefId:
-          description: A user-defined unique identifier (up to 180 characters) for idempotency and client-side tracking. Submitting the same clientRefId multiple times will not create duplicate resources. Use a unique value (e.g., UUID) for each distinct request.
-          type: string
-        createdAt:
-          description: Timestamp when the wire transfer was created
-          type: string
-          format: date-time
-        id:
-          description: Unique identifier for the wire transfer
-          type: string
-        imad:
-          description: Fedwire Input Message Accountability Data (IMAD) reference (when available)
-          type: string
-        omad:
-          description: Fedwire Output Message Accountability Data (OMAD) reference (when available)
-          type: string
-        originatingAccountId:
-          description: Unique identifier of the originating account
-          type: string
-        receivingAccount:
-          $ref: '#/components/schemas/WireReceivingAccount'
-        returnInfo:
-          description: Return information if the wire was returned by the receiving bank
-          type:
-          - object
-          - 'null'
-          allOf:
-          - $ref: '#/components/schemas/PaymentReturnInfo'
-        status:
-          $ref: '#/components/schemas/PaymentStatus'
-        swiftMir:
-          description: SWIFT Message Identifier Reference (MIR) - unique identifier for SWIFT messages (when available)
-          type: string
-        swiftUetr:
-          description: SWIFT Unique End-to-End Transaction Reference (UETR) - tracks payment lifecycle (when available)
-          type: string
-      required:
-      - id
-      - originatingAccountId
-      - receivingAccount
-      - amount
-      - clientRefId
-      - status
-      - createdAt
-    WireCreateResponse:
-      type: object
-      properties:
-        id:
-          description: Unique identifier for the wire transfer
-          type: string
-      required:
-      - id
-    VirtualAccountGetResponse:
+      - businessName
+      title: BNY Business
+    ACHBankInstructions:
       type: object
       properties:
         accountDetails:
-          description: Bank account details. Contains the account number and account number type.
-          type:
-          - object
-          - 'null'
-          allOf:
-          - $ref: '#/components/schemas/AccountDetails'
-        achRoutingDetails:
-          description: ACH routing details for this virtual account. Contains the ABA routing number used for ACH transfers.
-          type:
-          - object
-          - 'null'
-          allOf:
-          - $ref: '#/components/schemas/ACHRoutingDetails'
-        bankKycInfo:
-          description: 'Bank-specific KYC information for this virtual account. Note: Only fields returned by the applicable bank (bankCode and partyName) are included.'
-          discriminator:
-            propertyName: bankCode
-            mapping:
-              BNY: '#/components/schemas/BNYBankInfoResponse'
-              CRB: '#/components/schemas/CRBBankInfoResponse'
-          oneOf:
-          - $ref: '#/components/schemas/BNYBankInfoResponse'
-          - $ref: '#/components/schemas/CRBBankInfoResponse'
-        bankName:
-          description: Name of the financial institution. This field is specific to virtual accounts and not part of the standard routing schemas.
-          type:
-          - string
-          - 'null'
-        createdAt:
+          $ref: '#/components/schemas/AccountDetails'
+        partyName:
+          description: Name of the account holder or beneficiary
           type: string
-          format: date-time
-        currency:
-          description: Currency code for permitted currency with this virtual account.
+        routingDetails:
+          $ref: '#/components/schemas/ACHRoutingDetails'
+        type:
+          description: Discriminator field indicating bank account type
           type: string
+          default: BANK
           enum:
-          - USD
-        id:
-          description: Unique identifier for the virtual account
-          type: string
-        liveMode:
-          description: This field will be true if this object exists in the live environment or false if it exists in the test environment.
-          type: boolean
-        object:
-          type: string
-        parentAccountId:
-          description: The parent internal account ID at the bank provider. This is the main account under which this virtual account was created.
-          type:
-          - string
-          - 'null'
-        status:
-          $ref: '#/components/schemas/VirtualAccountStatus'
-        updatedAt:
-          type: string
-          format: date-time
-        wireRoutingDetails:
-          description: Wire routing details for this virtual account. Contains the routing number (ABA or SWIFT) used for wire transfers. If routingNumberType is SWIFT, the routingNumber field contains the SWIFT code. If routingNumberType is ABA, the routingNumber may differ from the ACH routing number.
-          type:
-          - object
-          - 'null'
-          allOf:
-          - $ref: '#/components/schemas/WireRoutingDetails'
+          - BANK
       required:
-      - id
-      - object
-      - liveMode
-      - createdAt
-      - updatedAt
-      - status
-      - bankKycInfo
-      - currency
-    BNYIndividual:
+      - type
+      - partyName
+      - accountDetails
+      - routingDetails
+      title: ACH Bank Instructions
+    ACHRoutingDetails:
       type: object
       properties:
+        routingNumber:
+          description: Bank routing number (ABA routing number for US banks)
+          type: string
+        routingNumberType:
+          description: Type of routing number. ACH transfers only support ABA routing numbers.
+          type: string
+          default: ABA
+          enum:
+          - ABA
+      required:
+      - routingNumber
+      - routingNumberType
+      title: ACH Routing Details
+    VirtualAccountOwnerIndividual:
+      type: object
+      properties:
+        dateOfBirth:
+          description: Individual's birth date in the form YYYY-MM-DD.
+          type: string
+          format: date
         firstName:
           description: Individual's first name.
           type: string
@@ -2590,8 +2430,14 @@ components:
         middleName:
           description: Individual's middle name.
           type: string
+        politicallyExposedPerson:
+          description: Whether the individual is a politically exposed person.
+          type: boolean
+        regulationO:
+          description: Pertains to loans issued to executive officers, directors, and principal shareholders of member banks.
+          type: boolean
         type:
-          description: Discriminator field indicating individual entity type
+          description: Discriminator field indicating individual owner type
           type: string
           default: INDIVIDUAL
           enum:
@@ -2600,7 +2446,8 @@ components:
       - type
       - firstName
       - lastName
-      title: BNY Individual
+      - dateOfBirth
+      title: Individual Owner
     VirtualAccountOwnerCreateRequest:
       type: object
       properties:
@@ -2673,58 +2520,6 @@ components:
       - addressState
       - addressPostalCode
       - addressCountry
-    CRBBankInfoResponse:
-      type: object
-      properties:
-        bankCode:
-          description: Discriminator field indicating Cross River Bank
-          type: string
-          default: CRB
-          enum:
-          - CRB
-        partyAddress:
-          $ref: '#/components/schemas/PartyAddress'
-        partyName:
-          description: Party name for this virtual account.
-          type: string
-        virtualAccountOwnerId:
-          description: Virtual account owner ID (legal entity ID) associated with this virtual account.
-          type:
-          - string
-          - 'null'
-      required:
-      - bankCode
-      - partyName
-      title: CRB Bank Information Response
-    PaymentStatus:
-      description: 'Status of a payment (wire, ACH, or book transfer). Payments flow through the following lifecycle:
-
-
-        * `APPROVED` - The payment order has been approved and will be sent to the bank
-
-        * `PROCESSING` - Brief transition state while the payment is prepared for bank submission
-
-        * `SENT` - The payment order has been sent to the bank (may remain for a few days depending on payment type)
-
-        * `COMPLETED` - The bank has accepted and executed the payment; funds posted to recipient''s ledger
-
-        * `RETURNED` - The payment was returned by the receiving bank (see associated Return object)
-
-        * `FAILED` - Bank error or invalid parameters caused the payment to fail
-
-        * `CANCELLED` - Terminal state - the payment order was cancelled
-
-        * `OTHER` - Unexpected status received from the banking provider'
-      type: string
-      enum:
-      - APPROVED
-      - PROCESSING
-      - SENT
-      - COMPLETED
-      - RETURNED
-      - FAILED
-      - CANCELLED
-      - OTHER
     ListWiresResponse:
       type: object
       properties:
@@ -2737,6 +2532,211 @@ components:
       required:
       - data
       - page
+    PaymentAmount:
+      type: object
+      properties:
+        amount:
+          description: Payment amount in cents
+          type: integer
+          example: 10000
+        currency:
+          description: Currency code (e.g., USD)
+          type: string
+          example: USD
+      required:
+      - currency
+      - amount
+    PaymentReturnInfo:
+      type: object
+      properties:
+        code:
+          description: Return code indicating the reason for the return (e.g., 'R01', 'C01')
+          type: string
+        reason:
+          description: Human-readable description of the return reason
+          type: string
+      required:
+      - code
+      - reason
+    ACHCreateResponse:
+      type: object
+      properties:
+        id:
+          description: Unique identifier for the ACH transfer
+          type: string
+      required:
+      - id
+    TransactionCreateRequest:
+      type: object
+      properties:
+        amount:
+          $ref: '#/components/schemas/PaymentAmount'
+        asOfDate:
+          description: Date the transaction settled, in YYYY-MM-DD format
+          type: string
+          format: date
+        direction:
+          description: Direction of the transaction. Use 'credit' for incoming (deposit) and 'debit' for outgoing.
+          type: string
+          enum:
+          - credit
+          - debit
+        internalAccountId:
+          description: Unique identifier of the internal account to credit
+          type: string
+        posted:
+          description: Whether the transaction has posted
+          type: boolean
+        type:
+          description: Type of incoming transaction
+          type: string
+          enum:
+          - ACH
+          - WIRE
+        vendorCode:
+          description: Bank-specific code for the transaction
+          type: string
+        vendorCodeType:
+          description: The type of vendor_code being reported. Required if type is not provided.
+          type: string
+        vendorDescription:
+          description: Optional description for the transaction
+          type: string
+      required:
+      - internalAccountId
+      - amount
+      - direction
+      - asOfDate
+      - posted
+    BookCreateResponse:
+      type: object
+      properties:
+        id:
+          description: Unique identifier for the book transfer
+          type: string
+      required:
+      - id
+    ACHCreateRequest:
+      type: object
+      properties:
+        amount:
+          $ref: '#/components/schemas/PaymentAmount'
+        clientRefId:
+          description: A user-defined unique identifier (up to 180 characters) for idempotency and client-side tracking. Submitting the same clientRefId multiple times will not create duplicate resources. Use a unique value (e.g., UUID) for each distinct request.
+          type: string
+        originatingAccountId:
+          description: Unique identifier of the originating account
+          type: string
+        receivingAccount:
+          $ref: '#/components/schemas/ACHReceivingAccount'
+        subtype:
+          $ref: '#/components/schemas/ACHSubtype'
+        type:
+          $ref: '#/components/schemas/ACHType'
+      required:
+      - originatingAccountId
+      - receivingAccount
+      - amount
+      - type
+      - subtype
+      - clientRefId
+    ACHType:
+      description: Type of ACH transaction - CREDIT for funds moving into an account, DEBIT for funds moving out of an account.
+      type: string
+      enum:
+      - CREDIT
+      - DEBIT
+    BNYIndividual:
+      type: object
+      properties:
+        firstName:
+          description: Individual's first name.
+          type: string
+        lastName:
+          description: Individual's last name.
+          type: string
+        middleName:
+          description: Individual's middle name.
+          type: string
+        type:
+          description: Discriminator field indicating individual entity type
+          type: string
+          default: INDIVIDUAL
+          enum:
+          - INDIVIDUAL
+      required:
+      - type
+      - firstName
+      - lastName
+      title: BNY Individual
+    Page:
+      description: Pagination info
+      type: object
+      properties:
+        endCursor:
+          description: Submit this parameter in the "after" field to fetch the next page.
+          type:
+          - string
+          - 'null'
+      title: Page
+    BalanceObject:
+      type: object
+      properties:
+        amount:
+          $ref: '#/components/schemas/PaymentAmount'
+        asOfTime:
+          description: The date and time when this balance became true for the account.
+          type: string
+          format: date-time
+        type:
+          $ref: '#/components/schemas/BalanceType'
+      required:
+      - type
+      - amount
+      - asOfTime
+    ACHResponse:
+      type: object
+      properties:
+        amount:
+          $ref: '#/components/schemas/PaymentAmount'
+        clientRefId:
+          description: A user-defined unique identifier (up to 180 characters) for idempotency and client-side tracking. Submitting the same clientRefId multiple times will not create duplicate resources. Use a unique value (e.g., UUID) for each distinct request.
+          type: string
+        createdAt:
+          description: Timestamp when the ACH transfer was created
+          type: string
+          format: date-time
+        id:
+          description: Unique identifier for the ACH transfer
+          type: string
+        originatingAccountId:
+          description: Unique identifier of the originating account
+          type: string
+        receivingAccount:
+          $ref: '#/components/schemas/ACHReceivingAccount'
+        returnInfo:
+          description: Return information if the ACH payment was returned
+          type:
+          - object
+          - 'null'
+          allOf:
+          - $ref: '#/components/schemas/PaymentReturnInfo'
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        subtype:
+          $ref: '#/components/schemas/ACHSubtype'
+        type:
+          $ref: '#/components/schemas/ACHType'
+      required:
+      - id
+      - originatingAccountId
+      - receivingAccount
+      - amount
+      - type
+      - subtype
+      - clientRefId
+      - status
+      - createdAt
   securitySchemes:
     Api-Access-Key:
       type: apiKey

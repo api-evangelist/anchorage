@@ -175,23 +175,6 @@ components:
       required:
       - data
       title: AssetTypesResponse
-    ErrorType:
-      description: The type of error returned.
-      type: string
-      enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
     AssetTypeDetails:
       description: A representation of the details a given crypto-asset
       type: object
@@ -241,6 +224,23 @@ components:
       - decimals
       - featureSupport
       title: AssetTypeDetails
+    ErrorType:
+      description: The type of error returned.
+      type: string
+      enum:
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
     ErrorDetails:
       type: object
       properties:

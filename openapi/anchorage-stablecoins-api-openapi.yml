@@ -281,45 +281,13 @@ paths:
     - url: https://api.anchorage-staging.com/v2
 components:
   schemas:
-    IssueRedeemHistoryResponse:
+    StablecoinConversionResponse:
       type: object
       properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/IssueRedeemConversion'
-        page:
-          $ref: '#/components/schemas/Page'
+        authorizationOperationId:
+          type: string
       required:
-      - data
-      - page
-    EntitledStablecoins:
-      type: object
-      properties:
-        stablecoins:
-          description: Stablecoin token symbols your organization is entitled to query reserves history for.
-          type: array
-          items:
-            type: string
-      required:
-      - stablecoins
-    ErrorType:
-      description: The type of error returned.
-      type: string
-      enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
+      - authorizationOperationId
     StablecoinConversion:
       type: object
       properties:
@@ -353,112 +321,33 @@ components:
       - destinationWalletId
       - destinationAssetType
       - amount
-    ReservesSnapshot:
+    EntitledStablecoins:
       type: object
       properties:
-        createdAt:
-          description: RFC3339 row write time; pagination cursor field.
-          type: string
-          format: date-time
-        inTransit:
-          description: In-transit cash, as a decimal string. Already reflected in reserveComposition and totalReserves; broken out separately for visibility. Do not re-add to the total.
-          type: string
-          example: '100.00'
-        reportDate:
-          description: Reconciliation date (YYYY-MM-DD).
-          type: string
-          format: date
-        reserveComposition:
-          $ref: '#/components/schemas/ReserveComposition'
-        reserveRatio:
-          description: totalReserves / totalStablecoinOnNetwork, as a decimal string.
-          type: string
-          example: '1.00010'
-        stablecoin:
-          description: Token symbol.
-          type: string
-          example: USDX
-        totalReserves:
-          description: Total reserves, as a decimal string.
-          type: string
-          example: '10000'
-        totalStablecoinOnNetwork:
-          description: Total supply on-network, as a decimal string.
-          type: string
-          example: '9999'
-      required:
-      - reportDate
-      - stablecoin
-      - totalStablecoinOnNetwork
-      - totalReserves
-      - reserveRatio
-      - reserveComposition
-      - inTransit
-      - createdAt
-      title: Reserves Snapshot
-    ErrorDetails:
-      type: object
-      properties:
-        errorType:
-          $ref: '#/components/schemas/ErrorType'
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - errorType
-      - message
-      title: ErrorDetails
-    StablecoinReservesEntitledStablecoinsResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/EntitledStablecoins'
-      required:
-      - data
-    ReserveComposition:
-      description: 'Reserve backing for the queried token, as a map of reserve-component key to balance.
-
-
-        Each value is a decimal string. The set of keys is not fixed; it varies by token and may gain new keys over time, so iterate over whatever keys are present and ignore any you do not recognize. Existing keys are stable and will not be renamed or removed without a new API version.'
-      type: object
-      example:
-        cashDeposits: '5000.00'
-        mmfXyz: '5000.00'
-      additionalProperties:
-        type: string
-      title: Reserve Composition
-    ReservesHistoryResponse:
-      type: object
-      properties:
-        data:
+        stablecoins:
+          description: Stablecoin token symbols your organization is entitled to query reserves history for.
           type: array
           items:
-            $ref: '#/components/schemas/ReservesSnapshot'
-        page:
-          $ref: '#/components/schemas/Page'
+            type: string
       required:
-      - data
-      - page
-    StablecoinConversionResponse:
-      type: object
-      properties:
-        authorizationOperationId:
-          type: string
-      required:
-      - authorizationOperationId
-    Page:
-      description: Pagination info
-      type: object
-      properties:
-        next:
-          description: URL to use to query for the next page or null if no additional results are available
-          type:
-          - string
-          - 'null'
-          example: <next page url>
-          x-omitempty: false
-      title: Page
+      - stablecoins
+    ErrorType:
+      description: The type of error returned.
+      type: string
+      enum:
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
     IssueRedeemConversion:
       type: object
       properties:
@@ -559,6 +448,117 @@ components:
       - amount
       - status
       - createdAt
+    ReservesHistoryResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReservesSnapshot'
+        page:
+          $ref: '#/components/schemas/Page'
+      required:
+      - data
+      - page
+    ErrorDetails:
+      type: object
+      properties:
+        errorType:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - errorType
+      - message
+      title: ErrorDetails
+    IssueRedeemHistoryResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/IssueRedeemConversion'
+        page:
+          $ref: '#/components/schemas/Page'
+      required:
+      - data
+      - page
+    ReserveComposition:
+      description: 'Reserve backing for the queried token, as a map of reserve-component key to balance.
+
+
+        Each value is a decimal string. The set of keys is not fixed; it varies by token and may gain new keys over time, so iterate over whatever keys are present and ignore any you do not recognize. Existing keys are stable and will not be renamed or removed without a new API version.'
+      type: object
+      example:
+        cashDeposits: '5000.00'
+        mmfXyz: '5000.00'
+      additionalProperties:
+        type: string
+      title: Reserve Composition
+    Page:
+      description: Pagination info
+      type: object
+      properties:
+        next:
+          description: URL to use to query for the next page or null if no additional results are available
+          type:
+          - string
+          - 'null'
+          example: <next page url>
+          x-omitempty: false
+      title: Page
+    ReservesSnapshot:
+      type: object
+      properties:
+        createdAt:
+          description: RFC3339 row write time; pagination cursor field.
+          type: string
+          format: date-time
+        inTransit:
+          description: In-transit cash, as a decimal string. Already reflected in reserveComposition and totalReserves; broken out separately for visibility. Do not re-add to the total.
+          type: string
+          example: '100.00'
+        reportDate:
+          description: Reconciliation date (YYYY-MM-DD).
+          type: string
+          format: date
+        reserveComposition:
+          $ref: '#/components/schemas/ReserveComposition'
+        reserveRatio:
+          description: totalReserves / totalStablecoinOnNetwork, as a decimal string.
+          type: string
+          example: '1.00010'
+        stablecoin:
+          description: Token symbol.
+          type: string
+          example: USDX
+        totalReserves:
+          description: Total reserves, as a decimal string.
+          type: string
+          example: '10000'
+        totalStablecoinOnNetwork:
+          description: Total supply on-network, as a decimal string.
+          type: string
+          example: '9999'
+      required:
+      - reportDate
+      - stablecoin
+      - totalStablecoinOnNetwork
+      - totalReserves
+      - reserveRatio
+      - reserveComposition
+      - inTransit
+      - createdAt
+      title: Reserves Snapshot
+    StablecoinReservesEntitledStablecoinsResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/EntitledStablecoins'
+      required:
+      - data
     ErrorDetails_2:
       type: object
       properties:

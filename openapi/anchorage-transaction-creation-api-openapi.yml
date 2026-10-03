@@ -263,6 +263,259 @@ paths:
       - Transaction Creation
 components:
   schemas:
+    HypercoreDelegateStakeRequest:
+      description: Request to delegate inactive stake balance to a validator on HyperCore. Currently only supports a single validator per wallet.
+      type: object
+      properties:
+        amount:
+          description: Amount of HYPE to delegate (decimal string)
+          type: string
+          example: '100.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        type:
+          description: Discriminator field indicating this is a HyperCore delegate stake request
+          type: string
+          default: HYPERCORE_DELEGATE_STAKE
+          enum:
+          - HYPERCORE_DELEGATE_STAKE
+        validatorAddress:
+          description: Address of the validator to delegate to (EVM 0x + 40 hex)
+          type: string
+          example: '0x393d4f2209abcacf57b75a51dafae777f9dd38bc'
+          pattern: ^0x[0-9a-fA-F]{40}$
+      required:
+      - type
+      - validatorAddress
+      - amount
+      title: HyperCore Delegate Stake Request
+    ErrorDetails:
+      type: object
+      properties:
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - message
+      title: ErrorDetails
+    HypercoreLinkAccountsRequest:
+      description: Request to link this HyperCore staking wallet to an external trading account. This is permanent and irreversible, and carries no amount. The operation only succeeds if the trading account has already initiated a linking request to this staking wallet. This operation can't be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)
+      type: object
+      properties:
+        linkAddress:
+          description: Address of the external trading account to link to this staking wallet (EVM 0x + 40 hex)
+          type: string
+          example: '0x393d4f2209abcacf57b75a51dafae777f9dd38bc'
+          pattern: ^0x[0-9a-fA-F]{40}$
+        type:
+          description: Discriminator field indicating this is a HyperCore link-accounts request
+          type: string
+          default: HYPERCORE_LINK_ACCOUNTS
+          enum:
+          - HYPERCORE_LINK_ACCOUNTS
+      required:
+      - type
+      - linkAddress
+      title: HyperCore Link Accounts Request
+    CreateWalletOperationResponse:
+      description: Async response with wallet operation ID. Use the walletOperationId with the GET /wallet-operations/{walletOperationId} endpoint to poll for the operation status and retrieve the created transaction details.
+      type: object
+      properties:
+        walletOperationId:
+          description: Wallet operation identifier. Poll the GET /wallet-operations/{walletOperationId} endpoint to check the status and retrieve the transaction data once creation is complete.
+          type: string
+          example: op_550e8400-e29b-41d4-a716-446655440000
+      required:
+      - walletOperationId
+    AvalanchePChainImportRequest:
+      description: 'Step 2 of a C→P transfer: claim on the P-Chain the AVAX that was exported from the C-Chain (on-chain p_from_c_import), initiated against the P-Chain wallet. The import pulls the funds from shared atomic memory into the P-Chain wallet''s own address, so there is no destination. Explicit amount only — ''all'' is not supported. This operation can''t be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)'
+      type: object
+      properties:
+        amount:
+          description: Amount of AVAX to claim on the P-Chain (decimal string). Explicit amount required.
+          type: string
+          example: '10.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        type:
+          description: Discriminator field indicating this is an Avalanche P-Chain import request (initiated on the P-Chain wallet)
+          type: string
+          default: AVALANCHE_PCHAIN_IMPORT
+          enum:
+          - AVALANCHE_PCHAIN_IMPORT
+      required:
+      - type
+      - amount
+      title: Avalanche P-Chain Import Request
+    AvalanchePChainStakeRequest:
+      description: Request to create a new Avalanche P-Chain validator (self-stake). Requires BLS proof-of-possession (nodePublicKey + nodeSignature) to register the validator's BLS key. The commission controls what percentage of delegation rewards are kept by the validator. This operation can't be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)
+      type: object
+      properties:
+        amount:
+          description: Amount of AVAX to self-stake (decimal string)
+          type: string
+          example: '2000.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        commission:
+          description: Delegation rewards commission percentage (2–100, up to 2 decimal places). E.g. '5' for 5%.
+          type: string
+          example: '5'
+          pattern: ^[0-9]\d*(\.\d{1,2})?$
+        delegatorRewardsAddress:
+          description: P-Chain address to receive delegator staking rewards
+          type: string
+          example: P-avax1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4
+        duration:
+          description: Staking duration in whole days (e.g. '14'). Must be between 14 and 365 days on mainnet, or 1 and 365 days on testnet/regnet.
+          type: string
+          example: '14'
+          pattern: ^[1-9][0-9]*$
+        nodeId:
+          description: 'Avalanche NodeID of the new validator (format: NodeID-<base58check>)'
+          type: string
+          example: NodeID-7Xhw2mDxuDS44j42TCB6U5579esbSt3Lg
+          pattern: ^NodeID-[1-9A-HJ-NP-Za-km-z]{33}$
+        nodePublicKey:
+          description: BLS12-381 public key for proof-of-possession (48 bytes, 0x-prefixed hex, 96 hex chars)
+          type: string
+          example: '0x93247f2209abcacf57b75a51dafae777f9dd38bc7053d1af526f220a7489a6d3a2753e5f3e8b1cfe39b56f43611df74a'
+          pattern: ^0x[0-9a-fA-F]{96}$
+        nodeSignature:
+          description: BLS12-381 proof-of-possession signature (96 bytes, 0x-prefixed hex, 192 hex chars)
+          type: string
+          example: '0xb3a48349cf17e7c24b23a1b0e9469ebe1c03a4f4e52e5e80ce09caa5c7c7f4f2a5b34fe2e9a2b4c61d3f8e7a56821f8bb3a48349cf17e7c24b23a1b0e9469ebe1c03a4f4e52e5e80ce09caa5c7c7f4f2a5b34fe2e9a2b4c61d3f8e7a56821f8b'
+          pattern: ^0x[0-9a-fA-F]{192}$
+        type:
+          description: Discriminator field indicating this is an Avalanche P-Chain stake (validator creation) request
+          type: string
+          default: AVALANCHE_PCHAIN_STAKE
+          enum:
+          - AVALANCHE_PCHAIN_STAKE
+        validatorRewardsAddress:
+          description: P-Chain address to receive validator staking rewards
+          type: string
+          example: P-avax1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4
+      required:
+      - type
+      - nodeId
+      - nodePublicKey
+      - nodeSignature
+      - commission
+      - duration
+      - amount
+      - validatorRewardsAddress
+      - delegatorRewardsAddress
+      title: Avalanche P-Chain Stake Request
+    HypercoreBridgeRequest:
+      description: Request to bridge HyperCore spot balance out to the client's HyperEVM wallet. An explicit amount is required ('all' is not supported). This operation can't be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)
+      type: object
+      properties:
+        amount:
+          description: Amount of HYPE to bridge from HyperCore spot to HyperEVM (decimal string). An explicit amount greater than zero is required.
+          type: string
+          example: '100.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        type:
+          description: Discriminator field indicating this is a HyperCore bridge (outbound) request
+          type: string
+          default: HYPERCORE_BRIDGE
+          enum:
+          - HYPERCORE_BRIDGE
+      required:
+      - type
+      - amount
+      title: HyperCore Bridge to HyperEVM Request
+    SolanaSplitAndDeactivateStakeRequest:
+      description: Request to split a Solana stake account and deactivate the new account in a single transaction. The specified amount will be split into a new stake account (with a server-generated address) and immediately deactivated. Minimum split amount is 0.01 SOL, and the original stake account must retain at least 0.01 SOL after the split.
+      type: object
+      properties:
+        amount:
+          description: Amount of SOL to split into the new stake account, which will then be deactivated (decimal string). Minimum 1 SOL. The original account must retain at least 1.1 SOL.
+          type: string
+          example: '1.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        stakeAccountAddress:
+          description: Address of the source stake account to split from
+          type: string
+          example: 7NMw8RfMFLc6WZvyuJQbAF5yVhxFMkH9mKzPP2JVYKjL
+        type:
+          description: Discriminator field indicating this is a Solana split and deactivate stake request
+          type: string
+          default: SOLANA_SPLIT_AND_DEACTIVATE_STAKE
+          enum:
+          - SOLANA_SPLIT_AND_DEACTIVATE_STAKE
+      required:
+      - type
+      - stakeAccountAddress
+      - amount
+      title: Solana Split And Deactivate Stake Request
+    HypercoreStakeToSpotRequest:
+      description: Request to move inactive stake balance back to spot balance. This is the withdraw-to-spot action; completion is subject to HyperCore's 7-day unstaking queue. This operation can't be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)
+      type: object
+      properties:
+        amount:
+          description: Amount of HYPE to move from the stake account back to spot (decimal string). An explicit amount greater than zero is required.
+          type: string
+          example: '100.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        type:
+          description: Discriminator field indicating this is a HyperCore stake-to-spot request
+          type: string
+          default: HYPERCORE_STAKE_TO_SPOT
+          enum:
+          - HYPERCORE_STAKE_TO_SPOT
+      required:
+      - type
+      - amount
+      title: HyperCore Stake To Spot Request
+    EthereumAddStakeRequest:
+      description: Request to add stake to an existing 0x02 Ethereum validator by depositing additional ETH. Any validator balance above 2048 ETH will not earn rewards. Beyond that point it is recommended to create a new validator via ETHEREUM CREATE VALIDATOR REQUEST.
+      type: object
+      properties:
+        amount:
+          description: Amount of ETH to add as stake (decimal string)
+          type: string
+          example: '32.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        type:
+          description: Discriminator field indicating this is an Ethereum add stake request
+          type: string
+          default: ETHEREUM_ADD_STAKE
+          enum:
+          - ETHEREUM_ADD_STAKE
+        validatorPublicKey:
+          description: BLS12-381 public key of the validator to add stake to (48 bytes, hex encoded)
+          type: string
+          example: 93247f2209abcacf57b75a51dafae777f9dd38bc7053d1af526f220a7489a6d3a2753e5f3e8b1cfe39b56f43611df74a
+      required:
+      - type
+      - validatorPublicKey
+      - amount
+      title: Ethereum Add Stake Request
+    HypercoreUndelegateStakeRequest:
+      description: Request to undelegate funds from a validator on HyperCore, beginning the 1-day delegation lockup before the funds return to the idle stake account. Currently only supports a single validator per wallet.
+      type: object
+      properties:
+        amount:
+          description: Amount of HYPE to undelegate (decimal string), or 'ALL' to undelegate the full delegated balance at the validator
+          type: string
+          example: '100.0'
+          pattern: ^(ALL|[0-9]\d*(\.\d+)?)$
+        type:
+          description: Discriminator field indicating this is a HyperCore undelegate stake request
+          type: string
+          default: HYPERCORE_UNDELEGATE_STAKE
+          enum:
+          - HYPERCORE_UNDELEGATE_STAKE
+        validatorAddress:
+          description: Address of the validator to undelegate from (EVM 0x + 40 hex)
+          type: string
+          example: '0x393d4f2209abcacf57b75a51dafae777f9dd38bc'
+          pattern: ^0x[0-9a-fA-F]{40}$
+      required:
+      - type
+      - validatorAddress
+      - amount
+      title: HyperCore Undelegate Stake Request
     EthereumWithdrawStakeRequest:
       description: Request to withdraw some or all stake from a 0x02 Ethereum validator
       type: object
@@ -287,43 +540,25 @@ components:
       - validatorPublicKey
       - amount
       title: Ethereum Withdraw Stake Request
-    HypercoreStakeToSpotRequest:
-      description: Request to move inactive stake balance back to spot balance. This is the withdraw-to-spot action; completion is subject to HyperCore's 7-day unstaking queue. This operation can't be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)
+    AvalancheCChainImportRequest:
+      description: 'Step 2 of a P→C transfer: claim on the C-Chain the AVAX that was exported from the P-Chain (on-chain c_from_p_import), initiated against the C-Chain (EVM) wallet. The funds always credit the initiating wallet''s own C-Chain address, so no destination is supplied. Explicit amount only — ''all'' is not supported. This operation can''t be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)'
       type: object
       properties:
         amount:
-          description: Amount of HYPE to move from the stake account back to spot (decimal string). An explicit amount greater than zero is required.
+          description: Amount of AVAX to claim on the C-Chain (decimal string). Explicit amount required.
           type: string
-          example: '100.0'
+          example: '10.0'
           pattern: ^[0-9]\d*(\.\d+)?$
         type:
-          description: Discriminator field indicating this is a HyperCore stake-to-spot request
+          description: Discriminator field indicating this is an Avalanche C-Chain import request (initiated on the C-Chain wallet)
           type: string
-          default: HYPERCORE_STAKE_TO_SPOT
+          default: AVALANCHE_CCHAIN_IMPORT
           enum:
-          - HYPERCORE_STAKE_TO_SPOT
+          - AVALANCHE_CCHAIN_IMPORT
       required:
       - type
       - amount
-      title: HyperCore Stake To Spot Request
-    EthPersonalSignRequest:
-      description: Ethereum personal message signing request using the eth_personalSign JSON-RPC method
-      type: object
-      properties:
-        message:
-          description: Human-readable message to sign
-          type: string
-          example: Please sign to verify wallet ownership
-        type:
-          description: Discriminator field indicating this is an Ethereum personal sign request
-          type: string
-          default: ETH_PERSONAL_SIGN
-          enum:
-          - ETH_PERSONAL_SIGN
-      required:
-      - type
-      - message
-      title: Ethereum Personal Sign Request
+      title: Avalanche C-Chain Import Request
     EIP712SignTypedDataV4Request:
       description: Ethereum structured data signing request following the EIP-712 specification, using the JSON-RPC method eth_signTypedData_v4. The chainId in the domain must match the chain ID of the source wallet's network.
       type: object
@@ -354,50 +589,6 @@ components:
       - domain
       - message
       title: EIP-712 Sign Typed Data V4 Request
-    AvalancheCChainImportRequest:
-      description: 'Step 2 of a P→C transfer: claim on the C-Chain the AVAX that was exported from the P-Chain (on-chain c_from_p_import), initiated against the C-Chain (EVM) wallet. The funds always credit the initiating wallet''s own C-Chain address, so no destination is supplied. Explicit amount only — ''all'' is not supported. This operation can''t be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)'
-      type: object
-      properties:
-        amount:
-          description: Amount of AVAX to claim on the C-Chain (decimal string). Explicit amount required.
-          type: string
-          example: '10.0'
-          pattern: ^[0-9]\d*(\.\d+)?$
-        type:
-          description: Discriminator field indicating this is an Avalanche C-Chain import request (initiated on the C-Chain wallet)
-          type: string
-          default: AVALANCHE_CCHAIN_IMPORT
-          enum:
-          - AVALANCHE_CCHAIN_IMPORT
-      required:
-      - type
-      - amount
-      title: Avalanche C-Chain Import Request
-    HypercoreUndelegateStakeRequest:
-      description: Request to undelegate funds from a validator on HyperCore, beginning the 1-day delegation lockup before the funds return to the idle stake account. Currently only supports a single validator per wallet.
-      type: object
-      properties:
-        amount:
-          description: Amount of HYPE to undelegate (decimal string), or 'ALL' to undelegate the full delegated balance at the validator
-          type: string
-          example: '100.0'
-          pattern: ^(ALL|[0-9]\d*(\.\d+)?)$
-        type:
-          description: Discriminator field indicating this is a HyperCore undelegate stake request
-          type: string
-          default: HYPERCORE_UNDELEGATE_STAKE
-          enum:
-          - HYPERCORE_UNDELEGATE_STAKE
-        validatorAddress:
-          description: Address of the validator to undelegate from (EVM 0x + 40 hex)
-          type: string
-          example: '0x393d4f2209abcacf57b75a51dafae777f9dd38bc'
-          pattern: ^0x[0-9a-fA-F]{40}$
-      required:
-      - type
-      - validatorAddress
-      - amount
-      title: HyperCore Undelegate Stake Request
     AvalancheCChainExportRequest:
       description: 'Step 1 of a C→P transfer: export AVAX from a C-Chain (EVM) wallet toward the P-Chain (on-chain c_to_p_export), initiated against the C-Chain wallet. This is the funding step that precedes P-Chain staking; settle the funds on the P-Chain with a follow-up AVALANCHE_PCHAIN_IMPORT. The destination must be a P-Chain wallet you control. Explicit amount only — ''all'' is not supported. This operation can''t be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)'
       type: object
@@ -422,30 +613,6 @@ components:
       - destination
       - amount
       title: Avalanche C-Chain Export Request
-    SolanaWithdrawStakeRequest:
-      description: Request to withdraw inactive SOL from a Solana stake account. The stake account must be deactivated and cooldown period must have elapsed. Minimum withdrawal is 0.000000001 SOL (1 lamport). Partial withdrawals must leave at least 0.00228288 SOL (rent-exempt reserve) in the stake account.
-      type: object
-      properties:
-        amount:
-          description: Amount of SOL to withdraw (decimal string). Minimum 0.000000001 SOL. For partial withdrawals, must leave at least 0.00228288 SOL in the account.
-          type: string
-          example: '1.0'
-          pattern: ^[0-9]\d*(\.\d+)?$
-        stakeAccountAddress:
-          description: Address of the stake account to withdraw from
-          type: string
-          example: 7NMw8RfMFLc6WZvyuJQbAF5yVhxFMkH9mKzPP2JVYKjL
-        type:
-          description: Discriminator field indicating this is a Solana withdraw stake request
-          type: string
-          default: SOLANA_WITHDRAW_STAKE
-          enum:
-          - SOLANA_WITHDRAW_STAKE
-      required:
-      - type
-      - stakeAccountAddress
-      - amount
-      title: Solana Withdraw Stake Request
     SolanaCreateAndActivateStakeAccountRequest:
       description: Request to create and delegate a new Solana stake account in a single operation. Minimum stake amount is 0.01 SOL.
       type: object
@@ -470,6 +637,24 @@ components:
       - amount
       - voteAccountAddress
       title: Solana Create And Activate Stake Account Request
+    EthPersonalSignRequest:
+      description: Ethereum personal message signing request using the eth_personalSign JSON-RPC method
+      type: object
+      properties:
+        message:
+          description: Human-readable message to sign
+          type: string
+          example: Please sign to verify wallet ownership
+        type:
+          description: Discriminator field indicating this is an Ethereum personal sign request
+          type: string
+          default: ETH_PERSONAL_SIGN
+          enum:
+          - ETH_PERSONAL_SIGN
+      required:
+      - type
+      - message
+      title: Ethereum Personal Sign Request
     EthSendTransactionRequest:
       description: Ethereum transaction execution request using the eth_sendTransaction JSON-RPC method. The from address must match the address associated with the source wallet.
       type: object
@@ -501,111 +686,6 @@ components:
       - from
       - to
       title: Ethereum Send Transaction Request
-    CreateWalletOperationResponse:
-      description: Async response with wallet operation ID. Use the walletOperationId with the GET /wallet-operations/{walletOperationId} endpoint to poll for the operation status and retrieve the created transaction details.
-      type: object
-      properties:
-        walletOperationId:
-          description: Wallet operation identifier. Poll the GET /wallet-operations/{walletOperationId} endpoint to check the status and retrieve the transaction data once creation is complete.
-          type: string
-          example: op_550e8400-e29b-41d4-a716-446655440000
-      required:
-      - walletOperationId
-    ErrorDetails:
-      type: object
-      properties:
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - message
-      title: ErrorDetails
-    AvalanchePChainExportRequest:
-      description: 'Step 1 of a P→C transfer: export AVAX from a P-Chain wallet toward the C-Chain (on-chain p_to_c_export), initiated against the P-Chain wallet. Bridging is two steps with no auto-import — settle the funds on the C-Chain with a follow-up AVALANCHE_CCHAIN_IMPORT. The destination must be a C-Chain wallet you control. Explicit amount only — ''all'' is not supported. This operation can''t be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)'
-      type: object
-      properties:
-        amount:
-          description: Amount of AVAX to export (decimal string). Explicit amount required.
-          type: string
-          example: '10.0'
-          pattern: ^[0-9]\d*(\.\d+)?$
-        destination:
-          description: C-Chain (EVM 0x) address to receive the exported AVAX. Must be an address of a wallet your organization controls.
-          type: string
-          example: '0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed'
-        type:
-          description: Discriminator field indicating this is an Avalanche P-Chain export request
-          type: string
-          default: AVALANCHE_PCHAIN_EXPORT
-          enum:
-          - AVALANCHE_PCHAIN_EXPORT
-      required:
-      - type
-      - destination
-      - amount
-      title: Avalanche P-Chain Export Request
-    EthereumAddStakeRequest:
-      description: Request to add stake to an existing 0x02 Ethereum validator by depositing additional ETH. Any validator balance above 2048 ETH will not earn rewards. Beyond that point it is recommended to create a new validator via ETHEREUM CREATE VALIDATOR REQUEST.
-      type: object
-      properties:
-        amount:
-          description: Amount of ETH to add as stake (decimal string)
-          type: string
-          example: '32.0'
-          pattern: ^[0-9]\d*(\.\d+)?$
-        type:
-          description: Discriminator field indicating this is an Ethereum add stake request
-          type: string
-          default: ETHEREUM_ADD_STAKE
-          enum:
-          - ETHEREUM_ADD_STAKE
-        validatorPublicKey:
-          description: BLS12-381 public key of the validator to add stake to (48 bytes, hex encoded)
-          type: string
-          example: 93247f2209abcacf57b75a51dafae777f9dd38bc7053d1af526f220a7489a6d3a2753e5f3e8b1cfe39b56f43611df74a
-      required:
-      - type
-      - validatorPublicKey
-      - amount
-      title: Ethereum Add Stake Request
-    SolanaRawTransactionRequest:
-      description: Solana raw transaction execution request. The transaction field contains a Base64-encoded Solana transaction.
-      type: object
-      properties:
-        transaction:
-          description: Base64-encoded Solana transaction that could be passed to the sendTransaction RPC method
-          type: string
-          example: AX9ymHgILTd01GtdBsbQZ9by5D4z4UWh+1Tsh6LDuPHuZk/Z8LrIwoKZRp3le2RTb5lywL1xcJGQ8u3M3U0tyAgBAAEDXCL+JarHftfP5QgsRxpEsr+/YiRWQeCz7PI3jfzeppEvUc61u+TNHri9ChQdLN2evWGx+1O3MwbPFKV5rIqlxAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAvOdVbvGn3R+uBkugNCq8C/Texc7ILBoYjbn4aVQV0OgBAgIAAQwCAAAAQEIPAAAAAAA=
-        type:
-          description: Discriminator field indicating this is a Solana raw transaction request
-          type: string
-          default: SOLANA_RAW_TRANSACTION
-          enum:
-          - SOLANA_RAW_TRANSACTION
-      required:
-      - type
-      - transaction
-      title: Solana Raw Transaction Request
-    AvalanchePChainImportRequest:
-      description: 'Step 2 of a C→P transfer: claim on the P-Chain the AVAX that was exported from the C-Chain (on-chain p_from_c_import), initiated against the P-Chain wallet. The import pulls the funds from shared atomic memory into the P-Chain wallet''s own address, so there is no destination. Explicit amount only — ''all'' is not supported. This operation can''t be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)'
-      type: object
-      properties:
-        amount:
-          description: Amount of AVAX to claim on the P-Chain (decimal string). Explicit amount required.
-          type: string
-          example: '10.0'
-          pattern: ^[0-9]\d*(\.\d+)?$
-        type:
-          description: Discriminator field indicating this is an Avalanche P-Chain import request (initiated on the P-Chain wallet)
-          type: string
-          default: AVALANCHE_PCHAIN_IMPORT
-          enum:
-          - AVALANCHE_PCHAIN_IMPORT
-      required:
-      - type
-      - amount
-      title: Avalanche P-Chain Import Request
     ProposeRawTransactionRequest:
       description: Request to create a raw transaction for approval workflow
       type: object
@@ -635,25 +715,116 @@ components:
       required:
       - sourceWalletId
       - parameters
-    HyperevmBridgeRequest:
-      description: Request to bridge HYPE from the client's HyperEVM wallet into HyperCore spot balance, the funding step that precedes staking. This operation is initiated on the HyperEVM (HYPE_HYPEREVM) wallet. An explicit amount is required ('all' is not supported). This operation can't be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)
+    SolanaWithdrawStakeRequest:
+      description: Request to withdraw inactive SOL from a Solana stake account. The stake account must be deactivated and cooldown period must have elapsed. Minimum withdrawal is 0.000000001 SOL (1 lamport). Partial withdrawals must leave at least 0.00228288 SOL (rent-exempt reserve) in the stake account.
       type: object
       properties:
         amount:
-          description: Amount of HYPE to bridge from HyperEVM into HyperCore spot (decimal string). An explicit amount greater than zero is required.
+          description: Amount of SOL to withdraw (decimal string). Minimum 0.000000001 SOL. For partial withdrawals, must leave at least 0.00228288 SOL in the account.
           type: string
-          example: '100.0'
+          example: '1.0'
           pattern: ^[0-9]\d*(\.\d+)?$
-        type:
-          description: Discriminator field indicating this is a HyperEVM bridge (inbound, HyperEVM -> HyperCore) request
+        stakeAccountAddress:
+          description: Address of the stake account to withdraw from
           type: string
-          default: HYPEREVM_BRIDGE
+          example: 7NMw8RfMFLc6WZvyuJQbAF5yVhxFMkH9mKzPP2JVYKjL
+        type:
+          description: Discriminator field indicating this is a Solana withdraw stake request
+          type: string
+          default: SOLANA_WITHDRAW_STAKE
           enum:
-          - HYPEREVM_BRIDGE
+          - SOLANA_WITHDRAW_STAKE
       required:
       - type
+      - stakeAccountAddress
       - amount
-      title: HyperEVM Bridge to HyperCore Request
+      title: Solana Withdraw Stake Request
+    SolanaRawTransactionRequest:
+      description: Solana raw transaction execution request. The transaction field contains a Base64-encoded Solana transaction.
+      type: object
+      properties:
+        transaction:
+          description: Base64-encoded Solana transaction that could be passed to the sendTransaction RPC method
+          type: string
+          example: AX9ymHgILTd01GtdBsbQZ9by5D4z4UWh+1Tsh6LDuPHuZk/Z8LrIwoKZRp3le2RTb5lywL1xcJGQ8u3M3U0tyAgBAAEDXCL+JarHftfP5QgsRxpEsr+/YiRWQeCz7PI3jfzeppEvUc61u+TNHri9ChQdLN2evWGx+1O3MwbPFKV5rIqlxAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAvOdVbvGn3R+uBkugNCq8C/Texc7ILBoYjbn4aVQV0OgBAgIAAQwCAAAAQEIPAAAAAAA=
+        type:
+          description: Discriminator field indicating this is a Solana raw transaction request
+          type: string
+          default: SOLANA_RAW_TRANSACTION
+          enum:
+          - SOLANA_RAW_TRANSACTION
+      required:
+      - type
+      - transaction
+      title: Solana Raw Transaction Request
+    SolanaDeactivateStakeRequest:
+      description: Request to deactivate a Solana stake account, beginning the process to unstake. This deactivates the entire balance of the stake account. For partial unstaking, use SOLANA_SPLIT_AND_DEACTIVATE_STAKE instead.
+      type: object
+      properties:
+        stakeAccountAddress:
+          description: Address of the stake account to deactivate. The entire balance will be deactivated.
+          type: string
+          example: 7NMw8RfMFLc6WZvyuJQbAF5yVhxFMkH9mKzPP2JVYKjL
+        type:
+          description: Discriminator field indicating this is a Solana deactivate stake request
+          type: string
+          default: SOLANA_DEACTIVATE_STAKE
+          enum:
+          - SOLANA_DEACTIVATE_STAKE
+      required:
+      - type
+      - stakeAccountAddress
+      title: Solana Deactivate Stake Request
+    EthereumCreateValidatorRequest:
+      description: Request to create an 0x02 Ethereum validator by depositing ETH to the beacon chain deposit contract. In order to retain status as an active validator, it must maintain a minimum of 32 ETH. Validators cannot be merged, if you'd like to increase an existing position instead use ETHEREUM ADD STAKE REQUEST.
+      type: object
+      properties:
+        amount:
+          description: Amount of ETH to deposit for the validator. Must be between 32 and 2048 ETH.
+          type: string
+          example: '33.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        stakingProvider:
+          description: The entity running the validator infrastructure
+          type: string
+          enum:
+          - FIGMENT
+          - BLOCKDAEMON
+        type:
+          description: Discriminator field indicating this is an Ethereum create validator request
+          type: string
+          default: ETHEREUM_CREATE_VALIDATOR
+          enum:
+          - ETHEREUM_CREATE_VALIDATOR
+      required:
+      - type
+      - stakingProvider
+      - amount
+      title: Ethereum Create Validator Request
+    AvalanchePChainExportRequest:
+      description: 'Step 1 of a P→C transfer: export AVAX from a P-Chain wallet toward the C-Chain (on-chain p_to_c_export), initiated against the P-Chain wallet. Bridging is two steps with no auto-import — settle the funds on the C-Chain with a follow-up AVALANCHE_CCHAIN_IMPORT. The destination must be a C-Chain wallet you control. Explicit amount only — ''all'' is not supported. This operation can''t be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)'
+      type: object
+      properties:
+        amount:
+          description: Amount of AVAX to export (decimal string). Explicit amount required.
+          type: string
+          example: '10.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        destination:
+          description: C-Chain (EVM 0x) address to receive the exported AVAX. Must be an address of a wallet your organization controls.
+          type: string
+          example: '0x5aAeb6053F3E94C9b9A09f33669435E7Ef1BeAed'
+        type:
+          description: Discriminator field indicating this is an Avalanche P-Chain export request
+          type: string
+          default: AVALANCHE_PCHAIN_EXPORT
+          enum:
+          - AVALANCHE_PCHAIN_EXPORT
+      required:
+      - type
+      - destination
+      - amount
+      title: Avalanche P-Chain Export Request
     CreateTransactionRequest:
       description: Request to create a specialized transaction with server-managed replay protection and fees
       type: object
@@ -716,171 +887,6 @@ components:
       required:
       - parameters
       - sourceWalletId
-    SolanaSplitAndDeactivateStakeRequest:
-      description: Request to split a Solana stake account and deactivate the new account in a single transaction. The specified amount will be split into a new stake account (with a server-generated address) and immediately deactivated. Minimum split amount is 0.01 SOL, and the original stake account must retain at least 0.01 SOL after the split.
-      type: object
-      properties:
-        amount:
-          description: Amount of SOL to split into the new stake account, which will then be deactivated (decimal string). Minimum 1 SOL. The original account must retain at least 1.1 SOL.
-          type: string
-          example: '1.0'
-          pattern: ^[0-9]\d*(\.\d+)?$
-        stakeAccountAddress:
-          description: Address of the source stake account to split from
-          type: string
-          example: 7NMw8RfMFLc6WZvyuJQbAF5yVhxFMkH9mKzPP2JVYKjL
-        type:
-          description: Discriminator field indicating this is a Solana split and deactivate stake request
-          type: string
-          default: SOLANA_SPLIT_AND_DEACTIVATE_STAKE
-          enum:
-          - SOLANA_SPLIT_AND_DEACTIVATE_STAKE
-      required:
-      - type
-      - stakeAccountAddress
-      - amount
-      title: Solana Split And Deactivate Stake Request
-    HypercoreBridgeRequest:
-      description: Request to bridge HyperCore spot balance out to the client's HyperEVM wallet. An explicit amount is required ('all' is not supported). This operation can't be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)
-      type: object
-      properties:
-        amount:
-          description: Amount of HYPE to bridge from HyperCore spot to HyperEVM (decimal string). An explicit amount greater than zero is required.
-          type: string
-          example: '100.0'
-          pattern: ^[0-9]\d*(\.\d+)?$
-        type:
-          description: Discriminator field indicating this is a HyperCore bridge (outbound) request
-          type: string
-          default: HYPERCORE_BRIDGE
-          enum:
-          - HYPERCORE_BRIDGE
-      required:
-      - type
-      - amount
-      title: HyperCore Bridge to HyperEVM Request
-    HypercoreSpotToStakeRequest:
-      description: Request to move spot balance into the stake account as inactive stake, the prerequisite for delegating. This operation can't be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)
-      type: object
-      properties:
-        amount:
-          description: Amount of HYPE to move from spot into the stake account (decimal string). An explicit amount greater than zero is required.
-          type: string
-          example: '100.0'
-          pattern: ^[0-9]\d*(\.\d+)?$
-        type:
-          description: Discriminator field indicating this is a HyperCore spot-to-stake request
-          type: string
-          default: HYPERCORE_SPOT_TO_STAKE
-          enum:
-          - HYPERCORE_SPOT_TO_STAKE
-      required:
-      - type
-      - amount
-      title: HyperCore Spot To Stake Request
-    AvalanchePChainStakeRequest:
-      description: Request to create a new Avalanche P-Chain validator (self-stake). Requires BLS proof-of-possession (nodePublicKey + nodeSignature) to register the validator's BLS key. The commission controls what percentage of delegation rewards are kept by the validator. This operation can't be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)
-      type: object
-      properties:
-        amount:
-          description: Amount of AVAX to self-stake (decimal string)
-          type: string
-          example: '2000.0'
-          pattern: ^[0-9]\d*(\.\d+)?$
-        commission:
-          description: Delegation rewards commission percentage (2–100, up to 2 decimal places). E.g. '5' for 5%.
-          type: string
-          example: '5'
-          pattern: ^[0-9]\d*(\.\d{1,2})?$
-        delegatorRewardsAddress:
-          description: P-Chain address to receive delegator staking rewards
-          type: string
-          example: P-avax1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4
-        duration:
-          description: Staking duration in whole days (e.g. '14'). Must be between 14 and 365 days on mainnet, or 1 and 365 days on testnet/regnet.
-          type: string
-          example: '14'
-          pattern: ^[1-9][0-9]*$
-        nodeId:
-          description: 'Avalanche NodeID of the new validator (format: NodeID-<base58check>)'
-          type: string
-          example: NodeID-7Xhw2mDxuDS44j42TCB6U5579esbSt3Lg
-          pattern: ^NodeID-[1-9A-HJ-NP-Za-km-z]{33}$
-        nodePublicKey:
-          description: BLS12-381 public key for proof-of-possession (48 bytes, 0x-prefixed hex, 96 hex chars)
-          type: string
-          example: '0x93247f2209abcacf57b75a51dafae777f9dd38bc7053d1af526f220a7489a6d3a2753e5f3e8b1cfe39b56f43611df74a'
-          pattern: ^0x[0-9a-fA-F]{96}$
-        nodeSignature:
-          description: BLS12-381 proof-of-possession signature (96 bytes, 0x-prefixed hex, 192 hex chars)
-          type: string
-          example: '0xb3a48349cf17e7c24b23a1b0e9469ebe1c03a4f4e52e5e80ce09caa5c7c7f4f2a5b34fe2e9a2b4c61d3f8e7a56821f8bb3a48349cf17e7c24b23a1b0e9469ebe1c03a4f4e52e5e80ce09caa5c7c7f4f2a5b34fe2e9a2b4c61d3f8e7a56821f8b'
-          pattern: ^0x[0-9a-fA-F]{192}$
-        type:
-          description: Discriminator field indicating this is an Avalanche P-Chain stake (validator creation) request
-          type: string
-          default: AVALANCHE_PCHAIN_STAKE
-          enum:
-          - AVALANCHE_PCHAIN_STAKE
-        validatorRewardsAddress:
-          description: P-Chain address to receive validator staking rewards
-          type: string
-          example: P-avax1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4
-      required:
-      - type
-      - nodeId
-      - nodePublicKey
-      - nodeSignature
-      - commission
-      - duration
-      - amount
-      - validatorRewardsAddress
-      - delegatorRewardsAddress
-      title: Avalanche P-Chain Stake Request
-    EthereumCreateValidatorRequest:
-      description: Request to create an 0x02 Ethereum validator by depositing ETH to the beacon chain deposit contract. In order to retain status as an active validator, it must maintain a minimum of 32 ETH. Validators cannot be merged, if you'd like to increase an existing position instead use ETHEREUM ADD STAKE REQUEST.
-      type: object
-      properties:
-        amount:
-          description: Amount of ETH to deposit for the validator. Must be between 32 and 2048 ETH.
-          type: string
-          example: '33.0'
-          pattern: ^[0-9]\d*(\.\d+)?$
-        stakingProvider:
-          description: The entity running the validator infrastructure
-          type: string
-          enum:
-          - FIGMENT
-          - BLOCKDAEMON
-        type:
-          description: Discriminator field indicating this is an Ethereum create validator request
-          type: string
-          default: ETHEREUM_CREATE_VALIDATOR
-          enum:
-          - ETHEREUM_CREATE_VALIDATOR
-      required:
-      - type
-      - stakingProvider
-      - amount
-      title: Ethereum Create Validator Request
-    SolanaDeactivateStakeRequest:
-      description: Request to deactivate a Solana stake account, beginning the process to unstake. This deactivates the entire balance of the stake account. For partial unstaking, use SOLANA_SPLIT_AND_DEACTIVATE_STAKE instead.
-      type: object
-      properties:
-        stakeAccountAddress:
-          description: Address of the stake account to deactivate. The entire balance will be deactivated.
-          type: string
-          example: 7NMw8RfMFLc6WZvyuJQbAF5yVhxFMkH9mKzPP2JVYKjL
-        type:
-          description: Discriminator field indicating this is a Solana deactivate stake request
-          type: string
-          default: SOLANA_DEACTIVATE_STAKE
-          enum:
-          - SOLANA_DEACTIVATE_STAKE
-      required:
-      - type
-      - stakeAccountAddress
-      title: Solana Deactivate Stake Request
     AvalanchePChainDelegateStakeRequest:
       description: 'Request to delegate AVAX to a validator on the Avalanche P-Chain for a fixed duration. P-Chain staking is time-locked: there is no early exit, and funds are returned automatically at the end of the staking period. Duration must be between 14 and 365 days on mainnet (1–365 days on testnet).'
       type: object
@@ -912,50 +918,44 @@ components:
       - amount
       - duration
       title: Avalanche P-Chain Delegate Stake Request
-    HypercoreLinkAccountsRequest:
-      description: Request to link this HyperCore staking wallet to an external trading account. This is permanent and irreversible, and carries no amount. The operation only succeeds if the trading account has already initiated a linking request to this staking wallet. This operation can't be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)
-      type: object
-      properties:
-        linkAddress:
-          description: Address of the external trading account to link to this staking wallet (EVM 0x + 40 hex)
-          type: string
-          example: '0x393d4f2209abcacf57b75a51dafae777f9dd38bc'
-          pattern: ^0x[0-9a-fA-F]{40}$
-        type:
-          description: Discriminator field indicating this is a HyperCore link-accounts request
-          type: string
-          default: HYPERCORE_LINK_ACCOUNTS
-          enum:
-          - HYPERCORE_LINK_ACCOUNTS
-      required:
-      - type
-      - linkAddress
-      title: HyperCore Link Accounts Request
-    HypercoreDelegateStakeRequest:
-      description: Request to delegate inactive stake balance to a validator on HyperCore. Currently only supports a single validator per wallet.
+    HypercoreSpotToStakeRequest:
+      description: Request to move spot balance into the stake account as inactive stake, the prerequisite for delegating. This operation can't be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)
       type: object
       properties:
         amount:
-          description: Amount of HYPE to delegate (decimal string)
+          description: Amount of HYPE to move from spot into the stake account (decimal string). An explicit amount greater than zero is required.
           type: string
           example: '100.0'
           pattern: ^[0-9]\d*(\.\d+)?$
         type:
-          description: Discriminator field indicating this is a HyperCore delegate stake request
+          description: Discriminator field indicating this is a HyperCore spot-to-stake request
           type: string
-          default: HYPERCORE_DELEGATE_STAKE
+          default: HYPERCORE_SPOT_TO_STAKE
           enum:
-          - HYPERCORE_DELEGATE_STAKE
-        validatorAddress:
-          description: Address of the validator to delegate to (EVM 0x + 40 hex)
-          type: string
-          example: '0x393d4f2209abcacf57b75a51dafae777f9dd38bc'
-          pattern: ^0x[0-9a-fA-F]{40}$
+          - HYPERCORE_SPOT_TO_STAKE
       required:
       - type
-      - validatorAddress
       - amount
-      title: HyperCore Delegate Stake Request
+      title: HyperCore Spot To Stake Request
+    HyperevmBridgeRequest:
+      description: Request to bridge HYPE from the client's HyperEVM wallet into HyperCore spot balance, the funding step that precedes staking. This operation is initiated on the HyperEVM (HYPE_HYPEREVM) wallet. An explicit amount is required ('all' is not supported). This operation can't be submitted to the create-transaction endpoint yet — it always requires quorum approval, so use the propose-transaction endpoint instead. (API-key endorsement / skip-quorum auto-execution for this and other generic operations is planned.)
+      type: object
+      properties:
+        amount:
+          description: Amount of HYPE to bridge from HyperEVM into HyperCore spot (decimal string). An explicit amount greater than zero is required.
+          type: string
+          example: '100.0'
+          pattern: ^[0-9]\d*(\.\d+)?$
+        type:
+          description: Discriminator field indicating this is a HyperEVM bridge (inbound, HyperEVM -> HyperCore) request
+          type: string
+          default: HYPEREVM_BRIDGE
+          enum:
+          - HYPEREVM_BRIDGE
+      required:
+      - type
+      - amount
+      title: HyperEVM Bridge to HyperCore Request
   securitySchemes:
     Api-Access-Key:
       type: apiKey

@@ -179,6 +179,17 @@ components:
       - networkId
       - name
       - keyFamily
+    ListAssetTypesResponse:
+      description: Response containing a list of supported asset types
+      type: object
+      properties:
+        data:
+          description: Array of asset type details
+          type: array
+          items:
+            $ref: '#/components/schemas/AssetType'
+      required:
+      - data
     AssetType:
       description: Details about a supported asset type, including its identifier, name, decimal precision, and blockchain network
       type: object
@@ -210,17 +221,6 @@ components:
       - name
       - decimals
       - networkId
-    ListAssetTypesResponse:
-      description: Response containing a list of supported asset types
-      type: object
-      properties:
-        data:
-          description: Array of asset type details
-          type: array
-          items:
-            $ref: '#/components/schemas/AssetType'
-      required:
-      - data
   securitySchemes:
     Api-Access-Key:
       type: apiKey

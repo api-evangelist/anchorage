@@ -331,37 +331,16 @@ paths:
       - Trusted Destinations
 components:
   schemas:
-    TrustedDestinationStatusResponse:
+    CreateTrustedDestinationsResponse:
       type: object
       properties:
-        status:
-          description: 'A string describing the status of the Trusted Destination creation request
-
-
-            * `Initiated`
-
-            * `Generating Docusign`
-
-            * `Pending DocuSign Signature`
-
-            * `Trusted Destination Operation In Progress`
-
-            * `Needs Quorum Approval`
-
-            * `Anchorage Risk Review`
-
-            * `Linking Trusted Destination`
-
-            * `Complete`
-
-            * `Failed`
-
-            * `Rejected`
-
-            * `Canceled`
-
-            * `Expired`'
+        creationRequestId:
+          description: The client-provided ID which can be used to specify this request in other operations
           type: string
+          example: 1ca86e65-4340-4876-85f4-8334852b9c43
+          maxLength: 128
+      required:
+      - creationRequestId
     TrustedDestinationsResponse:
       type: object
       properties:
@@ -415,23 +394,6 @@ components:
       - address
       - name
       - description
-    ErrorType:
-      description: The type of error returned.
-      type: string
-      enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
     CreateTrustedDestinationsRequest:
       type: object
       properties:
@@ -450,97 +412,74 @@ components:
       required:
       - idempotentId
       - trustedDestinations
-    TrustedDestinationFiatBeneficiary:
+    ErrorType:
+      description: The type of error returned.
+      type: string
+      enum:
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
+    TrustedDestination:
       type: object
       properties:
-        account:
-          description: Beneficiary account number
+        crypto:
+          $ref: '#/components/schemas/TrustedDestinationCrypto'
+        description:
+          description: The description of the trusted destination
           type: string
-          example: '*****1234'
-        address:
-          description: Beneficiary address
-          type: string
-          example: 123 Main Street
-        city:
-          description: Beneficiary city
-          type: string
-          example: Beverly Hills
-        country:
-          description: Beneficiary country
-          type: string
-          example: US
-        name:
-          description: The name of the beneficiary
-          type: string
-          example: Satoshi Nakamoto
-        state:
-          description: Beneficiary state
-          type: string
-          example: CA
-        type:
-          description: The beneficiary type
-          type: string
-          example: INDIVIDUAL
-          enum:
-          - BUSINESS
-          - INDIVIDUAL
-        zipCode:
-          description: Beneficiary zip code
-          type: string
-          example: '90210'
-      required:
-      - name
-      - type
-      - account
-      - address
-      - city
-      - state
-      - zipCode
-      - country
-    TrustedDestinationFiatBank:
-      type: object
-      properties:
-        address:
-          description: Financial institution address
-          type: string
-          example: 240 Greenwich Street
-        city:
-          description: Financial institution city
-          type: string
-          example: New York
-        code:
-          description: "Financial institution ID code\n\n * `ABA` - Routing number\n * `BIC` - SWIFT code"
-          type: string
-          example: BIC
-        country:
-          description: Financial institution country
-          type: string
-          example: US
+        fiat:
+          $ref: '#/components/schemas/TrustedDestinationFiat'
         id:
-          description: Financial institution ID
+          description: A unique ID for the trusted destination
           type: string
-          example: IRVTUS3N
         name:
-          description: The name of the financial institution
+          description: The name of the trusted destination
           type: string
-          example: The Bank of New York Mellon
-        state:
-          description: Financial institution state
+        owner:
+          $ref: '#/components/schemas/TrustedDestinationOwner'
+        type:
+          description: Can be either "crypto" or "fiat", indicating which sub-field contains the details for the trusted destination.
           type: string
-          example: NY
-        zipCode:
-          description: Financial institution zip code
-          type: string
-          example: '10286'
       required:
-      - name
-      - code
       - id
+      - type
+    TrustedDestinationCrypto:
+      type: object
+      properties:
+        address:
+          description: A crypto address for the intended asset
+          type: string
+          example: 2N19AcihQ1a4MxQW658UFHTioUNnMkiHPkw
+        assetType:
+          description: The asset type of the trusted destination.
+          type: string
+          example: BTC
+        isNetworkLevel:
+          description: Determines if the Trusted Destination is Network level or not
+          type: boolean
+          example: true
+        memo:
+          description: Additional data to be sent along with the transaction on blockchains that support it.
+          type: string
+        networkId:
+          description: The ID of the network this trusted destination belongs to.
+          type: string
+          example: BTC
+      required:
       - address
-      - city
-      - state
-      - zipCode
-      - country
+      - networkId
+      - assetType
+      - isNetworkLevel
     ErrorDetails:
       type: object
       properties:
@@ -554,16 +493,6 @@ components:
       - errorType
       - message
       title: ErrorDetails
-    CreateTrustedDestinationsResponse:
-      type: object
-      properties:
-        creationRequestId:
-          description: The client-provided ID which can be used to specify this request in other operations
-          type: string
-          example: 1ca86e65-4340-4876-85f4-8334852b9c43
-          maxLength: 128
-      required:
-      - creationRequestId
     TrustedDestinationFiat:
       type: object
       properties:
@@ -686,33 +615,37 @@ components:
       required:
       - type
       - id
-    TrustedDestinationCrypto:
+    TrustedDestinationStatusResponse:
       type: object
       properties:
-        address:
-          description: A crypto address for the intended asset
+        status:
+          description: 'A string describing the status of the Trusted Destination creation request
+
+
+            * `Initiated`
+
+            * `Generating Docusign`
+
+            * `Pending DocuSign Signature`
+
+            * `Trusted Destination Operation In Progress`
+
+            * `Needs Quorum Approval`
+
+            * `Anchorage Risk Review`
+
+            * `Linking Trusted Destination`
+
+            * `Complete`
+
+            * `Failed`
+
+            * `Rejected`
+
+            * `Canceled`
+
+            * `Expired`'
           type: string
-          example: 2N19AcihQ1a4MxQW658UFHTioUNnMkiHPkw
-        assetType:
-          description: The asset type of the trusted destination.
-          type: string
-          example: BTC
-        isNetworkLevel:
-          description: Determines if the Trusted Destination is Network level or not
-          type: boolean
-          example: true
-        memo:
-          description: Additional data to be sent along with the transaction on blockchains that support it.
-          type: string
-        networkId:
-          description: The ID of the network this trusted destination belongs to.
-          type: string
-          example: BTC
-      required:
-      - address
-      - networkId
-      - assetType
-      - isNetworkLevel
     Page:
       description: Pagination info
       type: object
@@ -725,30 +658,97 @@ components:
           example: <next page url>
           x-omitempty: false
       title: Page
-    TrustedDestination:
+    TrustedDestinationFiatBeneficiary:
       type: object
       properties:
-        crypto:
-          $ref: '#/components/schemas/TrustedDestinationCrypto'
-        description:
-          description: The description of the trusted destination
+        account:
+          description: Beneficiary account number
           type: string
-        fiat:
-          $ref: '#/components/schemas/TrustedDestinationFiat'
-        id:
-          description: A unique ID for the trusted destination
+          example: '*****1234'
+        address:
+          description: Beneficiary address
           type: string
+          example: 123 Main Street
+        city:
+          description: Beneficiary city
+          type: string
+          example: Beverly Hills
+        country:
+          description: Beneficiary country
+          type: string
+          example: US
         name:
-          description: The name of the trusted destination
+          description: The name of the beneficiary
           type: string
-        owner:
-          $ref: '#/components/schemas/TrustedDestinationOwner'
+          example: Satoshi Nakamoto
+        state:
+          description: Beneficiary state
+          type: string
+          example: CA
         type:
-          description: Can be either "crypto" or "fiat", indicating which sub-field contains the details for the trusted destination.
+          description: The beneficiary type
           type: string
+          example: INDIVIDUAL
+          enum:
+          - BUSINESS
+          - INDIVIDUAL
+        zipCode:
+          description: Beneficiary zip code
+          type: string
+          example: '90210'
       required:
-      - id
+      - name
       - type
+      - account
+      - address
+      - city
+      - state
+      - zipCode
+      - country
+    TrustedDestinationFiatBank:
+      type: object
+      properties:
+        address:
+          description: Financial institution address
+          type: string
+          example: 240 Greenwich Street
+        city:
+          description: Financial institution city
+          type: string
+          example: New York
+        code:
+          description: "Financial institution ID code\n\n * `ABA` - Routing number\n * `BIC` - SWIFT code"
+          type: string
+          example: BIC
+        country:
+          description: Financial institution country
+          type: string
+          example: US
+        id:
+          description: Financial institution ID
+          type: string
+          example: IRVTUS3N
+        name:
+          description: The name of the financial institution
+          type: string
+          example: The Bank of New York Mellon
+        state:
+          description: Financial institution state
+          type: string
+          example: NY
+        zipCode:
+          description: Financial institution zip code
+          type: string
+          example: '10286'
+      required:
+      - name
+      - code
+      - id
+      - address
+      - city
+      - state
+      - zipCode
+      - country
   securitySchemes:
     Api-Access-Key:
       type: apiKey

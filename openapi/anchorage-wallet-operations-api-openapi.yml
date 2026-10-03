@@ -193,6 +193,18 @@ paths:
       - Wallet Operations
 components:
   schemas:
+    ListWalletOperationsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WalletOperation'
+        page:
+          $ref: '#/components/schemas/Page'
+      required:
+      - data
+      - page
     ErrorDetails:
       type: object
       properties:
@@ -210,18 +222,6 @@ components:
           $ref: '#/components/schemas/WalletOperation'
       required:
       - walletOperation
-    ListWalletOperationsResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/WalletOperation'
-        page:
-          $ref: '#/components/schemas/Page'
-      required:
-      - data
-      - page
     WalletOperation:
       description: 'A wallet operation represents a transaction that your organization signed and broadcast on-chain.
 

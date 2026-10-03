@@ -216,6 +216,21 @@ paths:
         Read vault activity: present
 components:
   schemas:
+    WalletInfo:
+      type: object
+      properties:
+        address:
+          description: The public address of the wallet associated with this allocation
+          type: string
+          example: 0x1234567890abcdef...
+        walletId:
+          description: The ID of the wallet associated with this allocation
+          type: string
+          example: 3d293c0d64c703023692216e9b4f5280
+      required:
+      - walletId
+      - address
+      title: WalletInfo
     ErrorType:
       description: The type of error returned.
       type: string
@@ -233,19 +248,81 @@ components:
       - InsufficientFunds
       - NotImplemented
       title: ErrorType
-    OffchainVestingSchedulesResponse:
+    OffchainVestingWalletAllocation:
       type: object
       properties:
-        data:
+        totalAmount:
+          description: Total amount being vested for this wallet
+          type: string
+        vestedAmount:
+          description: Amount already vested for this wallet
+          type: string
+        vestingHolds:
+          description: Vesting holds associated with this wallet
           type: array
           items:
-            $ref: '#/components/schemas/OffchainVestingSchedule'
-        page:
-          $ref: '#/components/schemas/Page'
+            $ref: '#/components/schemas/OffchainVestingHold'
+        walletId:
+          description: Unique wallet identifier
+          type: string
       required:
-      - data
-      - page
-      title: OffchainVestingSchedulesResponse
+      - walletId
+      - totalAmount
+      - vestedAmount
+      - vestingHolds
+      title: OffchainVestingWalletAllocation
+    VestingBalance:
+      type: object
+      properties:
+        assetType:
+          description: A string representing a type of crypto-asset, which usually corresponds to the crypto asset's ticker symbol.
+          type: string
+          example: BTC
+        availableBalance:
+          description: Amount of tokens unlocked for this allocation
+          type: string
+          example: '1000.50000000'
+        externalTokenId:
+          description: The ID of the asset assigned by the external provider that funds these wallets
+          type: string
+          example: magna_token_123
+        lockedBalance:
+          description: Amount of tokens on hold to be released to this stakeholder for this allocation
+          type: string
+          example: '100.10000000'
+        networkId:
+          description: The network identifier for the blockchain network
+          type: string
+          example: ETHHOODI
+        unvestedBalance:
+          description: Amount of tokens still scheduled to be released to this stakeholder for this allocation
+          type: string
+          example: '500.25000000'
+      required:
+      - assetType
+      - externalTokenId
+      - networkId
+      - availableBalance
+      - unvestedBalance
+      - lockedBalance
+      title: VestingBalance
+    GetVestingBalancesBatchRequest:
+      type: object
+      properties:
+        allocationIds:
+          description: List of allocation IDs to get vesting balances for
+          type: array
+          items:
+            type: string
+            minLength: 1
+          maxItems: 100
+          minItems: 1
+        stakeholderId:
+          description: The external stakeholder ID (optional, used to retrieve wallet info when no transactions exist yet)
+          type: string
+      required:
+      - allocationIds
+      title: GetVestingBalancesBatchRequest
     ErrorDetails:
       type: object
       properties:
@@ -280,21 +357,76 @@ components:
       - successCount
       - errorCount
       title: VestingBalancesBatchResponse
-    WalletInfo:
+    OffchainVestingSchedulesResponse:
       type: object
       properties:
-        address:
-          description: The public address of the wallet associated with this allocation
-          type: string
-          example: 0x1234567890abcdef...
-        walletId:
-          description: The ID of the wallet associated with this allocation
-          type: string
-          example: 3d293c0d64c703023692216e9b4f5280
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/OffchainVestingSchedule'
+        page:
+          $ref: '#/components/schemas/Page'
       required:
-      - walletId
-      - address
-      title: WalletInfo
+      - data
+      - page
+      title: OffchainVestingSchedulesResponse
+    OffchainVestingSchedule:
+      type: object
+      properties:
+        accountId:
+          description: The account ID associated with this schedule
+          type: string
+        allocations:
+          description: Breakdown of vesting schedule by wallet
+          type: array
+          items:
+            $ref: '#/components/schemas/OffchainVestingWalletAllocation'
+        assetType:
+          description: The asset type abbreviation for this vesting schedule (e.g. BTC, ETH)
+          type: string
+        endTime:
+          description: End time of the vesting schedule in UTC following [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'date-time' format. A valid format example is `2021-01-01T00:00:00Z`.
+          type: string
+          format: date-time
+        organizationKeyId:
+          description: The organization key ID
+          type: string
+        startTime:
+          description: Start time of the vesting schedule in UTC following [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'date-time' format. A valid format example is `2021-01-01T00:00:00Z`.
+          type: string
+          format: date-time
+        status:
+          description: Status of the vesting schedule
+          type: string
+          enum:
+          - ACTIVE
+          - CANCELLED
+          - COMPLETED
+        totalAmount:
+          description: Total amount being vested
+          type: string
+        unstakeable:
+          description: Whether the unvested tokens cannot be staked
+          type: boolean
+        vestedAmount:
+          description: Amount that has already vested
+          type: string
+        vestingScheduleId:
+          description: Unique identifier for the vesting schedule
+          type: string
+      required:
+      - allocations
+      - vestingScheduleId
+      - accountId
+      - organizationKeyId
+      - totalAmount
+      - vestedAmount
+      - startTime
+      - endTime
+      - status
+      - unstakeable
+      - assetType
+      title: OffchainVestingSchedule
     OffchainVestingHold:
       type: object
       properties:
@@ -364,138 +496,6 @@ components:
       required:
       - allocationId
       title: VestingBalancesResult
-    OffchainVestingWalletAllocation:
-      type: object
-      properties:
-        totalAmount:
-          description: Total amount being vested for this wallet
-          type: string
-        vestedAmount:
-          description: Amount already vested for this wallet
-          type: string
-        vestingHolds:
-          description: Vesting holds associated with this wallet
-          type: array
-          items:
-            $ref: '#/components/schemas/OffchainVestingHold'
-        walletId:
-          description: Unique wallet identifier
-          type: string
-      required:
-      - walletId
-      - totalAmount
-      - vestedAmount
-      - vestingHolds
-      title: OffchainVestingWalletAllocation
-    GetVestingBalancesBatchRequest:
-      type: object
-      properties:
-        allocationIds:
-          description: List of allocation IDs to get vesting balances for
-          type: array
-          items:
-            type: string
-            minLength: 1
-          maxItems: 100
-          minItems: 1
-        stakeholderId:
-          description: The external stakeholder ID (optional, used to retrieve wallet info when no transactions exist yet)
-          type: string
-      required:
-      - allocationIds
-      title: GetVestingBalancesBatchRequest
-    OffchainVestingSchedule:
-      type: object
-      properties:
-        accountId:
-          description: The account ID associated with this schedule
-          type: string
-        allocations:
-          description: Breakdown of vesting schedule by wallet
-          type: array
-          items:
-            $ref: '#/components/schemas/OffchainVestingWalletAllocation'
-        assetType:
-          description: The asset type abbreviation for this vesting schedule (e.g. BTC, ETH)
-          type: string
-        endTime:
-          description: End time of the vesting schedule in UTC following [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'date-time' format. A valid format example is `2021-01-01T00:00:00Z`.
-          type: string
-          format: date-time
-        organizationKeyId:
-          description: The organization key ID
-          type: string
-        startTime:
-          description: Start time of the vesting schedule in UTC following [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'date-time' format. A valid format example is `2021-01-01T00:00:00Z`.
-          type: string
-          format: date-time
-        status:
-          description: Status of the vesting schedule
-          type: string
-          enum:
-          - ACTIVE
-          - CANCELLED
-          - COMPLETED
-        totalAmount:
-          description: Total amount being vested
-          type: string
-        unstakeable:
-          description: Whether the unvested tokens cannot be staked
-          type: boolean
-        vestedAmount:
-          description: Amount that has already vested
-          type: string
-        vestingScheduleId:
-          description: Unique identifier for the vesting schedule
-          type: string
-      required:
-      - allocations
-      - vestingScheduleId
-      - accountId
-      - organizationKeyId
-      - totalAmount
-      - vestedAmount
-      - startTime
-      - endTime
-      - status
-      - unstakeable
-      - assetType
-      title: OffchainVestingSchedule
-    VestingBalance:
-      type: object
-      properties:
-        assetType:
-          description: A string representing a type of crypto-asset, which usually corresponds to the crypto asset's ticker symbol.
-          type: string
-          example: BTC
-        availableBalance:
-          description: Amount of tokens unlocked for this allocation
-          type: string
-          example: '1000.50000000'
-        externalTokenId:
-          description: The ID of the asset assigned by the external provider that funds these wallets
-          type: string
-          example: magna_token_123
-        lockedBalance:
-          description: Amount of tokens on hold to be released to this stakeholder for this allocation
-          type: string
-          example: '100.10000000'
-        networkId:
-          description: The network identifier for the blockchain network
-          type: string
-          example: ETHHOODI
-        unvestedBalance:
-          description: Amount of tokens still scheduled to be released to this stakeholder for this allocation
-          type: string
-          example: '500.25000000'
-      required:
-      - assetType
-      - externalTokenId
-      - networkId
-      - availableBalance
-      - unvestedBalance
-      - lockedBalance
-      title: VestingBalance
   securitySchemes:
     Api-Access-Key:
       type: apiKey

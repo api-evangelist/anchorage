@@ -246,6 +246,54 @@ paths:
         Write Tax: present
 components:
   schemas:
+    TaxTransactionUpdateCostBasisResponse:
+      description: Response after updating transaction cost basis
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/TaxTransactionUpdateCostBasisResponseId'
+      required:
+      - data
+    TaxTransactionUpdateCostBasisResponseId:
+      description: Response data containing transaction ID
+      type: object
+      properties:
+        transactionId:
+          description: The unique identifier of the transaction
+          type: string
+          example: 9cd9f4d4-078b-4e44-a308-7662fec0f546
+      required:
+      - transactionId
+    ErrorType:
+      description: The type of error returned.
+      type: string
+      enum:
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
+    ErrorDetails:
+      type: object
+      properties:
+        errorType:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - errorType
+      - message
+      title: ErrorDetails
     TaxAccount:
       description: A tax account for the organization
       type: object
@@ -267,46 +315,19 @@ components:
       - id
       - name
       - createdAt
-    ErrorType:
-      description: The type of error returned.
-      type: string
-      enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
-    TaxTransactionUpdateCostBasisResponseId:
-      description: Response data containing transaction ID
+    TaxTransactionUpdateCostBasisRequest:
+      description: Request to update cost basis for a transaction
       type: object
       properties:
-        transactionId:
-          description: The unique identifier of the transaction
-          type: string
-          example: 9cd9f4d4-078b-4e44-a308-7662fec0f546
+        lots:
+          description: An array of tax lots that are part of this transaction. Each lot specifies the quantity, cost basis and the acquisition date.
+          type: array
+          items:
+            $ref: '#/components/schemas/TaxTransactionInputLot'
+          minItems: 1
+          uniqueItems: true
       required:
-      - transactionId
-    ErrorDetails:
-      type: object
-      properties:
-        errorType:
-          $ref: '#/components/schemas/ErrorType'
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - errorType
-      - message
-      title: ErrorDetails
+      - lots
     TaxAccountsResponse:
       type: object
       properties:
@@ -350,18 +371,25 @@ components:
       - assetType
       - receivedAssets
       - transactionTime
-    TaxAccountTransactionsResponse:
+    Page:
+      description: Pagination info
       type: object
       properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/TaxAccountTransaction'
-        page:
-          $ref: '#/components/schemas/Page'
-      required:
-      - data
-      - page
+        next:
+          description: URL to use to query for the next page or null if no additional results are available
+          type:
+          - string
+          - 'null'
+          example: <next page url>
+          x-omitempty: false
+      title: Page
+    TaxTransactionInputLot:
+      description: A tax lot in a cost basis update request, with required cost basis
+      allOf:
+      - $ref: '#/components/schemas/TaxTransactionLot'
+      - required:
+        - costBasis
+        - acquisitionDatetime
     TaxTransactionLot:
       description: A tax lot, representing an asset quantity with its associated cost basis and acquisition date
       type: object
@@ -380,46 +408,18 @@ components:
           example: '1.0'
       required:
       - quantity
-    TaxTransactionUpdateCostBasisRequest:
-      description: Request to update cost basis for a transaction
-      type: object
-      properties:
-        lots:
-          description: An array of tax lots that are part of this transaction. Each lot specifies the quantity, cost basis and the acquisition date.
-          type: array
-          items:
-            $ref: '#/components/schemas/TaxTransactionInputLot'
-          minItems: 1
-          uniqueItems: true
-      required:
-      - lots
-    TaxTransactionInputLot:
-      description: A tax lot in a cost basis update request, with required cost basis
-      allOf:
-      - $ref: '#/components/schemas/TaxTransactionLot'
-      - required:
-        - costBasis
-        - acquisitionDatetime
-    TaxTransactionUpdateCostBasisResponse:
-      description: Response after updating transaction cost basis
+    TaxAccountTransactionsResponse:
       type: object
       properties:
         data:
-          $ref: '#/components/schemas/TaxTransactionUpdateCostBasisResponseId'
+          type: array
+          items:
+            $ref: '#/components/schemas/TaxAccountTransaction'
+        page:
+          $ref: '#/components/schemas/Page'
       required:
       - data
-    Page:
-      description: Pagination info
-      type: object
-      properties:
-        next:
-          description: URL to use to query for the next page or null if no additional results are available
-          type:
-          - string
-          - 'null'
-          example: <next page url>
-          x-omitempty: false
-      title: Page
+      - page
   securitySchemes:
     Api-Access-Key:
       type: apiKey
