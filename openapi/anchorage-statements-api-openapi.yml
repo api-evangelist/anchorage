@@ -381,36 +381,18 @@ paths:
       - Statements
 components:
   schemas:
-    ErrorType:
-      description: The type of error returned.
-      type: string
-      enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
-    ErrorDetails:
+    StatementType:
       type: object
       properties:
-        errorType:
-          $ref: '#/components/schemas/ErrorType'
-        message:
-          description: A human-readable message providing more details about the error.
+        id:
           type: string
-          example: Missing required field 'amount'.
+          example: b00e2483-57a1-4db4-8ea1-b91223a76a20
+        name:
+          type: string
+          example: Brokerage Monthly Statement
       required:
-      - errorType
-      - message
-      title: ErrorDetails
+      - id
+      - name
     Statement:
       type: object
       properties:
@@ -442,6 +424,36 @@ components:
       - typeId
       - createdAt
       - displayName
+    ErrorType:
+      description: The type of error returned.
+      type: string
+      enum:
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
+    ErrorDetails:
+      type: object
+      properties:
+        errorType:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - errorType
+      - message
+      title: ErrorDetails
     Page:
       description: Pagination info
       type: object
@@ -454,18 +466,6 @@ components:
           example: <next page url>
           x-omitempty: false
       title: Page
-    StatementType:
-      type: object
-      properties:
-        id:
-          type: string
-          example: b00e2483-57a1-4db4-8ea1-b91223a76a20
-        name:
-          type: string
-          example: Brokerage Monthly Statement
-      required:
-      - id
-      - name
     StatementDetails:
       type: object
       properties:

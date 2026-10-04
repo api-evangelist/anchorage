@@ -138,27 +138,6 @@ paths:
       - Asset Types & Networks
 components:
   schemas:
-    ListNetworksResponse:
-      description: Response containing a list of supported networks
-      type: object
-      properties:
-        data:
-          description: Array of network details
-          type: array
-          items:
-            $ref: '#/components/schemas/Network'
-      required:
-      - data
-    ErrorDetails:
-      type: object
-      properties:
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - message
-      title: ErrorDetails
     Network:
       description: Details about a blockchain network, including its key family identifier for wallet activation compatibility
       type: object
@@ -179,17 +158,6 @@ components:
       - networkId
       - name
       - keyFamily
-    ListAssetTypesResponse:
-      description: Response containing a list of supported asset types
-      type: object
-      properties:
-        data:
-          description: Array of asset type details
-          type: array
-          items:
-            $ref: '#/components/schemas/AssetType'
-      required:
-      - data
     AssetType:
       description: Details about a supported asset type, including its identifier, name, decimal precision, and blockchain network
       type: object
@@ -221,6 +189,38 @@ components:
       - name
       - decimals
       - networkId
+    ListNetworksResponse:
+      description: Response containing a list of supported networks
+      type: object
+      properties:
+        data:
+          description: Array of network details
+          type: array
+          items:
+            $ref: '#/components/schemas/Network'
+      required:
+      - data
+    ListAssetTypesResponse:
+      description: Response containing a list of supported asset types
+      type: object
+      properties:
+        data:
+          description: Array of asset type details
+          type: array
+          items:
+            $ref: '#/components/schemas/AssetType'
+      required:
+      - data
+    ErrorDetails:
+      type: object
+      properties:
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - message
+      title: ErrorDetails
   securitySchemes:
     Api-Access-Key:
       type: apiKey

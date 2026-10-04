@@ -368,19 +368,6 @@ paths:
         Read vault activity: present
 components:
   schemas:
-    Tag:
-      type: object
-      properties:
-        name:
-          description: The name of the tag (case-insensitive, max 25 chars)
-          type: string
-          example: urgent
-        tagType:
-          $ref: '#/components/schemas/TagType'
-      required:
-      - name
-      - tagType
-      title: Tag
     ApplyTagsRequest:
       type: object
       properties:
@@ -406,14 +393,6 @@ components:
       - tagType
       - tags
       title: ApplyTagsRequest
-    TagType:
-      description: The ownership type of a tag.
-      type: string
-      enum:
-      - system
-      - backoffice
-      - client
-      title: TagType
     ErrorType:
       description: The type of error returned.
       type: string
@@ -445,56 +424,6 @@ components:
       - data
       - pagination
       title: SearchTagsResponse
-    ErrorDetails:
-      type: object
-      properties:
-        errorType:
-          $ref: '#/components/schemas/ErrorType'
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - errorType
-      - message
-      title: ErrorDetails
-    EntityTagsData:
-      type: object
-      properties:
-        tags:
-          description: List of tags applied to the entity
-          type: array
-          items:
-            $ref: '#/components/schemas/Tag'
-      required:
-      - tags
-      title: EntityTagsData
-    CreateTagResponse:
-      type: object
-      properties:
-        id:
-          description: The unique identifier of the created tag
-          type: string
-          example: '208045946'
-        name:
-          description: The name of the tag
-          type: string
-          example: urgent
-        tagType:
-          $ref: '#/components/schemas/TagType'
-      required:
-      - id
-      - name
-      - tagType
-      title: CreateTagResponse
-    ListTagsResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/EntityTagsData'
-      required:
-      - data
-      title: ListTagsResponse
     TaggingResult:
       type: object
       properties:
@@ -521,21 +450,24 @@ components:
       - createdAt
       - tags
       title: TaggingResult
-    CreateTagRequest:
+    CreateTagResponse:
       type: object
       properties:
+        id:
+          description: The unique identifier of the created tag
+          type: string
+          example: '208045946'
         name:
-          description: Tag name (max 25 chars, letters/numbers/underscores/hyphens only)
+          description: The name of the tag
           type: string
           example: urgent
-          maxLength: 25
-          pattern: ^[a-zA-Z0-9_-]+$
         tagType:
           $ref: '#/components/schemas/TagType'
       required:
+      - id
       - name
       - tagType
-      title: CreateTagRequest
+      title: CreateTagResponse
     DeleteAppliedTagResponse:
       type: object
       properties:
@@ -546,6 +478,35 @@ components:
       required:
       - deleted
       title: DeleteAppliedTagResponse
+    TagType:
+      description: The ownership type of a tag.
+      type: string
+      enum:
+      - system
+      - backoffice
+      - client
+      title: TagType
+    Tag:
+      type: object
+      properties:
+        name:
+          description: The name of the tag (case-insensitive, max 25 chars)
+          type: string
+          example: urgent
+        tagType:
+          $ref: '#/components/schemas/TagType'
+      required:
+      - name
+      - tagType
+      title: Tag
+    ListTagsResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/EntityTagsData'
+      required:
+      - data
+      title: ListTagsResponse
     ApplyTagsResponse:
       type: object
       properties:
@@ -557,6 +518,19 @@ components:
           items:
             type: string
       title: ApplyTagsResponse
+    ErrorDetails:
+      type: object
+      properties:
+        errorType:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - errorType
+      - message
+      title: ErrorDetails
     TaggingPagination:
       type: object
       properties:
@@ -575,6 +549,32 @@ components:
       - hasMore
       - limit
       title: TaggingPagination
+    EntityTagsData:
+      type: object
+      properties:
+        tags:
+          description: List of tags applied to the entity
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+      required:
+      - tags
+      title: EntityTagsData
+    CreateTagRequest:
+      type: object
+      properties:
+        name:
+          description: Tag name (max 25 chars, letters/numbers/underscores/hyphens only)
+          type: string
+          example: urgent
+          maxLength: 25
+          pattern: ^[a-zA-Z0-9_-]+$
+        tagType:
+          $ref: '#/components/schemas/TagType'
+      required:
+      - name
+      - tagType
+      title: CreateTagRequest
   securitySchemes:
     Api-Access-Key:
       type: apiKey

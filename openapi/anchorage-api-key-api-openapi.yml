@@ -75,6 +75,14 @@ paths:
       - API Key
 components:
   schemas:
+    APIKeyInfoResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/APIKeyDetails'
+      required:
+      - data
+      title: APIKeyInfoResponse
     APIKeyDetails:
       type: object
       properties:
@@ -162,14 +170,6 @@ components:
       - InsufficientFunds
       - NotImplemented
       title: ErrorType
-    APIKeyInfoResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/APIKeyDetails'
-      required:
-      - data
-      title: APIKeyInfoResponse
   securitySchemes:
     Api-Access-Key:
       type: apiKey

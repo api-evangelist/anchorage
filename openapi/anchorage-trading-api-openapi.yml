@@ -2175,132 +2175,56 @@ paths:
         Execute trades: present
 components:
   schemas:
-    AcceptQuoteRequest:
-      type: object
-      properties:
-        accountId:
-          description: 'The ID of a trading account. This field is used to specify the trading account into which assets should be settled.
-
-            '
-          type: string
-          example: 6290d9bd-494f-11ed-975e-2e567b4c0e09
-        allowedSlippage:
-          description: "The maximum slippage Anchorage Digital will consider when accepting this order, communicated in terms of actual value (i.e. \"0.001\" => 10bps). Must be greater than or equal to 0 and less than or equal to 0.002 (20bps).\n\nIn order to illustrate how this setting works, as an example, we shall consider a commission of 10bps for a quote priced at 10000, and that we are about to accept this quote with an allowedSlippage of \"0.0008\" (8bps). Then, considering the market has moved away from the quoted price, one of the following two scenarios will be applicable:\n\n1) Best market price within allowedSlippage - fill the order at the spread off the market\n  Best Market Price: 10007\n  Trade Status: Executed\n  Customer Execution Price: 10017.007\n\n2) Best market price outside of allowedSlippage - reject the order\n  Best Market Price: 10009\n  Trade Status: Rejected\n"
-          type: string
-          example: '0.0005'
-        idempotentId:
-          description: A client-provided unique ID for idempotent requests (optional). This value must match the one provided to [request quote](#operation/requestQuote).
-          type:
-          - string
-          - 'null'
-          example: 01944c42-5ad3-4108-b376-f78cd6ff0393
-          maxLength: 128
-        quoteID:
-          description: ID of the quote to trade.
-          type: string
-        side:
-          description: Trade side, either "BUY" or "SELL".
-          type: string
-          example: BUY
-          enum:
-          - BUY
-          - SELL
-        vaultID:
-          description: 'Currently in BETA.
+    Amount:
+      description: 'An amount of a crypto-asset represented by quantity, assetType, current unit price and current USD value.
 
 
-            The ID of a vault. This optional field is used to specify the vault into which assets should be settled.
 
-            If provided, the API key must have the following permissions: **Read vault activity**
-
-            '
-          type: string
-          example: 1c920f4241b78a1d483a29f3c24b6c4c
-      required:
-      - quoteID
-      - side
-      - accountId
-      title: AcceptQuoteRequest
-    TradePairReferenceData:
-      description: 'Trading reference data for a pair including the minimum size and price increment.
+        Fee amounts will be estimates if a transaction is not final.
 
 
-        Size increment is the minimum size supported when specifying order quantity.
 
-
-        Price increment specifies the minimum price precision when specifying order price.
+        NOTE: price and USD value information is recent but does not reflect real-time data.
 
         '
       type: object
       properties:
-        baseAssetType:
-          description: A string representing the base asset of the trading pair.
+        assetType:
+          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
+
+
+            Use `/asset-types` to list all of the supported asset types for your organization.
+
+            '
           type: string
           example: BTC
-        baseSizeIncrement:
-          description: Minimum size increment when specifying order quantity in base asset.
+        currentPrice:
+          description: A recent assessment of the intra-day USD value of 1 unit of this asset type. This value is provided for convenience for such use cases as estimating point-in-time portfolio balances. This value does not represent authoritative pricing information used by Anchorage Digital for any purpose. The price is fetched as of the present, and may be omitted in certain contexts where more structured pricing information is provided (e.g. quotes and trades).
           type: string
-          example: '0.000001'
-        lastUpdateTime:
-          description: ISO format date time when the reference data was last updated.
+          example: '9751.01'
+        currentUSDValue:
+          description: The result of `quantity * currentPrice`, rounded to the nearest cent. A unitless number implicitly denominated in dollars. See `currentPrice` for methodology and disclaimers.
           type: string
-          format: date-time
-          example: '2022-07-30T22:15:31.99999Z'
-        minimumOrderSize:
-          description: Minimum required size for base asset to successfully place an order
+          example: '101920.94'
+        quantity:
+          description: The numeric value of this amount, excluding units
           type: string
-          example: '0.005'
-        priceIncrement:
-          description: Minimum price increment when specifying order price.
-          type: string
-          example: '0.00000001'
-        quoteAssetType:
-          description: A string representing the quote asset of the trading pair.
-          type: string
-          example: USD
-        quoteSizeIncrement:
-          description: Minimum size increment when specifying order quantity in quote asset.
-          type: string
-          example: '0.01'
+          example: '10.45234733'
       example:
-        baseAssetType: BTC
-        quoteAssetType: USD
-        baseSizeIncrement: '0.0000001'
-        quoteSizeIncrement: '0.01'
-        priceIncrement: '0.00000001'
-        minimumOrderSize: '0.005'
-        lastUpdateTime: '2022-07-30T22:15:31.99999Z'
+        quantity: '10.45234733'
+        assetType: BTC
+        currentPrice: '9751.01'
+        currentUSDValue: '101920.94'
       required:
-      - baseAssetType
-      - quoteAssetType
-      - baseSizeIncrement
-      - quoteSizeIncrement
-      - priceIncrement
-      - minimumOrderSize
-      - lastUpdateTime
-      title: TradePairReferenceData
-    ErrorDetails:
+      - quantity
+      - assetType
+      title: Amount
+    TradingAccountBalance:
       type: object
       properties:
-        errorType:
-          $ref: '#/components/schemas/ErrorType'
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - errorType
-      - message
-      title: ErrorDetails
-    TradingPosition:
-      description: Negative position values denote amounts that you owe Anchorage Digital and positive position values denote amounts owed to you by Anchorage Digital.
-      type: object
-      properties:
-        positionAmount:
+        balance:
           $ref: '#/components/schemas/Amount'
-      required:
-      - positionAmount
-      title: TradingPosition
+      title: TradingAccountBalance
     OrderExecutionReport:
       type: object
       properties:
@@ -2444,63 +2368,167 @@ components:
       - counterQtyAllIn
       - transactTime
       title: OrderExecutionReport
-    TradingAccountCreditResponse:
+    PriceLevel:
       type: object
       properties:
-        data:
-          $ref: '#/components/schemas/TradingAccountCredit'
-      required:
-      - data
-      title: TradingAccountCreditResponse
-    AcceptQuoteResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/AcceptQuoteResponseData'
-      required:
-      - data
-      title: AcceptQuoteResponse
-    StrategyParams:
-      type: object
-      properties:
-        endTime:
-          description: The expire time for the order. An ISO-8601 UTC string of the form 2019-02-13T05:17:32.000000Z.
+        amount:
+          description: Amount (in counter currency) available at this price level as a decimal string. Returned when amountBuckets parameter is used.
           type: string
-          format: date-time
-          example: '2019-01-02T12:34:56.000Z'
-          x-omitempty: true
-        triggerPrice:
-          description: The price that must be met to trigger execution of the order with the configured limit price.
+          example: '100.00000000'
+        price:
+          description: Price level as a decimal string
           type: string
-          example: '10000.00'
-          x-omitempty: true
-      title: Strategy Params
-    TradesBySettlementResponse:
+          example: '101022.85'
+        size:
+          description: Size available at this price level as a decimal string. Returned when sizeBuckets parameter is used.
+          type: string
+          example: '1.00000000'
+      required:
+      - price
+      title: PriceLevel
+    TradePair:
+      description: A representation of a trade pair
       type: object
       properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/TradeDetails'
-        page:
-          $ref: '#/components/schemas/Page'
+        description:
+          description: A string representing the human-readable name of the trade pair.
+          type: string
+          example: Buy Ethereum with Bitcoin, or Sell Ethereum for Bitcoin
+        pair:
+          description: A string representing a trade between one type of currency and another.
+          type: string
+          example: BTC-ETH
+        referenceData:
+          $ref: '#/components/schemas/TradePairReferenceData'
       required:
-      - data
-      - page
-      title: TradesResponse
-    TradeAccount:
-      description: The account into which this trade will be settled
+      - pair
+      - description
+      title: TradePair
+    NewOrderSingle:
       type: object
       properties:
         accountId:
-          description: An ID uniquely identifying the trading account
+          description: Account ID for this order to book into.
+          type: string
+          example: 0e2b2f9d-8d10-4f1e-960b-28567255045f
+        allocation:
+          description: Order subaccount allocation
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderAllocation'
+        clOrderId:
+          description: Unique client order ID.
+          type: string
+          example: 6fb5fc79-0bb4-446d-82dd-d4687fb56a02
+        currency:
+          description: The currency in which order quantity is specified in.
+          type: string
+          example: BTC
+        limitPrice:
+          description: Limit price for the order, required for limit order
+          type: string
+          example: '21005.5'
+        orderType:
+          description: Order type either MARKET or LIMIT
+          type: string
+          enum:
+          - MARKET
+          - LIMIT
+          - RFQ
+          - LIMIT_ALL_IN
+        quantity:
+          description: Order quantity in units of currency.
+          type: string
+          example: '100.00'
+        side:
+          description: Order side, either "BUY" or "SELL".
+          type: string
+          enum:
+          - BUY
+          - SELL
+        subaccountId:
+          description: Subaccount ID for this order to book into.
+          type: string
+          example: 343b6c83-6d91-4f13-9982-2109abd2dbb0
+        symbol:
+          description: Symbol for the order, e.g. BTC-USD.
+          type: string
+          example: BTC-USD
+        timestamp:
+          description: Timestamp when submitting this order. Date-times are always in UTC [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'date-time'.
+          type: string
+          format: date-time
+      required:
+      - clOrderId
+      - symbol
+      - side
+      - currency
+      - quantity
+      - orderType
+      - timestamp
+      title: NewOrderSingle
+    Allocation:
+      type: object
+      properties:
+        counterQtyAllIn:
+          description: Counter quantity all in
+          type: string
+          example: '10000'
+        counterQtyAllInToSettle:
+          description: Counter quantity all in to be settled
+          type: string
+          example: '10000'
+        cumQty:
+          description: Filled quantity
+          type: string
+          example: '10000'
+        executionId:
+          description: Execution identifier
           type: string
           example: 6290d9bd-494f-11ed-975e-2e567b4c0e09
-        subaccountId:
-          description: An ID uniquely identifying the subaccount where applicable
+        fee:
+          description: Fee
           type: string
-          example: 5490d9bd-494f-11ed-975e-2e567b4c0e09
-      title: Account
+          example: '10000'
+        quantity:
+          description: Allocated quantity
+          type: string
+          example: '10000'
+        subaccountId:
+          description: The Subaccount Identifier
+          type: string
+          example: 905272f0-52f9-404e-b6cd-ad879e671790
+      required:
+      - subaccountId
+      - quantity
+      - counterQtyAllIn
+      - counterQtyAllInToSettle
+      - fee
+      - cumQty
+      title: Allocation
+    AcceptQuoteResponseData:
+      type: object
+      properties:
+        quoteID:
+          description: ID of the quote to trade.
+          type: string
+        side:
+          description: Trade side, either "BUY" or "SELL".
+          type: string
+          example: BUY
+          enum:
+          - BUY
+          - SELL
+        tradeID:
+          description: ID of the trade.
+          type: string
+        tradeStatus:
+          $ref: '#/components/schemas/TradeStatus'
+      required:
+      - quoteID
+      - side
+      - tradeStatus
+      title: AcceptQuoteResponseData
     TradeDetails:
       type: object
       properties:
@@ -2585,6 +2613,164 @@ components:
       - tradeID
       - quoteID
       title: TradeDetails
+    TradingOrderResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/OrderExecutionReport'
+      required:
+      - data
+      title: TradingOrderResponse
+    SettlementResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/SettlementDetails'
+      required:
+      - data
+      title: SettlementResponse
+    AcceptQuoteRequest:
+      type: object
+      properties:
+        accountId:
+          description: 'The ID of a trading account. This field is used to specify the trading account into which assets should be settled.
+
+            '
+          type: string
+          example: 6290d9bd-494f-11ed-975e-2e567b4c0e09
+        allowedSlippage:
+          description: "The maximum slippage Anchorage Digital will consider when accepting this order, communicated in terms of actual value (i.e. \"0.001\" => 10bps). Must be greater than or equal to 0 and less than or equal to 0.002 (20bps).\n\nIn order to illustrate how this setting works, as an example, we shall consider a commission of 10bps for a quote priced at 10000, and that we are about to accept this quote with an allowedSlippage of \"0.0008\" (8bps). Then, considering the market has moved away from the quoted price, one of the following two scenarios will be applicable:\n\n1) Best market price within allowedSlippage - fill the order at the spread off the market\n  Best Market Price: 10007\n  Trade Status: Executed\n  Customer Execution Price: 10017.007\n\n2) Best market price outside of allowedSlippage - reject the order\n  Best Market Price: 10009\n  Trade Status: Rejected\n"
+          type: string
+          example: '0.0005'
+        idempotentId:
+          description: A client-provided unique ID for idempotent requests (optional). This value must match the one provided to [request quote](#operation/requestQuote).
+          type:
+          - string
+          - 'null'
+          example: 01944c42-5ad3-4108-b376-f78cd6ff0393
+          maxLength: 128
+        quoteID:
+          description: ID of the quote to trade.
+          type: string
+        side:
+          description: Trade side, either "BUY" or "SELL".
+          type: string
+          example: BUY
+          enum:
+          - BUY
+          - SELL
+        vaultID:
+          description: 'Currently in BETA.
+
+
+            The ID of a vault. This optional field is used to specify the vault into which assets should be settled.
+
+            If provided, the API key must have the following permissions: **Read vault activity**
+
+            '
+          type: string
+          example: 1c920f4241b78a1d483a29f3c24b6c4c
+      required:
+      - quoteID
+      - side
+      - accountId
+      title: AcceptQuoteRequest
+    GetQuoteRequest:
+      type: object
+      properties:
+        accountId:
+          description: Account ID for quote, must match the accountId on [accept quote](#operation/acceptQuote).
+          type:
+          - string
+          - 'null'
+          example: aaa44c42-5ad3-4108-b376-f78cd32f0543
+        currency:
+          description: Currency of quantity.
+          type: string
+          example: USD
+        idempotentId:
+          description: A client-provided unique ID for idempotent requests (optional). If provided a value, the same idempotentId must be also provided to [accept quote](#operation/acceptQuote).
+          type:
+          - string
+          - 'null'
+          example: 01944c42-5ad3-4108-b376-f78cd6ff0393
+          maxLength: 128
+        quantity:
+          description: Quantity to quote for in units of currency.
+          type: string
+          example: '100'
+        quantityRounding:
+          description: Optional boolean to specify if quantity should round to Anchorage Digital supported increments. If false or not specified, the request can be rejected if quantity has more precision than our published size increments. The rounding is done as a truncation of the extra fractional digits.
+          type: boolean
+        side:
+          description: Side of the quote request. "BUY", "SELL", or "TWOWAY".
+          type: string
+          example: BUY
+          enum:
+          - BUY
+          - SELL
+          - TWOWAY
+        tradingPair:
+          description: Trading pair being quoted.
+          type: string
+          example: BTC-USD
+      required:
+      - tradingPair
+      - quantity
+      - currency
+      - side
+      title: GetQuoteRequest
+    TradingAccountCredit:
+      type: object
+      properties:
+        limits:
+          type: array
+          items:
+            $ref: '#/components/schemas/Amount'
+          minItems: 0
+          uniqueItems: true
+        usage:
+          type: array
+          items:
+            $ref: '#/components/schemas/Amount'
+          minItems: 0
+          uniqueItems: true
+      title: TradingAccountCredit
+    TradePairsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TradePair'
+          example:
+          - pair: BTC-USD
+            description: Buy BTC using USD, or Sell BTC for USD
+            referenceData:
+              baseAssetType: BTC
+              baseSizeIncrement: '0.001'
+              quoteAssetType: USD
+              quoteSizeIncrement: '0.01'
+              priceIncrement: '0.00000001'
+              minimumOrderSize: '0.005'
+              lastUpdateTime: '2022-08-24T18:00:53.471Z'
+          - pair: ETH-USD
+            description: Buy ETH using USD, or Sell ETH for USD
+            referenceData:
+              baseAssetType: ETH
+              baseSizeIncrement: '0.001'
+              quoteAssetType: USD
+              quoteSizeIncrement: '0.01'
+              priceIncrement: '0.00000001'
+              minimumOrderSize: '0.05'
+              lastUpdateTime: '2022-08-24T18:00:53.471Z'
+          - pair: BTC-ETH
+            description: Buy BTC using ETH, or Sell BTC for ETH
+          minItems: 1
+          uniqueItems: true
+      required:
+      - data
+      title: TradePairsResponse
     SettlementStatus:
       description: 'A string describing the status of the given settlement
 
@@ -2612,74 +2798,82 @@ components:
       - CANCELED
       - EXECUTED
       title: SettlementStatus
-    SettlementDetails:
+    StrategyParams:
       type: object
       properties:
-        account:
-          description: The account into which this trade will be settled
-          type: object
-          properties:
-            accountId:
-              description: An ID uniquely identifying the trading account
-              type: string
-              example: 6290d9bd-494f-11ed-975e-2e567b4c0e09
-          title: Account
-        createdAt:
-          description: The system timestamp when this settlement was created, as an ISO-8601 UTC string of the form 2019-02-13T05:17:32.000000Z.
+        endTime:
+          description: The expire time for the order. An ISO-8601 UTC string of the form 2019-02-13T05:17:32.000000Z.
           type: string
-        instructionsCrypto:
-          description: Set of settlement instructions in crypto currencies.
-          type:
-          - array
-          - 'null'
-          items:
-            $ref: '#/components/schemas/SettlementInstructionsCrypto'
-        positions:
-          description: A list of positions for that Settlement
-          type:
-          - array
-          - 'null'
-          items:
-            $ref: '#/components/schemas/TradingPosition'
-        settlementID:
-          description: Unique ID for this settlement.
+          format: date-time
+          example: '2019-01-02T12:34:56.000Z'
+          x-omitempty: true
+        triggerPrice:
+          description: The price that must be met to trigger execution of the order with the configured limit price.
           type: string
-        settlementStatus:
-          $ref: '#/components/schemas/SettlementStatus'
-        settlementType:
-          $ref: '#/components/schemas/SettlementType'
-        vault:
-          description: The vault into which this trade will be settled
-          type: object
-          properties:
-            vaultID:
-              description: An ID uniquely identifying the vault
-              type: string
-              example: 1c920f4241b78a1d483a29f3c24b6c4c
-          title: Vault
+          example: '10000.00'
+          x-omitempty: true
+      title: Strategy Params
+    TradingAccountsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TradingAccount'
+          minItems: 0
+          uniqueItems: true
       required:
-      - createdAt
-      - settlementStatus
-      - settlementID
-      title: SettlementDetails
-    ErrorType:
-      description: The type of error returned.
-      type: string
-      enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
-    TradingOrderDetails:
+      - data
+      title: TradingAccountsResponse
+    AcceptQuoteResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/AcceptQuoteResponseData'
+      required:
+      - data
+      title: AcceptQuoteResponse
+    OrderAllocation:
+      type: object
+      properties:
+        quantity:
+          description: Quantity to allocate to the subaccount
+          type: string
+          example: '10000'
+        subaccountId:
+          description: The Subaccount Identifier
+          type: string
+      required:
+      - subaccountId
+      - quantity
+      title: OrderAllocation
+    OrdersStatusResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TradingOrderDetails'
+        page:
+          $ref: '#/components/schemas/Page'
+      required:
+      - data
+      - page
+      title: OrdersStatusResponse
+    TradesBySettlementResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TradeDetails'
+        page:
+          $ref: '#/components/schemas/Page'
+      required:
+      - data
+      - page
+      title: TradesResponse
+    NewAsyncOrder:
       type: object
       properties:
         accountId:
@@ -2687,198 +2881,253 @@ components:
           type: string
           example: 0e2b2f9d-8d10-4f1e-960b-28567255045f
         allocation:
-          description: Subaccount allocation
+          description: Order subaccount allocation
           type: array
           items:
-            $ref: '#/components/schemas/Allocation'
-          x-omitempty: true
-        avgPx:
-          description: Average filled price for this order.
-          type: string
-          example: '21005.4'
-        avgPxAllIn:
-          description: Average filled price + anchorage commission.
-          type: string
-          example: '21006.00'
-        cancelQty:
-          description: quantity canceled for this order.
-          type: string
-          example: '10000.00'
+            $ref: '#/components/schemas/OrderAllocation'
         clOrderId:
-          description: Original client order ID as submitted.
+          description: Unique client order ID.
           type: string
           example: 6fb5fc79-0bb4-446d-82dd-d4687fb56a02
-        counterQty:
-          description: Filled quantity of the counter currency.
-          type: string
-          example: '0.001'
-        counterQtyAllIn:
-          description: Filled quantity of the counter currency including all fees.
-          type: string
-          example: '0.0012'
-        cumQty:
-          description: Cumulative filled quantity for this order. For open orders, orderQty = leavesQty + cumQty. For canceled order, leavesQty = 0, orderQty = cancelQty + cumQty.
-          type: string
-          example: '10000.00'
         currency:
           description: The currency in which order quantity is specified in.
           type: string
-          example: USD
-        feeCurrency:
-          description: Currency commission was charged in, which is always the opposite currency from what the order quantity is specified in.
-          type: string
           example: BTC
-        leavesQty:
-          description: quantity that is still open for this order.
-          type: string
-          example: '10000.00'
         limitPrice:
-          description: Original limit price for this order if present.
+          description: Limit price for the order, required for limit order
           type: string
           example: '21005.5'
-        orderId:
-          description: Order ID generated by anchorage.
-          type: string
-          example: a94c8d75-6c9d-4903-95f3-5b0893e76cb7
-        orderQty:
-          description: Original order quantity.
-          type: string
-          example: '10000.00'
-        orderStatus:
-          description: Order status
-          type: string
-          enum:
-          - PENDING
-          - NEW
-          - PARTIALLY_FILLED
-          - FILLED
-          - REJECTED
-          - PENDING_CANCEL
-          - CANCELED
         orderType:
-          description: General order type.
+          description: 'Order type should be for BUY and SELL: LIMIT, STOP_LIMIT, TAKE_PROFIT_LIMIT. Only for SELL: STOP_LOSS'
           type: string
           enum:
-          - MARKET
           - LIMIT
+          - STOP_LOSS
           - STOP_LIMIT
           - TAKE_PROFIT_LIMIT
-          - STOP_LOSS
-          - TWAP
-          - VWAP
-          - PEGGED
-          - POV
-          - RFQ
-          - LIMIT_ALL_IN
-          - MANUAL
-          - OTHER
-        reasonText:
-          description: Additional description for reason of reject or cancel.
+        parameters:
+          description: Optional order type parameters for STOP_LOSS, STOP_LIMIT and TAKE_PROFIT_LIMIT orders.
+          properties:
+            endTime:
+              description: Optional expire time for the order. Date-times are always in UTC [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'date-time'.
+              type: string
+              format: date-time
+            triggerPrice:
+              description: The price that must be met to trigger execution of the order. Required for STOP_LIMIT, TAKE_PROFIT_LIMIT and STOP_LOSS.
+              type: string
+              example: '21005.5'
+          type: object
+        quantity:
+          description: Order quantity in units of currency.
           type: string
-        rejectReason:
-          description: Reason for rejection.
-          type: string
+          example: '100.00'
         side:
           description: Order side, either "BUY" or "SELL".
           type: string
           enum:
           - BUY
           - SELL
-        strategyParams:
-          description: Strategy Parameters
-          type: object
-          properties:
-            data:
-              $ref: '#/components/schemas/StrategyParams'
-          x-omitempty: true
+        specLotId:
+          description: Optional specification lot ID for tax reporting purposes. Only applicable for SELL orders with timeInForce FOK. When provided, instructs the tax service to retire the specified lot.
+          type: string
+          example: 550e8400-e29b-41d4-a716-446655440000
         subaccountId:
           description: Subaccount ID for this order to book into.
           type: string
-          example: 0e2b2f9d-8d10-4f1e-960b-28567255045f
-        subaccountTransactionId:
-          description: Subaccount transaction ID linked with this order.
-          type: string
-          example: af2b2f9d-9d1a-4e2e-76ab-2756725dffdf
-        submitTime:
-          description: UTC timestamp when order is submitted. [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'date-time'.
-          type: string
-          format: date-time
+          example: 343b6c83-6d91-4f13-9982-2109abd2dbb0
         symbol:
           description: Symbol for the order, e.g. BTC-USD.
           type: string
           example: BTC-USD
         timeInForce:
-          description: Time in force defines the order expiry
+          description: Time in Force specifies how long the order remains in effect
           type: string
           enum:
-          - GTC
           - FOK
           - IOC
-        totalFee:
-          description: Commission charged for this order.
-          type: string
-          example: '10.0'
-        transactTime:
-          description: UTC timestamp when order is executed. [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'date-time'.
+          - GTC
+        timestamp:
+          description: Timestamp when submitting this order. Date-times are always in UTC [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'date-time'.
           type: string
           format: date-time
       required:
       - clOrderId
-      - orderId
-      - accountId
       - symbol
       - side
       - currency
-      - orderQty
+      - quantity
       - orderType
-      - orderStatus
-      - avgPx
-      - avgPxAllIn
-      - leavesQty
-      - cumQty
-      - totalFee
-      - feeCurrency
-      - transactTime
-      title: TradingOrderDetails
-    Allocation:
+      - timeInForce
+      - timestamp
+      title: NewAsyncOrder
+    SettlementType:
+      description: 'A string describing the type of a given settlement
+
+
+        * `TRADE` - This settlement is associated with trades.
+
+
+        * `ADVISORY_FEE` - This settlement is associated with advisory fees.
+
+
+        * `CUSTODY_FEE` - This settlement is associated with custody fees.
+
+
+        * `MANAGEMENT_FEE` - This settlement is associated with management fees.
+
+
+        * `MODEL_FEE` - This settlement is associated with model fees.
+
+        '
+      type: string
+      enum:
+      - TRADE
+      - ADVISORY_FEE
+      - CUSTODY_FEE
+      - MANAGEMENT_FEE
+      - MODEL_FEE
+      title: SettlementType
+    OrderStatusResponse:
       type: object
       properties:
-        counterQtyAllIn:
-          description: Counter quantity all in
-          type: string
-          example: '10000'
-        counterQtyAllInToSettle:
-          description: Counter quantity all in to be settled
-          type: string
-          example: '10000'
-        cumQty:
-          description: Filled quantity
-          type: string
-          example: '10000'
-        executionId:
-          description: Execution identifier
+        data:
+          $ref: '#/components/schemas/TradingOrderDetails'
+      required:
+      - data
+      title: OrderStatusResponse
+    TradingAccount:
+      type: object
+      properties:
+        enabled:
+          description: Enabled state of the trading account
+          type: boolean
+        id:
+          description: An ID uniquely identifying the trading account
           type: string
           example: 6290d9bd-494f-11ed-975e-2e567b4c0e09
-        fee:
-          description: Fee
+        name:
+          description: Name of the trading account
           type: string
-          example: '10000'
-        quantity:
-          description: Allocated quantity
-          type: string
-          example: '10000'
-        subaccountId:
-          description: The Subaccount Identifier
-          type: string
-          example: 905272f0-52f9-404e-b6cd-ad879e671790
+          example: Crypto Fund LLC
       required:
-      - subaccountId
-      - quantity
-      - counterQtyAllIn
-      - counterQtyAllInToSettle
-      - fee
-      - cumQty
-      title: Allocation
+      - id
+      - name
+      - enabled
+      title: TradingAccount
+    GetQuoteResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Quote'
+      required:
+      - data
+      title: GetQuoteResponse
+    QuoteStatus:
+      description: 'A string describing the status of the given quote
+
+
+        * `OPEN` - The quote request was accepted and the quote can be used to trade.
+
+
+        * `REJECTED` - The quote was rejected and cannot be used to trade.
+
+
+        * `EXECUTED` - The quote was traded successfully and can no longer be used to trade.
+
+        '
+      type: string
+      enum:
+      - OPEN
+      - REJECTED
+      - EXECUTED
+      title: QuoteStatus
+    CreditLimitResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/CreditLimitDetails'
+      required:
+      - data
+      title: CreditLimitResponse
+    AsyncOrderResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/AsyncOrderExecutionReport'
+      required:
+      - data
+      title: AsyncOrderResponse
+    TradesResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TradeDetails'
+        page:
+          $ref: '#/components/schemas/Page'
+      required:
+      - data
+      - page
+      title: TradesResponse
+    TradeAccount:
+      description: The account into which this trade will be settled
+      type: object
+      properties:
+        accountId:
+          description: An ID uniquely identifying the trading account
+          type: string
+          example: 6290d9bd-494f-11ed-975e-2e567b4c0e09
+        subaccountId:
+          description: An ID uniquely identifying the subaccount where applicable
+          type: string
+          example: 5490d9bd-494f-11ed-975e-2e567b4c0e09
+      title: Account
+    TradingAccountResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/TradingAccount'
+      required:
+      - data
+      title: TradingAccountResponse
+    Page:
+      description: Pagination info
+      type: object
+      properties:
+        next:
+          description: URL to use to query for the next page or null if no additional results are available
+          type:
+          - string
+          - 'null'
+          example: <next page url>
+          x-omitempty: false
+      title: Page
+    TradingPositionsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TradingPosition'
+          minItems: 0
+          uniqueItems: true
+      required:
+      - data
+      title: TradingPositionsResponse
+    SettlementInstructionsCrypto:
+      type: object
+      properties:
+        address:
+          description: Settlement address.
+          type: string
+        assetTypeID:
+          description: Asset type identifier.
+          type: string
+      required:
+      - assetTypeID
+      - address
+      title: SettlementInstructionsCrypto
     AsyncOrderExecutionReport:
       type: object
       properties:
@@ -3056,52 +3305,101 @@ components:
       - transactTime
       - submitTime
       title: OrderExecutionReport
-    GetQuoteRequest:
+    TradingAccountBalanceResponse:
       type: object
       properties:
-        accountId:
-          description: Account ID for quote, must match the accountId on [accept quote](#operation/acceptQuote).
-          type:
-          - string
-          - 'null'
-          example: aaa44c42-5ad3-4108-b376-f78cd32f0543
-        currency:
-          description: Currency of quantity.
-          type: string
-          example: USD
-        idempotentId:
-          description: A client-provided unique ID for idempotent requests (optional). If provided a value, the same idempotentId must be also provided to [accept quote](#operation/acceptQuote).
-          type:
-          - string
-          - 'null'
-          example: 01944c42-5ad3-4108-b376-f78cd6ff0393
-          maxLength: 128
-        quantity:
-          description: Quantity to quote for in units of currency.
-          type: string
-          example: '100'
-        quantityRounding:
-          description: Optional boolean to specify if quantity should round to Anchorage Digital supported increments. If false or not specified, the request can be rejected if quantity has more precision than our published size increments. The rounding is done as a truncation of the extra fractional digits.
-          type: boolean
-        side:
-          description: Side of the quote request. "BUY", "SELL", or "TWOWAY".
-          type: string
-          example: BUY
-          enum:
-          - BUY
-          - SELL
-          - TWOWAY
-        tradingPair:
-          description: Trading pair being quoted.
-          type: string
-          example: BTC-USD
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TradingAccountBalance'
       required:
-      - tradingPair
-      - quantity
-      - currency
-      - side
-      title: GetQuoteRequest
-    NewOrderSingle:
+      - data
+      title: TradingAccountBalanceResponse
+    TradingAccountCreditResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/TradingAccountCredit'
+      required:
+      - data
+      title: TradingAccountCreditResponse
+    TradingPosition:
+      description: Negative position values denote amounts that you owe Anchorage Digital and positive position values denote amounts owed to you by Anchorage Digital.
+      type: object
+      properties:
+        positionAmount:
+          $ref: '#/components/schemas/Amount'
+      required:
+      - positionAmount
+      title: TradingPosition
+    ErrorType:
+      description: The type of error returned.
+      type: string
+      enum:
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
+    MarketDataResponse:
+      type: object
+      properties:
+        data:
+          description: Array of market data snapshots
+          type: array
+          items:
+            $ref: '#/components/schemas/MarketDataSnapshot'
+      required:
+      - data
+      title: MarketDataResponse
+    TradeStatus:
+      description: 'A string describing the status of the given trade
+
+
+        * `PENDING` - The trade request has been placed and the trade is pending.
+
+
+        * `EXECUTED` - This trade was executed and is waiting customer deposit.
+
+
+        * `REJECTED` - This trade was rejected.
+
+
+        * `CANCELED` - This trade was canceled by Anchorage Digital''s trading team due to client legal/financial problems.
+
+
+        * `SETTLING` - Anchorage Digital received the customer''s deposit and the trade is in the process of settling.
+
+
+        * `SETTLED` - Trade is settled and assets were sent to the customer.
+
+
+        * `PENDINGALLOCATION` - Trade is executed and is awaiting client allocation.
+
+
+        * `ALLOCATED` - Trade is fully allocated by the client.
+
+        '
+      type: string
+      enum:
+      - PENDING
+      - REJECTED
+      - CANCELED
+      - EXECUTED
+      - SETTLING
+      - SETTLED
+      - PENDINGALLOCATION
+      - ALLOCATED
+      title: TradeStatus
+    TradingOrderDetails:
       type: object
       properties:
         accountId:
@@ -3109,154 +3407,159 @@ components:
           type: string
           example: 0e2b2f9d-8d10-4f1e-960b-28567255045f
         allocation:
-          description: Order subaccount allocation
+          description: Subaccount allocation
           type: array
           items:
-            $ref: '#/components/schemas/OrderAllocation'
+            $ref: '#/components/schemas/Allocation'
+          x-omitempty: true
+        avgPx:
+          description: Average filled price for this order.
+          type: string
+          example: '21005.4'
+        avgPxAllIn:
+          description: Average filled price + anchorage commission.
+          type: string
+          example: '21006.00'
+        cancelQty:
+          description: quantity canceled for this order.
+          type: string
+          example: '10000.00'
         clOrderId:
-          description: Unique client order ID.
+          description: Original client order ID as submitted.
           type: string
           example: 6fb5fc79-0bb4-446d-82dd-d4687fb56a02
+        counterQty:
+          description: Filled quantity of the counter currency.
+          type: string
+          example: '0.001'
+        counterQtyAllIn:
+          description: Filled quantity of the counter currency including all fees.
+          type: string
+          example: '0.0012'
+        cumQty:
+          description: Cumulative filled quantity for this order. For open orders, orderQty = leavesQty + cumQty. For canceled order, leavesQty = 0, orderQty = cancelQty + cumQty.
+          type: string
+          example: '10000.00'
         currency:
           description: The currency in which order quantity is specified in.
           type: string
+          example: USD
+        feeCurrency:
+          description: Currency commission was charged in, which is always the opposite currency from what the order quantity is specified in.
+          type: string
           example: BTC
+        leavesQty:
+          description: quantity that is still open for this order.
+          type: string
+          example: '10000.00'
         limitPrice:
-          description: Limit price for the order, required for limit order
+          description: Original limit price for this order if present.
           type: string
           example: '21005.5'
+        orderId:
+          description: Order ID generated by anchorage.
+          type: string
+          example: a94c8d75-6c9d-4903-95f3-5b0893e76cb7
+        orderQty:
+          description: Original order quantity.
+          type: string
+          example: '10000.00'
+        orderStatus:
+          description: Order status
+          type: string
+          enum:
+          - PENDING
+          - NEW
+          - PARTIALLY_FILLED
+          - FILLED
+          - REJECTED
+          - PENDING_CANCEL
+          - CANCELED
         orderType:
-          description: Order type either MARKET or LIMIT
+          description: General order type.
           type: string
           enum:
           - MARKET
           - LIMIT
+          - STOP_LIMIT
+          - TAKE_PROFIT_LIMIT
+          - STOP_LOSS
+          - TWAP
+          - VWAP
+          - PEGGED
+          - POV
           - RFQ
           - LIMIT_ALL_IN
-        quantity:
-          description: Order quantity in units of currency.
+          - MANUAL
+          - OTHER
+        reasonText:
+          description: Additional description for reason of reject or cancel.
           type: string
-          example: '100.00'
+        rejectReason:
+          description: Reason for rejection.
+          type: string
         side:
           description: Order side, either "BUY" or "SELL".
           type: string
           enum:
           - BUY
           - SELL
+        strategyParams:
+          description: Strategy Parameters
+          type: object
+          properties:
+            data:
+              $ref: '#/components/schemas/StrategyParams'
+          x-omitempty: true
         subaccountId:
           description: Subaccount ID for this order to book into.
           type: string
-          example: 343b6c83-6d91-4f13-9982-2109abd2dbb0
+          example: 0e2b2f9d-8d10-4f1e-960b-28567255045f
+        subaccountTransactionId:
+          description: Subaccount transaction ID linked with this order.
+          type: string
+          example: af2b2f9d-9d1a-4e2e-76ab-2756725dffdf
+        submitTime:
+          description: UTC timestamp when order is submitted. [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'date-time'.
+          type: string
+          format: date-time
         symbol:
           description: Symbol for the order, e.g. BTC-USD.
           type: string
           example: BTC-USD
-        timestamp:
-          description: Timestamp when submitting this order. Date-times are always in UTC [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'date-time'.
+        timeInForce:
+          description: Time in force defines the order expiry
+          type: string
+          enum:
+          - GTC
+          - FOK
+          - IOC
+        totalFee:
+          description: Commission charged for this order.
+          type: string
+          example: '10.0'
+        transactTime:
+          description: UTC timestamp when order is executed. [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'date-time'.
           type: string
           format: date-time
       required:
       - clOrderId
+      - orderId
+      - accountId
       - symbol
       - side
       - currency
-      - quantity
+      - orderQty
       - orderType
-      - timestamp
-      title: NewOrderSingle
-    AcceptQuoteResponseData:
-      type: object
-      properties:
-        quoteID:
-          description: ID of the quote to trade.
-          type: string
-        side:
-          description: Trade side, either "BUY" or "SELL".
-          type: string
-          example: BUY
-          enum:
-          - BUY
-          - SELL
-        tradeID:
-          description: ID of the trade.
-          type: string
-        tradeStatus:
-          $ref: '#/components/schemas/TradeStatus'
-      required:
-      - quoteID
-      - side
-      - tradeStatus
-      title: AcceptQuoteResponseData
-    TradingPositionsResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/TradingPosition'
-          minItems: 0
-          uniqueItems: true
-      required:
-      - data
-      title: TradingPositionsResponse
-    SettlementInstructionsCrypto:
-      type: object
-      properties:
-        address:
-          description: Settlement address.
-          type: string
-        assetTypeID:
-          description: Asset type identifier.
-          type: string
-      required:
-      - assetTypeID
-      - address
-      title: SettlementInstructionsCrypto
-    CreditLimitDetails:
-      type: object
-      properties:
-        creditLimitAmount:
-          $ref: '#/components/schemas/Amount'
-        creditSpentAmount:
-          $ref: '#/components/schemas/Amount'
-      required:
-      - creditLimitAmount
-      - creditSpentAmount
-      title: CreditLimitDetails
-    AsyncOrderResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/AsyncOrderExecutionReport'
-      required:
-      - data
-      title: AsyncOrderResponse
-    TradingOrderResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/OrderExecutionReport'
-      required:
-      - data
-      title: TradingOrderResponse
-    PriceLevel:
-      type: object
-      properties:
-        amount:
-          description: Amount (in counter currency) available at this price level as a decimal string. Returned when amountBuckets parameter is used.
-          type: string
-          example: '100.00000000'
-        price:
-          description: Price level as a decimal string
-          type: string
-          example: '101022.85'
-        size:
-          description: Size available at this price level as a decimal string. Returned when sizeBuckets parameter is used.
-          type: string
-          example: '1.00000000'
-      required:
-      - price
-      title: PriceLevel
+      - orderStatus
+      - avgPx
+      - avgPxAllIn
+      - leavesQty
+      - cumQty
+      - totalFee
+      - feeCurrency
+      - transactTime
+      title: TradingOrderDetails
     Quote:
       type: object
       properties:
@@ -3297,237 +3600,77 @@ components:
       - quoteStatus
       - timestamp
       title: Quote
-    TradingAccountsResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/TradingAccount'
-          minItems: 0
-          uniqueItems: true
-      required:
-      - data
-      title: TradingAccountsResponse
-    TradingAccountCredit:
-      type: object
-      properties:
-        limits:
-          type: array
-          items:
-            $ref: '#/components/schemas/Amount'
-          minItems: 0
-          uniqueItems: true
-        usage:
-          type: array
-          items:
-            $ref: '#/components/schemas/Amount'
-          minItems: 0
-          uniqueItems: true
-      title: TradingAccountCredit
-    TradingAccountBalance:
-      type: object
-      properties:
-        balance:
-          $ref: '#/components/schemas/Amount'
-      title: TradingAccountBalance
-    TradingAccount:
-      type: object
-      properties:
-        enabled:
-          description: Enabled state of the trading account
-          type: boolean
-        id:
-          description: An ID uniquely identifying the trading account
-          type: string
-          example: 6290d9bd-494f-11ed-975e-2e567b4c0e09
-        name:
-          description: Name of the trading account
-          type: string
-          example: Crypto Fund LLC
-      required:
-      - id
-      - name
-      - enabled
-      title: TradingAccount
-    TradingAccountBalanceResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/TradingAccountBalance'
-      required:
-      - data
-      title: TradingAccountBalanceResponse
-    MarketDataResponse:
-      type: object
-      properties:
-        data:
-          description: Array of market data snapshots
-          type: array
-          items:
-            $ref: '#/components/schemas/MarketDataSnapshot'
-      required:
-      - data
-      title: MarketDataResponse
-    TradePairsResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/TradePair'
-          example:
-          - pair: BTC-USD
-            description: Buy BTC using USD, or Sell BTC for USD
-            referenceData:
-              baseAssetType: BTC
-              baseSizeIncrement: '0.001'
-              quoteAssetType: USD
-              quoteSizeIncrement: '0.01'
-              priceIncrement: '0.00000001'
-              minimumOrderSize: '0.005'
-              lastUpdateTime: '2022-08-24T18:00:53.471Z'
-          - pair: ETH-USD
-            description: Buy ETH using USD, or Sell ETH for USD
-            referenceData:
-              baseAssetType: ETH
-              baseSizeIncrement: '0.001'
-              quoteAssetType: USD
-              quoteSizeIncrement: '0.01'
-              priceIncrement: '0.00000001'
-              minimumOrderSize: '0.05'
-              lastUpdateTime: '2022-08-24T18:00:53.471Z'
-          - pair: BTC-ETH
-            description: Buy BTC using ETH, or Sell BTC for ETH
-          minItems: 1
-          uniqueItems: true
-      required:
-      - data
-      title: TradePairsResponse
-    Amount:
-      description: 'An amount of a crypto-asset represented by quantity, assetType, current unit price and current USD value.
+    TradePairReferenceData:
+      description: 'Trading reference data for a pair including the minimum size and price increment.
 
 
-
-        Fee amounts will be estimates if a transaction is not final.
-
+        Size increment is the minimum size supported when specifying order quantity.
 
 
-        NOTE: price and USD value information is recent but does not reflect real-time data.
+        Price increment specifies the minimum price precision when specifying order price.
 
         '
       type: object
       properties:
-        assetType:
-          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
-
-
-            Use `/asset-types` to list all of the supported asset types for your organization.
-
-            '
+        baseAssetType:
+          description: A string representing the base asset of the trading pair.
           type: string
           example: BTC
-        currentPrice:
-          description: A recent assessment of the intra-day USD value of 1 unit of this asset type. This value is provided for convenience for such use cases as estimating point-in-time portfolio balances. This value does not represent authoritative pricing information used by Anchorage Digital for any purpose. The price is fetched as of the present, and may be omitted in certain contexts where more structured pricing information is provided (e.g. quotes and trades).
+        baseSizeIncrement:
+          description: Minimum size increment when specifying order quantity in base asset.
           type: string
-          example: '9751.01'
-        currentUSDValue:
-          description: The result of `quantity * currentPrice`, rounded to the nearest cent. A unitless number implicitly denominated in dollars. See `currentPrice` for methodology and disclaimers.
+          example: '0.000001'
+        lastUpdateTime:
+          description: ISO format date time when the reference data was last updated.
           type: string
-          example: '101920.94'
-        quantity:
-          description: The numeric value of this amount, excluding units
+          format: date-time
+          example: '2022-07-30T22:15:31.99999Z'
+        minimumOrderSize:
+          description: Minimum required size for base asset to successfully place an order
           type: string
-          example: '10.45234733'
+          example: '0.005'
+        priceIncrement:
+          description: Minimum price increment when specifying order price.
+          type: string
+          example: '0.00000001'
+        quoteAssetType:
+          description: A string representing the quote asset of the trading pair.
+          type: string
+          example: USD
+        quoteSizeIncrement:
+          description: Minimum size increment when specifying order quantity in quote asset.
+          type: string
+          example: '0.01'
       example:
-        quantity: '10.45234733'
-        assetType: BTC
-        currentPrice: '9751.01'
-        currentUSDValue: '101920.94'
+        baseAssetType: BTC
+        quoteAssetType: USD
+        baseSizeIncrement: '0.0000001'
+        quoteSizeIncrement: '0.01'
+        priceIncrement: '0.00000001'
+        minimumOrderSize: '0.005'
+        lastUpdateTime: '2022-07-30T22:15:31.99999Z'
       required:
-      - quantity
-      - assetType
-      title: Amount
-    CreditLimitResponse:
+      - baseAssetType
+      - quoteAssetType
+      - baseSizeIncrement
+      - quoteSizeIncrement
+      - priceIncrement
+      - minimumOrderSize
+      - lastUpdateTime
+      title: TradePairReferenceData
+    ErrorDetails:
       type: object
       properties:
-        data:
-          $ref: '#/components/schemas/CreditLimitDetails'
-      required:
-      - data
-      title: CreditLimitResponse
-    SettlementsResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/SettlementDetails'
-        page:
-          $ref: '#/components/schemas/Page'
-      required:
-      - data
-      - page
-      title: SettlementsResponse
-    TradePair:
-      description: A representation of a trade pair
-      type: object
-      properties:
-        description:
-          description: A string representing the human-readable name of the trade pair.
+        errorType:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          description: A human-readable message providing more details about the error.
           type: string
-          example: Buy Ethereum with Bitcoin, or Sell Ethereum for Bitcoin
-        pair:
-          description: A string representing a trade between one type of currency and another.
-          type: string
-          example: BTC-ETH
-        referenceData:
-          $ref: '#/components/schemas/TradePairReferenceData'
+          example: Missing required field 'amount'.
       required:
-      - pair
-      - description
-      title: TradePair
-    TradeStatus:
-      description: 'A string describing the status of the given trade
-
-
-        * `PENDING` - The trade request has been placed and the trade is pending.
-
-
-        * `EXECUTED` - This trade was executed and is waiting customer deposit.
-
-
-        * `REJECTED` - This trade was rejected.
-
-
-        * `CANCELED` - This trade was canceled by Anchorage Digital''s trading team due to client legal/financial problems.
-
-
-        * `SETTLING` - Anchorage Digital received the customer''s deposit and the trade is in the process of settling.
-
-
-        * `SETTLED` - Trade is settled and assets were sent to the customer.
-
-
-        * `PENDINGALLOCATION` - Trade is executed and is awaiting client allocation.
-
-
-        * `ALLOCATED` - Trade is fully allocated by the client.
-
-        '
-      type: string
-      enum:
-      - PENDING
-      - REJECTED
-      - CANCELED
-      - EXECUTED
-      - SETTLING
-      - SETTLED
-      - PENDINGALLOCATION
-      - ALLOCATED
-      title: TradeStatus
+      - errorType
+      - message
+      title: ErrorDetails
     MarketDataSnapshot:
       type: object
       properties:
@@ -3582,201 +3725,6 @@ components:
       - bids
       - offers
       title: MarketDataSnapshot
-    QuoteStatus:
-      description: 'A string describing the status of the given quote
-
-
-        * `OPEN` - The quote request was accepted and the quote can be used to trade.
-
-
-        * `REJECTED` - The quote was rejected and cannot be used to trade.
-
-
-        * `EXECUTED` - The quote was traded successfully and can no longer be used to trade.
-
-        '
-      type: string
-      enum:
-      - OPEN
-      - REJECTED
-      - EXECUTED
-      title: QuoteStatus
-    TradingAccountResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/TradingAccount'
-      required:
-      - data
-      title: TradingAccountResponse
-    NewAsyncOrder:
-      type: object
-      properties:
-        accountId:
-          description: Account ID for this order to book into.
-          type: string
-          example: 0e2b2f9d-8d10-4f1e-960b-28567255045f
-        allocation:
-          description: Order subaccount allocation
-          type: array
-          items:
-            $ref: '#/components/schemas/OrderAllocation'
-        clOrderId:
-          description: Unique client order ID.
-          type: string
-          example: 6fb5fc79-0bb4-446d-82dd-d4687fb56a02
-        currency:
-          description: The currency in which order quantity is specified in.
-          type: string
-          example: BTC
-        limitPrice:
-          description: Limit price for the order, required for limit order
-          type: string
-          example: '21005.5'
-        orderType:
-          description: 'Order type should be for BUY and SELL: LIMIT, STOP_LIMIT, TAKE_PROFIT_LIMIT. Only for SELL: STOP_LOSS'
-          type: string
-          enum:
-          - LIMIT
-          - STOP_LOSS
-          - STOP_LIMIT
-          - TAKE_PROFIT_LIMIT
-        parameters:
-          description: Optional order type parameters for STOP_LOSS, STOP_LIMIT and TAKE_PROFIT_LIMIT orders.
-          properties:
-            endTime:
-              description: Optional expire time for the order. Date-times are always in UTC [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'date-time'.
-              type: string
-              format: date-time
-            triggerPrice:
-              description: The price that must be met to trigger execution of the order. Required for STOP_LIMIT, TAKE_PROFIT_LIMIT and STOP_LOSS.
-              type: string
-              example: '21005.5'
-          type: object
-        quantity:
-          description: Order quantity in units of currency.
-          type: string
-          example: '100.00'
-        side:
-          description: Order side, either "BUY" or "SELL".
-          type: string
-          enum:
-          - BUY
-          - SELL
-        specLotId:
-          description: Optional specification lot ID for tax reporting purposes. Only applicable for SELL orders with timeInForce FOK. When provided, instructs the tax service to retire the specified lot.
-          type: string
-          example: 550e8400-e29b-41d4-a716-446655440000
-        subaccountId:
-          description: Subaccount ID for this order to book into.
-          type: string
-          example: 343b6c83-6d91-4f13-9982-2109abd2dbb0
-        symbol:
-          description: Symbol for the order, e.g. BTC-USD.
-          type: string
-          example: BTC-USD
-        timeInForce:
-          description: Time in Force specifies how long the order remains in effect
-          type: string
-          enum:
-          - FOK
-          - IOC
-          - GTC
-        timestamp:
-          description: Timestamp when submitting this order. Date-times are always in UTC [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'date-time'.
-          type: string
-          format: date-time
-      required:
-      - clOrderId
-      - symbol
-      - side
-      - currency
-      - quantity
-      - orderType
-      - timeInForce
-      - timestamp
-      title: NewAsyncOrder
-    SettlementType:
-      description: 'A string describing the type of a given settlement
-
-
-        * `TRADE` - This settlement is associated with trades.
-
-
-        * `ADVISORY_FEE` - This settlement is associated with advisory fees.
-
-
-        * `CUSTODY_FEE` - This settlement is associated with custody fees.
-
-
-        * `MANAGEMENT_FEE` - This settlement is associated with management fees.
-
-
-        * `MODEL_FEE` - This settlement is associated with model fees.
-
-        '
-      type: string
-      enum:
-      - TRADE
-      - ADVISORY_FEE
-      - CUSTODY_FEE
-      - MANAGEMENT_FEE
-      - MODEL_FEE
-      title: SettlementType
-    OrdersStatusResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/TradingOrderDetails'
-        page:
-          $ref: '#/components/schemas/Page'
-      required:
-      - data
-      - page
-      title: OrdersStatusResponse
-    SettlementResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/SettlementDetails'
-      required:
-      - data
-      title: SettlementResponse
-    OrderStatusResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/TradingOrderDetails'
-      required:
-      - data
-      title: OrderStatusResponse
-    TradesResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/TradeDetails'
-        page:
-          $ref: '#/components/schemas/Page'
-      required:
-      - data
-      - page
-      title: TradesResponse
-    Page:
-      description: Pagination info
-      type: object
-      properties:
-        next:
-          description: URL to use to query for the next page or null if no additional results are available
-          type:
-          - string
-          - 'null'
-          example: <next page url>
-          x-omitempty: false
-      title: Page
     TradeResponse:
       type: object
       properties:
@@ -3785,28 +3733,80 @@ components:
       required:
       - data
       title: TradeResponse
-    GetQuoteResponse:
+    CreditLimitDetails:
+      type: object
+      properties:
+        creditLimitAmount:
+          $ref: '#/components/schemas/Amount'
+        creditSpentAmount:
+          $ref: '#/components/schemas/Amount'
+      required:
+      - creditLimitAmount
+      - creditSpentAmount
+      title: CreditLimitDetails
+    SettlementDetails:
+      type: object
+      properties:
+        account:
+          description: The account into which this trade will be settled
+          type: object
+          properties:
+            accountId:
+              description: An ID uniquely identifying the trading account
+              type: string
+              example: 6290d9bd-494f-11ed-975e-2e567b4c0e09
+          title: Account
+        createdAt:
+          description: The system timestamp when this settlement was created, as an ISO-8601 UTC string of the form 2019-02-13T05:17:32.000000Z.
+          type: string
+        instructionsCrypto:
+          description: Set of settlement instructions in crypto currencies.
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/SettlementInstructionsCrypto'
+        positions:
+          description: A list of positions for that Settlement
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/TradingPosition'
+        settlementID:
+          description: Unique ID for this settlement.
+          type: string
+        settlementStatus:
+          $ref: '#/components/schemas/SettlementStatus'
+        settlementType:
+          $ref: '#/components/schemas/SettlementType'
+        vault:
+          description: The vault into which this trade will be settled
+          type: object
+          properties:
+            vaultID:
+              description: An ID uniquely identifying the vault
+              type: string
+              example: 1c920f4241b78a1d483a29f3c24b6c4c
+          title: Vault
+      required:
+      - createdAt
+      - settlementStatus
+      - settlementID
+      title: SettlementDetails
+    SettlementsResponse:
       type: object
       properties:
         data:
-          $ref: '#/components/schemas/Quote'
+          type: array
+          items:
+            $ref: '#/components/schemas/SettlementDetails'
+        page:
+          $ref: '#/components/schemas/Page'
       required:
       - data
-      title: GetQuoteResponse
-    OrderAllocation:
-      type: object
-      properties:
-        quantity:
-          description: Quantity to allocate to the subaccount
-          type: string
-          example: '10000'
-        subaccountId:
-          description: The Subaccount Identifier
-          type: string
-      required:
-      - subaccountId
-      - quantity
-      title: OrderAllocation
+      - page
+      title: SettlementsResponse
   securitySchemes:
     Api-Access-Key:
       type: apiKey

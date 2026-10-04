@@ -159,19 +159,58 @@ paths:
         Read vault activity: checkSourceVault
 components:
   schemas:
-    VaultsResponse:
+    Amount:
+      description: 'An amount of a crypto-asset represented by quantity, assetType, current unit price and current USD value.
+
+
+
+        Fee amounts will be estimates if a transaction is not final.
+
+
+
+        NOTE: price and USD value information is recent but does not reflect real-time data.
+
+        '
+      type: object
+      properties:
+        assetType:
+          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
+
+
+            Use `/asset-types` to list all of the supported asset types for your organization.
+
+            '
+          type: string
+          example: BTC
+        currentPrice:
+          description: A recent assessment of the intra-day USD value of 1 unit of this asset type. This value is provided for convenience for such use cases as estimating point-in-time portfolio balances. This value does not represent authoritative pricing information used by Anchorage Digital for any purpose. The price is fetched as of the present, and may be omitted in certain contexts where more structured pricing information is provided (e.g. quotes and trades).
+          type: string
+          example: '9751.01'
+        currentUSDValue:
+          description: The result of `quantity * currentPrice`, rounded to the nearest cent. A unitless number implicitly denominated in dollars. See `currentPrice` for methodology and disclaimers.
+          type: string
+          example: '101920.94'
+        quantity:
+          description: The numeric value of this amount, excluding units
+          type: string
+          example: '10.45234733'
+      example:
+        quantity: '10.45234733'
+        assetType: BTC
+        currentPrice: '9751.01'
+        currentUSDValue: '101920.94'
+      required:
+      - quantity
+      - assetType
+      title: Amount
+    VaultsResponse1:
       type: object
       properties:
         data:
-          type: array
-          items:
-            $ref: '#/components/schemas/VaultDetails'
-        page:
-          $ref: '#/components/schemas/Page'
+          $ref: '#/components/schemas/VaultDetails'
       required:
       - data
-      - page
-      title: VaultsResponse
+      title: VaultsResponse1
     ErrorType:
       description: The type of error returned.
       type: string
@@ -189,6 +228,68 @@ components:
       - InsufficientFunds
       - NotImplemented
       title: ErrorType
+    VaultDetails:
+      type: object
+      properties:
+        accountName:
+          description: Account name
+          type: string
+        assets:
+          description: A list of the assets in this vault
+          type: array
+          items:
+            $ref: '#/components/schemas/AssetDetails'
+        description:
+          description: A description of the vault
+          type: string
+        name:
+          description: Vault name
+          type: string
+        type:
+          description: Always VAULT
+          type: string
+        vaultId:
+          description: An ID uniquely identifying an Anchorage Digital vault.
+          type: string
+          example: 1c920f4241b78a1d483a29f3c24b6c4c
+      example:
+        vaultId: 1c920f4241b78a1d483a29f3c24b6c4c
+        name: Long Hold Vault
+        description: For long-term investments
+        type: VAULT
+        accountName: Account name
+        assets:
+        - walletId: 3d293c0d64c703023692216e9b4f5280
+          assetType: BTC
+          availableBalance:
+            quantity: '10.00000000'
+            assetType: BTC
+            currentPrice: '9751.01'
+            currentUSDValue: '97510.1'
+          totalBalance:
+            quantity: '10.45234733'
+            assetType: BTC
+            currentPrice: '9751.01'
+            currentUSDValue: '101920.94'
+          stakedBalance:
+            quantity: '32.00000000'
+            assetType: BTC
+            currentPrice: '9751.01'
+            currentUSDValue: '312032.32'
+          unclaimedBalance:
+            quantity: '0'
+            assetType: BTC
+            currentPrice: '9751.01'
+            currentUSDValue: '0'
+          vaultId: 1c920f4241b78a1d483a29f3c24b6c4c
+          vaultName: Long Hold Vault
+      required:
+      - vaultId
+      - name
+      - description
+      - assets
+      - type
+      title: VaultDetails
     ErrorDetails:
       type: object
       properties:
@@ -264,58 +365,6 @@ components:
       - vaultId
       - vaultName
       title: AssetDetails
-    VaultsResponse1:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/VaultDetails'
-      required:
-      - data
-      title: VaultsResponse1
-    Amount:
-      description: 'An amount of a crypto-asset represented by quantity, assetType, current unit price and current USD value.
-
-
-
-        Fee amounts will be estimates if a transaction is not final.
-
-
-
-        NOTE: price and USD value information is recent but does not reflect real-time data.
-
-        '
-      type: object
-      properties:
-        assetType:
-          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
-
-
-            Use `/asset-types` to list all of the supported asset types for your organization.
-
-            '
-          type: string
-          example: BTC
-        currentPrice:
-          description: A recent assessment of the intra-day USD value of 1 unit of this asset type. This value is provided for convenience for such use cases as estimating point-in-time portfolio balances. This value does not represent authoritative pricing information used by Anchorage Digital for any purpose. The price is fetched as of the present, and may be omitted in certain contexts where more structured pricing information is provided (e.g. quotes and trades).
-          type: string
-          example: '9751.01'
-        currentUSDValue:
-          description: The result of `quantity * currentPrice`, rounded to the nearest cent. A unitless number implicitly denominated in dollars. See `currentPrice` for methodology and disclaimers.
-          type: string
-          example: '101920.94'
-        quantity:
-          description: The numeric value of this amount, excluding units
-          type: string
-          example: '10.45234733'
-      example:
-        quantity: '10.45234733'
-        assetType: BTC
-        currentPrice: '9751.01'
-        currentUSDValue: '101920.94'
-      required:
-      - quantity
-      - assetType
-      title: Amount
     Page:
       description: Pagination info
       type: object
@@ -328,68 +377,19 @@ components:
           example: <next page url>
           x-omitempty: false
       title: Page
-    VaultDetails:
+    VaultsResponse:
       type: object
       properties:
-        accountName:
-          description: Account name
-          type: string
-        assets:
-          description: A list of the assets in this vault
+        data:
           type: array
           items:
-            $ref: '#/components/schemas/AssetDetails'
-        description:
-          description: A description of the vault
-          type: string
-        name:
-          description: Vault name
-          type: string
-        type:
-          description: Always VAULT
-          type: string
-        vaultId:
-          description: An ID uniquely identifying an Anchorage Digital vault.
-          type: string
-          example: 1c920f4241b78a1d483a29f3c24b6c4c
-      example:
-        vaultId: 1c920f4241b78a1d483a29f3c24b6c4c
-        name: Long Hold Vault
-        description: For long-term investments
-        type: VAULT
-        accountName: Account name
-        assets:
-        - walletId: 3d293c0d64c703023692216e9b4f5280
-          assetType: BTC
-          availableBalance:
-            quantity: '10.00000000'
-            assetType: BTC
-            currentPrice: '9751.01'
-            currentUSDValue: '97510.1'
-          totalBalance:
-            quantity: '10.45234733'
-            assetType: BTC
-            currentPrice: '9751.01'
-            currentUSDValue: '101920.94'
-          stakedBalance:
-            quantity: '32.00000000'
-            assetType: BTC
-            currentPrice: '9751.01'
-            currentUSDValue: '312032.32'
-          unclaimedBalance:
-            quantity: '0'
-            assetType: BTC
-            currentPrice: '9751.01'
-            currentUSDValue: '0'
-          vaultId: 1c920f4241b78a1d483a29f3c24b6c4c
-          vaultName: Long Hold Vault
+            $ref: '#/components/schemas/VaultDetails'
+        page:
+          $ref: '#/components/schemas/Page'
       required:
-      - vaultId
-      - name
-      - description
-      - assets
-      - type
-      title: VaultDetails
+      - data
+      - page
+      title: VaultsResponse
   securitySchemes:
     Api-Access-Key:
       type: apiKey

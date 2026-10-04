@@ -1005,198 +1005,6 @@ paths:
     - url: https://api.anchorage-staging.com/v3
 components:
   schemas:
-    SignedAddressForWallet:
-      description: The deposit address for crypto wallets. Fiat wallets use deposit instructions instead.
-      type: object
-      properties:
-        address:
-          description: A crypto address for the intended asset
-          type: string
-          example: 2N19AcihQ1a4MxQW658UFHTioUNnMkiHPkw
-        addressId:
-          description: An id uniquely identifying an Anchorage Digital address.
-          type: string
-          example: a33f83d96ca95cac000a344aa478a8b8
-        addressSignaturePayload:
-          description: The hex-encoding of the bytes that were signed.
-          type: string
-          example: 7b225465787441646472657373223a22324e313941636968513161344d78515736353855464854696f554e6e4d6b6948506b77227d
-        certChain:
-          description: An x509 certificate chain in PEM format. When present, indicates that this address uses a V2 signature scheme where the signature is verified against the public key in the leaf certificate, and the certificate chain must verify up to a trusted Anchorage Digital Root CA. The Root CA is provided out-of-band. When absent, the signature is verified against the Organization Public Key (V1 signature scheme).
-          type: string
-          example: '-----BEGIN CERTIFICATE-----
-
-            MIIBkTCCATigAwIBAgIQExample...
-
-            -----END CERTIFICATE-----
-
-            -----BEGIN CERTIFICATE-----
-
-            MIIBkTCCATigAwIBAgIQExample...
-
-            -----END CERTIFICATE-----
-
-            '
-        signature:
-          description: A hex-encoded signature of the addressSignaturePayload
-          type: string
-          example: 1642000aa9cca8e8610981aefbdb204b361c9dca3fa067b88fdacfba7a0f620d721378a33f4bbadad3923e633a4d712646d1e8e314e9fcb4aa4102c0581f6503
-        signatureVersion:
-          description: The address signature scheme used for this address
-          type: string
-          example: V2
-          enum:
-          - V1
-          - V2
-      required:
-      - address
-      - addressId
-      - addressSignaturePayload
-      - signature
-      title: SignedAddressForWallet
-    ErrorDetails:
-      type: object
-      properties:
-        errorType:
-          $ref: '#/components/schemas/ErrorType'
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - errorType
-      - message
-      title: ErrorDetails
-    ResourceType:
-      description: The type of the resource being referenced. Note that the VAULT type has been deprecated and WALLET should be used instead.
-      type: string
-      enum:
-      - VAULT
-      - WALLET
-      - ADDRESS
-      - STANDING_INSTRUCTION
-      - TRUSTED_DESTINATION
-      title: ResourceType
-    ErrorType:
-      description: The type of error returned.
-      type: string
-      enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
-    WalletPositionsResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/WalletPositionsDetails'
-        page:
-          $ref: '#/components/schemas/Page'
-      required:
-      - data
-      - page
-      title: WalletPositionsResponse
-    WalletRewardsResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/WalletRewardsDetails'
-        page:
-          $ref: '#/components/schemas/Page'
-      required:
-      - data
-      - page
-      title: WalletRewardsResponse
-    VaultsWalletResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/WalletDetails'
-      required:
-      - data
-      title: VaultsWalletResponse
-    WalletsResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/WalletDetails'
-        page:
-          $ref: '#/components/schemas/Page'
-      required:
-      - data
-      - page
-      title: WalletsResponse
-    ActivateWalletResponse:
-      type: object
-      properties:
-        results:
-          description: One entry per requested network, in the order the networks were supplied.
-          type: array
-          items:
-            $ref: '#/components/schemas/ActivateWalletResult'
-      required:
-      - results
-      title: ActivateWalletResponse
-    DepositInstruction:
-      description: The deposit instructions for fiat wallets. Crypto wallets use a deposit address instead.
-      type: object
-      properties:
-        bankAddress:
-          description: The address of the bank
-          type: string
-          example: 123 Main Street, Anytown, USA 12345
-        bankName:
-          description: The name of the bank
-          type: string
-          example: Example Bank
-        bankRoutingNumber:
-          description: The bank routing number of the beneficiary
-          type: string
-          example: '123456789'
-        bankSwiftCode:
-          description: The SWIFT code of the bank
-          type: string
-          example: '12345678'
-        beneficiaryAccountNumber:
-          description: The bank account number of the beneficiary
-          type: string
-          example: '12345678'
-        beneficiaryAddress:
-          description: The address of the beneficiary
-          type: string
-          example: 123 Main Street, Anytown, USA 12345
-        beneficiaryName:
-          description: The name of the beneficiary
-          type: string
-          example: John Doe
-        memoField:
-          description: A memo field for the bank info
-          type: string
-          example: '123456789'
-      required:
-      - bankName
-      - bankRoutingNumber
-      - bankAddress
-      - bankSwiftCode
-      - beneficiaryName
-      - beneficiaryAddress
-      - beneficiaryAccountNumber
-      title: DepositInstruction
     Amount:
       description: 'An amount of a crypto-asset represented by quantity, assetType, current unit price and current USD value.
 
@@ -1241,19 +1049,6 @@ components:
       - quantity
       - assetType
       title: Amount
-    VaultsWalletsResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/WalletDetails'
-        page:
-          $ref: '#/components/schemas/Page'
-      required:
-      - data
-      - page
-      title: VaultsWalletsResponse
     WalletPositionsDetails:
       properties:
         assetType:
@@ -1320,6 +1115,57 @@ components:
       - providerName
       - transactionId
       title: WalletPositionsDetails
+    AssetDetailsForWallet:
+      type: object
+      properties:
+        assetType:
+          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
+
+
+            Use `/asset-types` to list all of the supported asset types for your organization.
+
+            '
+          type: string
+          example: BTC
+        availableBalance:
+          $ref: '#/components/schemas/Amount'
+        stakedBalance:
+          $ref: '#/components/schemas/Amount'
+        totalBalance:
+          $ref: '#/components/schemas/Amount'
+        unclaimedBalance:
+          $ref: '#/components/schemas/Amount'
+        unvestedBalance:
+          $ref: '#/components/schemas/Amount'
+        unvestedUnstakeableBalance:
+          $ref: '#/components/schemas/Amount'
+      example:
+        assetType: BTC
+        availableBalance:
+          quantity: '10.00000000'
+          assetType: BTC
+          currentPrice: '9751.01'
+          currentUSDValue: '97510.1'
+        totalBalance:
+          quantity: '10.45234733'
+          assetType: BTC
+          currentPrice: '9751.01'
+          currentUSDValue: '101920.94'
+        stakedBalance:
+          quantity: '32.00000000'
+          assetType: BTC
+          currentPrice: '9751.01'
+          currentUSDValue: '312032.32'
+        unclaimedBalance:
+          quantity: '0'
+          assetType: BTC
+          currentPrice: '9751.01'
+          currentUSDValue: '0'
+      required:
+      - assetType
+      - availableBalance
+      - totalBalance
+      title: AssetDetailsForWallet
     ActivateWalletResult:
       type: object
       properties:
@@ -1382,57 +1228,209 @@ components:
       - rewardType
       - referenceDate
       title: WalletRewardsDetails
-    AssetDetailsForWallet:
+    WalletPositionsResponse:
       type: object
       properties:
-        assetType:
-          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
-
-
-            Use `/asset-types` to list all of the supported asset types for your organization.
-
-            '
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WalletPositionsDetails'
+        page:
+          $ref: '#/components/schemas/Page'
+      required:
+      - data
+      - page
+      title: WalletPositionsResponse
+    VaultsWalletsRequest:
+      type: object
+      properties:
+        activateAllCompatibleNetworks:
+          description: When `true`, activate the new wallet on every network that is key-compatible with `networkId` and enabled for your organization — the same set returned by `compatibleNetworkIds` on `/asset-types` — without enumerating them. Mutually exclusive with `compatibleNetworkIds`; supplying both is rejected with a `400`.
+          type: boolean
+        compatibleNetworkIds:
+          description: Optional list of additional compatible network IDs to activate this wallet on. All networks must share the same key family as the primary networkId. Activation on these networks happens synchronously after the initial wallet creation.
+          type: array
+          items:
+            type: string
+        networkId:
+          description: The ID of the network for assets in this wallet.
           type: string
           example: BTC
-        availableBalance:
-          $ref: '#/components/schemas/Amount'
-        stakedBalance:
-          $ref: '#/components/schemas/Amount'
-        totalBalance:
-          $ref: '#/components/schemas/Amount'
-        unclaimedBalance:
-          $ref: '#/components/schemas/Amount'
-        unvestedBalance:
-          $ref: '#/components/schemas/Amount'
-        unvestedUnstakeableBalance:
-          $ref: '#/components/schemas/Amount'
-      example:
-        assetType: BTC
-        availableBalance:
-          quantity: '10.00000000'
-          assetType: BTC
-          currentPrice: '9751.01'
-          currentUSDValue: '97510.1'
-        totalBalance:
-          quantity: '10.45234733'
-          assetType: BTC
-          currentPrice: '9751.01'
-          currentUSDValue: '101920.94'
-        stakedBalance:
-          quantity: '32.00000000'
-          assetType: BTC
-          currentPrice: '9751.01'
-          currentUSDValue: '312032.32'
-        unclaimedBalance:
-          quantity: '0'
-          assetType: BTC
-          currentPrice: '9751.01'
-          currentUSDValue: '0'
+        subaccountId:
+          description: The Subaccount Identifier to link this wallet.(in development / early access)
+          type: string
+        walletName:
+          description: The name of the Wallet.
+          type:
+          - string
+          - 'null'
+          example: Bitcoin Mainnet - Wallet 1
       required:
-      - assetType
-      - availableBalance
-      - totalBalance
-      title: AssetDetailsForWallet
+      - networkId
+      title: VaultsWalletsRequest
+    ActivateWalletRequest:
+      type: object
+      properties:
+        activateAllCompatibleNetworks:
+          description: When `true`, activate the source wallet on every network that is key-compatible with its network and enabled for your organization — the same set returned by `compatibleNetworkIds` on `/asset-types` — without enumerating them. Mutually exclusive with `compatibleNetworkIds`; supplying both, or neither, is rejected with a `400`.
+          type: boolean
+        compatibleNetworkIds:
+          description: Target network IDs to activate the source wallet on. Each network must be key-compatible with the source wallet's network; incompatible entries are reported as `FAILED` in the response without affecting other entries. Mutually exclusive with `activateAllCompatibleNetworks` — provide exactly one.
+          type: array
+          items:
+            type: string
+            description: A network ID that shares cryptographic key derivation with the source wallet's network
+          maxItems: 25
+          minItems: 1
+      title: ActivateWalletRequest
+    SignedAddressForWallet:
+      description: The deposit address for crypto wallets. Fiat wallets use deposit instructions instead.
+      type: object
+      properties:
+        address:
+          description: A crypto address for the intended asset
+          type: string
+          example: 2N19AcihQ1a4MxQW658UFHTioUNnMkiHPkw
+        addressId:
+          description: An id uniquely identifying an Anchorage Digital address.
+          type: string
+          example: a33f83d96ca95cac000a344aa478a8b8
+        addressSignaturePayload:
+          description: The hex-encoding of the bytes that were signed.
+          type: string
+          example: 7b225465787441646472657373223a22324e313941636968513161344d78515736353855464854696f554e6e4d6b6948506b77227d
+        certChain:
+          description: An x509 certificate chain in PEM format. When present, indicates that this address uses a V2 signature scheme where the signature is verified against the public key in the leaf certificate, and the certificate chain must verify up to a trusted Anchorage Digital Root CA. The Root CA is provided out-of-band. When absent, the signature is verified against the Organization Public Key (V1 signature scheme).
+          type: string
+          example: '-----BEGIN CERTIFICATE-----
+
+            MIIBkTCCATigAwIBAgIQExample...
+
+            -----END CERTIFICATE-----
+
+            -----BEGIN CERTIFICATE-----
+
+            MIIBkTCCATigAwIBAgIQExample...
+
+            -----END CERTIFICATE-----
+
+            '
+        signature:
+          description: A hex-encoded signature of the addressSignaturePayload
+          type: string
+          example: 1642000aa9cca8e8610981aefbdb204b361c9dca3fa067b88fdacfba7a0f620d721378a33f4bbadad3923e633a4d712646d1e8e314e9fcb4aa4102c0581f6503
+        signatureVersion:
+          description: The address signature scheme used for this address
+          type: string
+          example: V2
+          enum:
+          - V1
+          - V2
+      required:
+      - address
+      - addressId
+      - addressSignaturePayload
+      - signature
+      title: SignedAddressForWallet
+    VaultsWalletsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WalletDetails'
+        page:
+          $ref: '#/components/schemas/Page'
+      required:
+      - data
+      - page
+      title: VaultsWalletsResponse
+    DepositInstruction:
+      description: The deposit instructions for fiat wallets. Crypto wallets use a deposit address instead.
+      type: object
+      properties:
+        bankAddress:
+          description: The address of the bank
+          type: string
+          example: 123 Main Street, Anytown, USA 12345
+        bankName:
+          description: The name of the bank
+          type: string
+          example: Example Bank
+        bankRoutingNumber:
+          description: The bank routing number of the beneficiary
+          type: string
+          example: '123456789'
+        bankSwiftCode:
+          description: The SWIFT code of the bank
+          type: string
+          example: '12345678'
+        beneficiaryAccountNumber:
+          description: The bank account number of the beneficiary
+          type: string
+          example: '12345678'
+        beneficiaryAddress:
+          description: The address of the beneficiary
+          type: string
+          example: 123 Main Street, Anytown, USA 12345
+        beneficiaryName:
+          description: The name of the beneficiary
+          type: string
+          example: John Doe
+        memoField:
+          description: A memo field for the bank info
+          type: string
+          example: '123456789'
+      required:
+      - bankName
+      - bankRoutingNumber
+      - bankAddress
+      - bankSwiftCode
+      - beneficiaryName
+      - beneficiaryAddress
+      - beneficiaryAccountNumber
+      title: DepositInstruction
+    Page:
+      description: Pagination info
+      type: object
+      properties:
+        next:
+          description: URL to use to query for the next page or null if no additional results are available
+          type:
+          - string
+          - 'null'
+          example: <next page url>
+          x-omitempty: false
+      title: Page
+    ResourceType:
+      description: The type of the resource being referenced. Note that the VAULT type has been deprecated and WALLET should be used instead.
+      type: string
+      enum:
+      - VAULT
+      - WALLET
+      - ADDRESS
+      - STANDING_INSTRUCTION
+      - TRUSTED_DESTINATION
+      title: ResourceType
+    VaultsWalletResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/WalletDetails'
+      required:
+      - data
+      title: VaultsWalletResponse
+    ActivateWalletResponse:
+      type: object
+      properties:
+        results:
+          description: One entry per requested network, in the order the networks were supplied.
+          type: array
+          items:
+            $ref: '#/components/schemas/ActivateWalletResult'
+      required:
+      - results
+      title: ActivateWalletResponse
     WalletDetails:
       type: object
       properties:
@@ -1533,60 +1531,77 @@ components:
       - networkId
       - type
       title: WalletDetails
-    ActivateWalletRequest:
+    ErrorType:
+      description: The type of error returned.
+      type: string
+      enum:
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
+    WalletRewardsResponse:
       type: object
       properties:
-        activateAllCompatibleNetworks:
-          description: When `true`, activate the source wallet on every network that is key-compatible with its network and enabled for your organization — the same set returned by `compatibleNetworkIds` on `/asset-types` — without enumerating them. Mutually exclusive with `compatibleNetworkIds`; supplying both, or neither, is rejected with a `400`.
-          type: boolean
-        compatibleNetworkIds:
-          description: Target network IDs to activate the source wallet on. Each network must be key-compatible with the source wallet's network; incompatible entries are reported as `FAILED` in the response without affecting other entries. Mutually exclusive with `activateAllCompatibleNetworks` — provide exactly one.
+        data:
           type: array
           items:
-            type: string
-            description: A network ID that shares cryptographic key derivation with the source wallet's network
-          maxItems: 25
-          minItems: 1
-      title: ActivateWalletRequest
-    Page:
-      description: Pagination info
-      type: object
-      properties:
-        next:
-          description: URL to use to query for the next page or null if no additional results are available
-          type:
-          - string
-          - 'null'
-          example: <next page url>
-          x-omitempty: false
-      title: Page
-    VaultsWalletsRequest:
-      type: object
-      properties:
-        activateAllCompatibleNetworks:
-          description: When `true`, activate the new wallet on every network that is key-compatible with `networkId` and enabled for your organization — the same set returned by `compatibleNetworkIds` on `/asset-types` — without enumerating them. Mutually exclusive with `compatibleNetworkIds`; supplying both is rejected with a `400`.
-          type: boolean
-        compatibleNetworkIds:
-          description: Optional list of additional compatible network IDs to activate this wallet on. All networks must share the same key family as the primary networkId. Activation on these networks happens synchronously after the initial wallet creation.
-          type: array
-          items:
-            type: string
-        networkId:
-          description: The ID of the network for assets in this wallet.
-          type: string
-          example: BTC
-        subaccountId:
-          description: The Subaccount Identifier to link this wallet.(in development / early access)
-          type: string
-        walletName:
-          description: The name of the Wallet.
-          type:
-          - string
-          - 'null'
-          example: Bitcoin Mainnet - Wallet 1
+            $ref: '#/components/schemas/WalletRewardsDetails'
+        page:
+          $ref: '#/components/schemas/Page'
       required:
-      - networkId
-      title: VaultsWalletsRequest
+      - data
+      - page
+      title: WalletRewardsResponse
+    WalletsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WalletDetails'
+        page:
+          $ref: '#/components/schemas/Page'
+      required:
+      - data
+      - page
+      title: WalletsResponse
+    ErrorDetails:
+      type: object
+      properties:
+        errorType:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - errorType
+      - message
+      title: ErrorDetails
+    Amount_2:
+      description: Combines an asset identifier with a decimal string value
+      type: object
+      properties:
+        amount:
+          description: Amount as a decimal string. Amounts never include fees.
+          type: string
+          example: '10.45234733'
+        assetType:
+          description: A unique string identifying a specific asset on a specific blockchain and environment (testnet, mainnet).
+          type: string
+          example: ETH
+      required:
+      - assetType
+      - amount
     ListWalletsResponse:
       type: object
       properties:
@@ -1599,27 +1614,102 @@ components:
       required:
       - data
       - page
-    WalletAddressSignatureVersion:
-      description: 'Version of the address signature scheme used.
-
-
-        * `V1` - The original scheme. Verify the `signature` against your organization''s fixed Ed25519 public key (provided by Anchorage Digital out-of-band).
-
-        * `V2` - The newer scheme. Verify the `signature` against the leaf certificate''s public key from the `certChain` field, and verify the certificate chain against the Anchorage Digital Address Signing Root CA.'
-      type: string
-      enum:
-      - V1
-      - V2
-    ErrorDetails_2:
+    BatchActivateWalletsFromListRequest:
+      description: Activate specific wallets for new target networks. Creates new wallets (one per source × target combination) that share keys with the source wallets.
       type: object
       properties:
-        message:
-          description: A human-readable message providing more details about the error.
+        addressGenerationType:
+          description: Address format type for the activated wallets. Only applicable to Bitcoin-like networks. Defaults to the target network's default address format if not specified.
+          allOf:
+          - $ref: '#/components/schemas/AddressGenerationType'
+        idempotencyKey:
+          description: Client-provided idempotency key to ensure request is processed only once
           type: string
-          example: Missing required field 'amount'.
+          example: e763a50d-aa82-4ec7-b5a3-89ad0462d248
+          maxLength: 128
+        sourceWalletIds:
+          description: Array of existing wallet IDs to activate for the target networks. Each wallet's source network is implied by the wallet itself.
+          type: array
+          items:
+            type: string
+          minItems: 1
+        targetNetworkIds:
+          description: Array of target network IDs. For each source wallet, creates new wallets on all target networks sharing the source's keys. Total wallets created = number of sourceWalletIds × number of targetNetworkIds.
+          type: array
+          items:
+            type: string
+          minItems: 1
+      additionalProperties: false
       required:
-      - message
-      title: ErrorDetails
+      - sourceWalletIds
+      - targetNetworkIds
+      title: Batch Activate Wallets From List Request
+    BatchCreateWalletsRequest:
+      description: Create wallet sets with fresh keys across multiple networks. A wallet exists on exactly one network.
+      type: object
+      properties:
+        addressGenerationType:
+          description: Address format type for the created wallets. Only applicable to Bitcoin-like networks (BTC, BCH, LTC, DOGE). Defaults to the network's default address format if not specified.
+          allOf:
+          - $ref: '#/components/schemas/AddressGenerationType'
+        count:
+          description: Number of wallet sets to create (not total wallets). Total wallets created = count × number of networkIds.
+          type: integer
+          minimum: 1
+        idempotencyKey:
+          description: Client-provided idempotency key to ensure request is processed only once
+          type: string
+          example: e763a50d-aa82-4ec7-b5a3-89ad0462d248
+          maxLength: 128
+        networkIds:
+          description: Array of network IDs. Creates `count` wallet sets, where each set contains one wallet per network, all sharing the same cryptographic keys. Total wallets created = count × number of networks.
+          type: array
+          items:
+            type: string
+          minItems: 1
+        vaultId:
+          description: The vault ID in which to create wallets
+          type: string
+        walletNamePrefix:
+          description: Wallet name identifier. The wallet name prefix is directly used as wallet name if count = 1. If count is >1 then the wallet name prefix is appended with the batch_id and a index from 1 to count.
+          type: string
+      additionalProperties: false
+      required:
+      - vaultId
+      - networkIds
+      - count
+      title: Batch Create Wallets Request
+    RewardEntry:
+      description: A single reward entry with type, date, amount, and optional transaction and staking position references
+      type: object
+      properties:
+        amount:
+          $ref: '#/components/schemas/Amount_2'
+        date:
+          description: The date for this reward entry in `YYYY-MM-DD` format (UTC)
+          type: string
+          format: date
+          example: '2024-01-15'
+        rewardType:
+          description: The type of reward. Will be one of the reward types you specified in the rewardTypes query parameter.
+          type: string
+          example: CONSENSUS_LAYER_REWARDS
+        stakingPositionId:
+          description: The unique identifier of the staking position that earned this reward, if applicable. May be null for rewards not associated with a specific staking position.
+          type:
+          - string
+          - 'null'
+          example: pos_550e8400-e29b-41d4-a716-446655440000
+        transactionHash:
+          description: The blockchain transaction hash associated with this reward, if available. May be null for rewards that don't correspond to a specific on-chain transaction or for aggregated rewards spanning multiple transactions.
+          type:
+          - string
+          - 'null'
+          example: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
+      required:
+      - date
+      - rewardType
+      - amount
     WalletRewardsListResponse:
       type: object
       properties:
@@ -1632,6 +1722,23 @@ components:
       required:
       - data
       - page
+    BatchStatusResponse:
+      description: Status of a batch operation
+      type: object
+      properties:
+        batchId:
+          description: The unique identifier for the batch operation
+          type: string
+        status:
+          description: Overall status of the batch operation
+          type: string
+          enum:
+          - PENDING
+          - COMPLETED
+          - FAILED
+      required:
+      - batchId
+      - status
     WalletAddress:
       description: "A blockchain address in a wallet. Each address includes a cryptographic signature that proves the address was generated by Anchorage Digital for your organization.\n\n## Signature Verification\n\nThe signature allows you to verify that an address string is authentic before using it for sensitive operations (like withdrawals to that address).\n\nCheck the `signatureVersion` field to determine which verification scheme applies. For complete verification steps, sample code, and Root CA values, see the Address verification guide docs.\n\n### V1 Address Signatures\n\nThe steps for verifying V1 address signatures are as follows:\n1. Check the validity of the signature\n   - Decode the `signedJson` field from hex to bytes\n   - Decode the `signature` field from hex to bytes\n   - Using your organization's verification public key (provided by Anchorage Digital), verify that the signature bytes are a valid Ed25519 signature of the signedJson bytes\n2. Verify the address that was signed matches the one that will be used\n   - Decode the `signedJson` field from hex to bytes\n   - Parse the bytes as a JSON object (e.g., `{\"TextAddress\":\"0x123...\"}`)\n   - Verify the address to be used matches the value of the `TextAddress` property from the JSON object\n\n**Important**: It is not sufficient to validate the signature without also validating that the address signed matches the address to be used.\n\n**Note**: The JSON object may contain additional properties in future versions. API clients must not use strict JSON parsers which disallow extra, unknown properties.\n\n**Verification Public Key**: Contact your Anchorage Digital representative to obtain the verification public key for your organization. This key is unique per organization and fixed for the lifetime of that organization.\n\n### V2 Address Signatures\n\nAddresses with `signatureVersion` set to `V2` also include a `certChain` field containing an X.509 certificate chain in PEM format.\n\nThe steps for verifying V2 address signatures are as follows:\n1. Verify the certificate chain:\n   - Parse the `certChain` field as PEM-encoded X.509 certificates (leaf at index 0, then intermediates)\n   - Verify the chain up to the hard-coded Anchorage Digital Address Signing Root CA (see Address verification guide docs)\n   - Verify all certificates are valid at the current time (both notAfter and notBefore)\n   - Verify the leaf certificate's Subject Alternative Names include `address-provider.anchorage.internal`\n   - Verify the leaf certificate's KeyUsage includes both `digitalSignature` and `nonRepudiation` (also known as `contentCommitment`)\n   - Extract the public key from the leaf certificate\n2. Verify the signature:\n   - Decode the `signedJson` field from hex to bytes\n   - Decode the `signature` field from hex to bytes\n   - Using the public key from the leaf certificate, verify that `signature` is a valid signature of the `signedJson` bytes\n3. Verify the signed details:\n   - Parse the `signedJson` bytes as JSON\n   - Verify `SignatureExpiresAt` is greater than or equal to the current UTC Unix timestamp\n   - Verify `TextAddress` matches the address to be used\n   - Verify `VaultId` matches your expected Vault ID\n   - Verify `NetworkId` matches the expected network for this address\n\n**Note**: API clients must not use strict JSON parsers which disallow unknown properties, as future versions may add new fields to the signed payload.\n\n**Note**: Anchorage Digital periodically refreshes V2 signatures and the certificate chain before expiration. The address itself does not change."
       type: object
@@ -1671,80 +1778,58 @@ components:
       - signature
       - walletId
       - signatureVersion
-    RewardEntry:
-      description: A single reward entry with type, date, amount, and optional transaction and staking position references
+    AddressGenerationType:
+      description: 'Address format type for Bitcoin-like blockchains.
+
+
+        * `DEFAULT` - Network''s default format (P2SH-P2WPKH for most networks)
+
+        * `BITCOINLIKE_P2PKH` - Legacy Pay-to-Public-Key-Hash addresses (starts with ''1'' for Bitcoin)
+
+        * `BITCOINLIKE_P2SH_P2WPKH` - Wrapped SegWit addresses (starts with ''3'' for Bitcoin)
+
+        * `BITCOINLIKE_P2TR` - Taproot addresses (starts with ''bc1p'' for Bitcoin)'
+      type: string
+      default: DEFAULT
+      enum:
+      - DEFAULT
+      - BITCOINLIKE_P2PKH
+      - BITCOINLIKE_P2SH_P2WPKH
+      - BITCOINLIKE_P2TR
+    WalletDetailsResponse:
+      description: Detailed information about a wallet
       type: object
       properties:
-        amount:
-          $ref: '#/components/schemas/Amount_2'
-        date:
-          description: The date for this reward entry in `YYYY-MM-DD` format (UTC)
-          type: string
-          format: date
-          example: '2024-01-15'
-        rewardType:
-          description: The type of reward. Will be one of the reward types you specified in the rewardTypes query parameter.
-          type: string
-          example: CONSENSUS_LAYER_REWARDS
-        stakingPositionId:
-          description: The unique identifier of the staking position that earned this reward, if applicable. May be null for rewards not associated with a specific staking position.
-          type:
-          - string
-          - 'null'
-          example: pos_550e8400-e29b-41d4-a716-446655440000
-        transactionHash:
-          description: The blockchain transaction hash associated with this reward, if available. May be null for rewards that don't correspond to a specific on-chain transaction or for aggregated rewards spanning multiple transactions.
-          type:
-          - string
-          - 'null'
-          example: '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
+        wallet:
+          $ref: '#/components/schemas/Wallet'
       required:
-      - date
-      - rewardType
-      - amount
-    BatchStatusResponse:
-      description: Status of a batch operation
+      - wallet
+    Wallet:
+      description: A wallet containing blockchain addresses
       type: object
       properties:
-        batchId:
-          description: The unique identifier for the batch operation
+        latestAddress:
+          description: The most recently created address in this wallet, including signature for verification
+          allOf:
+          - $ref: '#/components/schemas/WalletAddress'
+        name:
+          description: Human-readable name for the wallet
           type: string
-        status:
-          description: Overall status of the batch operation
+        networkId:
+          description: A unique string identifying a combination of blockchain and environment (testnet, mainnet).
           type: string
-          enum:
-          - PENDING
-          - COMPLETED
-          - FAILED
+        vaultId:
+          description: The vault ID containing this wallet
+          type: string
+        walletId:
+          description: The unique identifier for the wallet
+          type: string
       required:
-      - batchId
-      - status
-    WalletRewardsResponse_2:
-      description: Response containing daily rewards over a date range for a specific reward type
-      type: object
-      properties:
-        rewards:
-          description: Array of daily reward entries, one per day in the requested range
-          type: array
-          items:
-            $ref: '#/components/schemas/DailyRewardEntry'
-      required:
-      - rewards
-    CreateWalletsBatchRequest:
-      description: 'Request to create or activate multiple wallets in a batch operation. A wallet exists on exactly one network.
-
-
-        Supports three mutually exclusive patterns:
-
-        1. **Batch Create**: Create wallet sets across networks. Each set contains one wallet per network, all sharing keys.
-
-        2. **Batch Activate (List)**: Activate specific wallets for new networks. Creates new wallets sharing keys with the specified sources.
-
-        3. **Batch Activate (Vault)**: Activate all wallets in a vault/network for new networks. Creates new wallets sharing keys with each source.'
-      oneOf:
-      - $ref: '#/components/schemas/BatchCreateWalletsRequest'
-      - $ref: '#/components/schemas/BatchActivateWalletsFromListRequest'
-      - $ref: '#/components/schemas/BatchActivateWalletsFromVaultRequest'
+      - walletId
+      - vaultId
+      - networkId
+      - name
+      - latestAddress
     BatchActivateWalletsFromVaultRequest:
       description: Activate all wallets in a vault/network for new target networks. For each wallet in the vault on the source network, creates new wallets on the target networks sharing the same keys.
       type: object
@@ -1776,6 +1861,73 @@ components:
       - sourceNetworkId
       - targetNetworkIds
       title: Batch Activate Wallets From Vault Request
+    WalletAddressSignatureVersion:
+      description: 'Version of the address signature scheme used.
+
+
+        * `V1` - The original scheme. Verify the `signature` against your organization''s fixed Ed25519 public key (provided by Anchorage Digital out-of-band).
+
+        * `V2` - The newer scheme. Verify the `signature` against the leaf certificate''s public key from the `certChain` field, and verify the certificate chain against the Anchorage Digital Address Signing Root CA.'
+      type: string
+      enum:
+      - V1
+      - V2
+    Page_2:
+      description: Pagination info
+      type: object
+      properties:
+        endCursor:
+          description: Submit this parameter in the "after" field to fetch the next page.
+          type:
+          - string
+          - 'null'
+      title: Page
+    CreateBatchResponse:
+      description: Response from creating a batch operation
+      type: object
+      properties:
+        batchId:
+          description: The unique identifier for the batch operation. Poll the corresponding batch status endpoint to retrieve results.
+          type: string
+          example: batch_abc123xyz
+      required:
+      - batchId
+    CreateWalletsBatchRequest:
+      description: 'Request to create or activate multiple wallets in a batch operation. A wallet exists on exactly one network.
+
+
+        Supports three mutually exclusive patterns:
+
+        1. **Batch Create**: Create wallet sets across networks. Each set contains one wallet per network, all sharing keys.
+
+        2. **Batch Activate (List)**: Activate specific wallets for new networks. Creates new wallets sharing keys with the specified sources.
+
+        3. **Batch Activate (Vault)**: Activate all wallets in a vault/network for new networks. Creates new wallets sharing keys with each source.'
+      oneOf:
+      - $ref: '#/components/schemas/BatchCreateWalletsRequest'
+      - $ref: '#/components/schemas/BatchActivateWalletsFromListRequest'
+      - $ref: '#/components/schemas/BatchActivateWalletsFromVaultRequest'
+    WalletRewardsResponse_2:
+      description: Response containing daily rewards over a date range for a specific reward type
+      type: object
+      properties:
+        rewards:
+          description: Array of daily reward entries, one per day in the requested range
+          type: array
+          items:
+            $ref: '#/components/schemas/DailyRewardEntry'
+      required:
+      - rewards
+    ErrorDetails_2:
+      type: object
+      properties:
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - message
+      title: ErrorDetails
     DailyRewardEntry:
       description: Reward amount for a single day
       type: object
@@ -1794,158 +1946,6 @@ components:
       required:
       - date
       - amount
-    WalletDetailsResponse:
-      description: Detailed information about a wallet
-      type: object
-      properties:
-        wallet:
-          $ref: '#/components/schemas/Wallet'
-      required:
-      - wallet
-    Amount_2:
-      description: Combines an asset identifier with a decimal string value
-      type: object
-      properties:
-        amount:
-          description: Amount as a decimal string. Amounts never include fees.
-          type: string
-          example: '10.45234733'
-        assetType:
-          description: A unique string identifying a specific asset on a specific blockchain and environment (testnet, mainnet).
-          type: string
-          example: ETH
-      required:
-      - assetType
-      - amount
-    Wallet:
-      description: A wallet containing blockchain addresses
-      type: object
-      properties:
-        latestAddress:
-          description: The most recently created address in this wallet, including signature for verification
-          allOf:
-          - $ref: '#/components/schemas/WalletAddress'
-        name:
-          description: Human-readable name for the wallet
-          type: string
-        networkId:
-          description: A unique string identifying a combination of blockchain and environment (testnet, mainnet).
-          type: string
-        vaultId:
-          description: The vault ID containing this wallet
-          type: string
-        walletId:
-          description: The unique identifier for the wallet
-          type: string
-      required:
-      - walletId
-      - vaultId
-      - networkId
-      - name
-      - latestAddress
-    BatchCreateWalletsRequest:
-      description: Create wallet sets with fresh keys across multiple networks. A wallet exists on exactly one network.
-      type: object
-      properties:
-        addressGenerationType:
-          description: Address format type for the created wallets. Only applicable to Bitcoin-like networks (BTC, BCH, LTC, DOGE). Defaults to the network's default address format if not specified.
-          allOf:
-          - $ref: '#/components/schemas/AddressGenerationType'
-        count:
-          description: Number of wallet sets to create (not total wallets). Total wallets created = count × number of networkIds.
-          type: integer
-          minimum: 1
-        idempotencyKey:
-          description: Client-provided idempotency key to ensure request is processed only once
-          type: string
-          example: e763a50d-aa82-4ec7-b5a3-89ad0462d248
-          maxLength: 128
-        networkIds:
-          description: Array of network IDs. Creates `count` wallet sets, where each set contains one wallet per network, all sharing the same cryptographic keys. Total wallets created = count × number of networks.
-          type: array
-          items:
-            type: string
-          minItems: 1
-        vaultId:
-          description: The vault ID in which to create wallets
-          type: string
-        walletNamePrefix:
-          description: Wallet name identifier. The wallet name prefix is directly used as wallet name if count = 1. If count is >1 then the wallet name prefix is appended with the batch_id and a index from 1 to count.
-          type: string
-      additionalProperties: false
-      required:
-      - vaultId
-      - networkIds
-      - count
-      title: Batch Create Wallets Request
-    CreateBatchResponse:
-      description: Response from creating a batch operation
-      type: object
-      properties:
-        batchId:
-          description: The unique identifier for the batch operation. Poll the corresponding batch status endpoint to retrieve results.
-          type: string
-          example: batch_abc123xyz
-      required:
-      - batchId
-    AddressGenerationType:
-      description: 'Address format type for Bitcoin-like blockchains.
-
-
-        * `DEFAULT` - Network''s default format (P2SH-P2WPKH for most networks)
-
-        * `BITCOINLIKE_P2PKH` - Legacy Pay-to-Public-Key-Hash addresses (starts with ''1'' for Bitcoin)
-
-        * `BITCOINLIKE_P2SH_P2WPKH` - Wrapped SegWit addresses (starts with ''3'' for Bitcoin)
-
-        * `BITCOINLIKE_P2TR` - Taproot addresses (starts with ''bc1p'' for Bitcoin)'
-      type: string
-      default: DEFAULT
-      enum:
-      - DEFAULT
-      - BITCOINLIKE_P2PKH
-      - BITCOINLIKE_P2SH_P2WPKH
-      - BITCOINLIKE_P2TR
-    BatchActivateWalletsFromListRequest:
-      description: Activate specific wallets for new target networks. Creates new wallets (one per source × target combination) that share keys with the source wallets.
-      type: object
-      properties:
-        addressGenerationType:
-          description: Address format type for the activated wallets. Only applicable to Bitcoin-like networks. Defaults to the target network's default address format if not specified.
-          allOf:
-          - $ref: '#/components/schemas/AddressGenerationType'
-        idempotencyKey:
-          description: Client-provided idempotency key to ensure request is processed only once
-          type: string
-          example: e763a50d-aa82-4ec7-b5a3-89ad0462d248
-          maxLength: 128
-        sourceWalletIds:
-          description: Array of existing wallet IDs to activate for the target networks. Each wallet's source network is implied by the wallet itself.
-          type: array
-          items:
-            type: string
-          minItems: 1
-        targetNetworkIds:
-          description: Array of target network IDs. For each source wallet, creates new wallets on all target networks sharing the source's keys. Total wallets created = number of sourceWalletIds × number of targetNetworkIds.
-          type: array
-          items:
-            type: string
-          minItems: 1
-      additionalProperties: false
-      required:
-      - sourceWalletIds
-      - targetNetworkIds
-      title: Batch Activate Wallets From List Request
-    Page_2:
-      description: Pagination info
-      type: object
-      properties:
-        endCursor:
-          description: Submit this parameter in the "after" field to fetch the next page.
-          type:
-          - string
-          - 'null'
-      title: Page
   securitySchemes:
     Api-Access-Key:
       type: apiKey

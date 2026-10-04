@@ -237,45 +237,40 @@ paths:
       - Balances
 components:
   schemas:
-    EthereumStakingPositionDetails:
-      description: Ethereum-specific staking position information
+    Amount:
+      description: Combines an asset identifier with a decimal string value
       type: object
       properties:
-        stakingProvider:
-          description: The entity running the validator infrastructure
-          type:
-          - string
-          - 'null'
-          enum:
-          - FIGMENT
-          - BLOCKDAEMON
+        amount:
+          description: Amount as a decimal string. Amounts never include fees.
+          type: string
+          example: '10.45234733'
+        assetType:
+          description: A unique string identifying a specific asset on a specific blockchain and environment (testnet, mainnet).
+          type: string
+          example: ETH
+      required:
+      - assetType
+      - amount
+    AvalanchePChainStakingPositionDetails:
+      description: Avalanche P-Chain-specific staking position information. P-Chain staking is time-locked with no early exit; funds are returned automatically at the end of the staking period.
+      type: object
+      properties:
         type:
           description: Discriminator field
           type: string
-          default: ETHEREUM
+          default: AVALANCHE_PCHAIN
           enum:
-          - ETHEREUM
-        validatorPublicKey:
-          description: BLS12-381 public key of the validator (48 bytes, hex encoded)
+          - AVALANCHE_PCHAIN
+        validatorAddress:
+          description: Node ID of the validator this stake is delegated to (e.g. NodeID-abc123). Null when the position cannot be correlated to a specific validator.
           type:
           - string
           - 'null'
-          example: '0x93247f2209abcacf57b75a51dafae777f9dd38bc7053d1af526f220a7489a6d3a2753e5f3e8b1cfe39b56f43611df74a'
+          example: NodeID-CaBYJ9kzHvrQFiYCckne1QM8R9zMjgVzp
       required:
       - type
-      title: Ethereum Staking Position Details
-    StakingPositionsResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/StakingPosition'
-        page:
-          $ref: '#/components/schemas/Page'
-      required:
-      - data
-      - page
+      title: Avalanche P-Chain Staking Position Details
     SolanaStakingPositionDetails:
       description: Solana-specific staking position information
       type: object
@@ -348,6 +343,32 @@ components:
       - INACTIVE_STAKE
       - ACTIVATING_STAKE
       - DEACTIVATING_STAKE
+    HyperCoreStakingPositionDetails:
+      description: HyperCore-specific staking position information. HyperCore delegates directly to validators (no third-party staking provider), so the validator address is the position identifier.
+      type: object
+      properties:
+        delegationUnlockAt:
+          description: Timestamp (RFC 3339) until which this delegated position is locked — i.e. when it first becomes eligible to undelegate (HyperCore's ~1-day delegation lock). Present only for actively delegated positions; null for wallet-level UNBOND/UNBONDED positions or when the validator has not reported a lock.
+          type:
+          - string
+          - 'null'
+          format: date-time
+          example: '2026-06-07T12:00:00Z'
+        type:
+          description: Discriminator field
+          type: string
+          default: HYPERCORE
+          enum:
+          - HYPERCORE
+        validatorAddress:
+          description: Address of the validator this stake is delegated to. Empty for wallet-level positions in the unbonding (UNBOND) or unbonded (UNBONDED) states, which HyperCore does not associate with a specific validator.
+          type:
+          - string
+          - 'null'
+          example: '0xa012b9d2a8b1f7b8f8b9b3a1f0c9d8e7f6a5b4c3'
+      required:
+      - type
+      title: HyperCore Staking Position Details
     StakingPositionBalanceType:
       description: 'The type of balance for a staking position.
 
@@ -365,6 +386,17 @@ components:
       - INACTIVE_STAKE
       - ACTIVATING_STAKE
       - DEACTIVATING_STAKE
+    WalletBalancesResponse:
+      description: Response containing wallet balance details
+      type: object
+      properties:
+        balances:
+          description: Array of balance entries for this wallet
+          type: array
+          items:
+            $ref: '#/components/schemas/WalletBalanceEntry'
+      required:
+      - balances
     WalletBalanceEntry:
       description: A single balance entry with type and amount
       type: object
@@ -373,6 +405,17 @@ components:
           $ref: '#/components/schemas/Amount'
         balanceType:
           $ref: '#/components/schemas/WalletBalanceType'
+      required:
+      - balanceType
+      - amount
+    StakingPositionBalanceEntry:
+      description: A single balance entry for a staking position
+      type: object
+      properties:
+        amount:
+          $ref: '#/components/schemas/Amount'
+        balanceType:
+          $ref: '#/components/schemas/StakingPositionBalanceType'
       required:
       - balanceType
       - amount
@@ -397,6 +440,43 @@ components:
             $ref: '#/components/schemas/StakingPositionBalanceEntry'
       required:
       - balances
+    Page:
+      description: Pagination info
+      type: object
+      properties:
+        endCursor:
+          description: Submit this parameter in the "after" field to fetch the next page.
+          type:
+          - string
+          - 'null'
+      title: Page
+    EthereumStakingPositionDetails:
+      description: Ethereum-specific staking position information
+      type: object
+      properties:
+        stakingProvider:
+          description: The entity running the validator infrastructure
+          type:
+          - string
+          - 'null'
+          enum:
+          - FIGMENT
+          - BLOCKDAEMON
+        type:
+          description: Discriminator field
+          type: string
+          default: ETHEREUM
+          enum:
+          - ETHEREUM
+        validatorPublicKey:
+          description: BLS12-381 public key of the validator (48 bytes, hex encoded)
+          type:
+          - string
+          - 'null'
+          example: '0x93247f2209abcacf57b75a51dafae777f9dd38bc7053d1af526f220a7489a6d3a2753e5f3e8b1cfe39b56f43611df74a'
+      required:
+      - type
+      title: Ethereum Staking Position Details
     StakingPosition:
       description: High-level information about a staking position
       type: object
@@ -425,98 +505,18 @@ components:
       - positionId
       - networkId
       - networkSpecific
-    Amount:
-      description: Combines an asset identifier with a decimal string value
+    StakingPositionsResponse:
       type: object
       properties:
-        amount:
-          description: Amount as a decimal string. Amounts never include fees.
-          type: string
-          example: '10.45234733'
-        assetType:
-          description: A unique string identifying a specific asset on a specific blockchain and environment (testnet, mainnet).
-          type: string
-          example: ETH
-      required:
-      - assetType
-      - amount
-    StakingPositionBalanceEntry:
-      description: A single balance entry for a staking position
-      type: object
-      properties:
-        amount:
-          $ref: '#/components/schemas/Amount'
-        balanceType:
-          $ref: '#/components/schemas/StakingPositionBalanceType'
-      required:
-      - balanceType
-      - amount
-    AvalanchePChainStakingPositionDetails:
-      description: Avalanche P-Chain-specific staking position information. P-Chain staking is time-locked with no early exit; funds are returned automatically at the end of the staking period.
-      type: object
-      properties:
-        type:
-          description: Discriminator field
-          type: string
-          default: AVALANCHE_PCHAIN
-          enum:
-          - AVALANCHE_PCHAIN
-        validatorAddress:
-          description: Node ID of the validator this stake is delegated to (e.g. NodeID-abc123). Null when the position cannot be correlated to a specific validator.
-          type:
-          - string
-          - 'null'
-          example: NodeID-CaBYJ9kzHvrQFiYCckne1QM8R9zMjgVzp
-      required:
-      - type
-      title: Avalanche P-Chain Staking Position Details
-    Page:
-      description: Pagination info
-      type: object
-      properties:
-        endCursor:
-          description: Submit this parameter in the "after" field to fetch the next page.
-          type:
-          - string
-          - 'null'
-      title: Page
-    WalletBalancesResponse:
-      description: Response containing wallet balance details
-      type: object
-      properties:
-        balances:
-          description: Array of balance entries for this wallet
+        data:
           type: array
           items:
-            $ref: '#/components/schemas/WalletBalanceEntry'
+            $ref: '#/components/schemas/StakingPosition'
+        page:
+          $ref: '#/components/schemas/Page'
       required:
-      - balances
-    HyperCoreStakingPositionDetails:
-      description: HyperCore-specific staking position information. HyperCore delegates directly to validators (no third-party staking provider), so the validator address is the position identifier.
-      type: object
-      properties:
-        delegationUnlockAt:
-          description: Timestamp (RFC 3339) until which this delegated position is locked — i.e. when it first becomes eligible to undelegate (HyperCore's ~1-day delegation lock). Present only for actively delegated positions; null for wallet-level UNBOND/UNBONDED positions or when the validator has not reported a lock.
-          type:
-          - string
-          - 'null'
-          format: date-time
-          example: '2026-06-07T12:00:00Z'
-        type:
-          description: Discriminator field
-          type: string
-          default: HYPERCORE
-          enum:
-          - HYPERCORE
-        validatorAddress:
-          description: Address of the validator this stake is delegated to. Empty for wallet-level positions in the unbonding (UNBOND) or unbonded (UNBONDED) states, which HyperCore does not associate with a specific validator.
-          type:
-          - string
-          - 'null'
-          example: '0xa012b9d2a8b1f7b8f8b9b3a1f0c9d8e7f6a5b4c3'
-      required:
-      - type
-      title: HyperCore Staking Position Details
+      - data
+      - page
   securitySchemes:
     Api-Access-Key:
       type: apiKey

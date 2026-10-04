@@ -254,46 +254,6 @@ components:
           $ref: '#/components/schemas/TaxTransactionUpdateCostBasisResponseId'
       required:
       - data
-    TaxTransactionUpdateCostBasisResponseId:
-      description: Response data containing transaction ID
-      type: object
-      properties:
-        transactionId:
-          description: The unique identifier of the transaction
-          type: string
-          example: 9cd9f4d4-078b-4e44-a308-7662fec0f546
-      required:
-      - transactionId
-    ErrorType:
-      description: The type of error returned.
-      type: string
-      enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
-    ErrorDetails:
-      type: object
-      properties:
-        errorType:
-          $ref: '#/components/schemas/ErrorType'
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - errorType
-      - message
-      title: ErrorDetails
     TaxAccount:
       description: A tax account for the organization
       type: object
@@ -315,31 +275,71 @@ components:
       - id
       - name
       - createdAt
-    TaxTransactionUpdateCostBasisRequest:
-      description: Request to update cost basis for a transaction
+    TaxTransactionLot:
+      description: A tax lot, representing an asset quantity with its associated cost basis and acquisition date
       type: object
       properties:
-        lots:
-          description: An array of tax lots that are part of this transaction. Each lot specifies the quantity, cost basis and the acquisition date.
-          type: array
-          items:
-            $ref: '#/components/schemas/TaxTransactionInputLot'
-          minItems: 1
-          uniqueItems: true
+        acquisitionDatetime:
+          description: ISO-8601 timestamp representing when this lot was originally acquired
+          type: string
+          format: date-time
+        costBasis:
+          description: The cost basis of this lot.
+          type: string
+          example: '2500'
+        quantity:
+          description: The quantity of this lot.
+          type: string
+          example: '1.0'
       required:
-      - lots
-    TaxAccountsResponse:
+      - quantity
+    ErrorType:
+      description: The type of error returned.
+      type: string
+      enum:
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
+    TaxTransactionUpdateCostBasisResponseId:
+      description: Response data containing transaction ID
       type: object
       properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/TaxAccount'
-        page:
-          $ref: '#/components/schemas/Page'
+        transactionId:
+          description: The unique identifier of the transaction
+          type: string
+          example: 9cd9f4d4-078b-4e44-a308-7662fec0f546
       required:
-      - data
-      - page
+      - transactionId
+    TaxTransactionInputLot:
+      description: A tax lot in a cost basis update request, with required cost basis
+      allOf:
+      - $ref: '#/components/schemas/TaxTransactionLot'
+      - required:
+        - costBasis
+        - acquisitionDatetime
+    ErrorDetails:
+      type: object
+      properties:
+        errorType:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - errorType
+      - message
+      title: ErrorDetails
     TaxAccountTransaction:
       description: Details of an external transaction into Anchorage Digital
       type: object
@@ -383,31 +383,19 @@ components:
           example: <next page url>
           x-omitempty: false
       title: Page
-    TaxTransactionInputLot:
-      description: A tax lot in a cost basis update request, with required cost basis
-      allOf:
-      - $ref: '#/components/schemas/TaxTransactionLot'
-      - required:
-        - costBasis
-        - acquisitionDatetime
-    TaxTransactionLot:
-      description: A tax lot, representing an asset quantity with its associated cost basis and acquisition date
+    TaxTransactionUpdateCostBasisRequest:
+      description: Request to update cost basis for a transaction
       type: object
       properties:
-        acquisitionDatetime:
-          description: ISO-8601 timestamp representing when this lot was originally acquired
-          type: string
-          format: date-time
-        costBasis:
-          description: The cost basis of this lot.
-          type: string
-          example: '2500'
-        quantity:
-          description: The quantity of this lot.
-          type: string
-          example: '1.0'
+        lots:
+          description: An array of tax lots that are part of this transaction. Each lot specifies the quantity, cost basis and the acquisition date.
+          type: array
+          items:
+            $ref: '#/components/schemas/TaxTransactionInputLot'
+          minItems: 1
+          uniqueItems: true
       required:
-      - quantity
+      - lots
     TaxAccountTransactionsResponse:
       type: object
       properties:
@@ -415,6 +403,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TaxAccountTransaction'
+        page:
+          $ref: '#/components/schemas/Page'
+      required:
+      - data
+      - page
+    TaxAccountsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaxAccount'
         page:
           $ref: '#/components/schemas/Page'
       required:

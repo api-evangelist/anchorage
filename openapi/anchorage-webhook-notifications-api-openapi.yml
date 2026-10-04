@@ -623,33 +623,18 @@ paths:
       - Webhook Notifications
 components:
   schemas:
-    WebhookEndpointSubscription:
+    CreateWebhookSubscriptionsResponse:
+      type: object
+      properties: {}
+      title: CreateWebhookSubscriptionsResponse
+    NewWebhookEndpointSubscription:
       type: object
       properties:
-        createdAt:
-          type: string
-          format: date-time
         eventTypeId:
           type: string
-      required:
-      - createdAt
-      - eventTypeId
-    WebhookEndpointPatch:
-      type: object
-      properties:
-        description:
-          type: string
-        publicKey:
-          type: string
-        subscriptions:
-          type: array
-          items:
-            $ref: '#/components/schemas/NewWebhookEndpointSubscription'
-        url:
-          type: string
-          format: uri
       additionalProperties: false
-      title: WebhookEndpointPatch
+      required:
+      - eventTypeId
     ErrorType:
       description: The type of error returned.
       type: string
@@ -678,19 +663,17 @@ components:
       required:
       - data
       title: CreateWebhookEndpointsResponse
-    ErrorDetails:
+    WebhookEndpointSubscription:
       type: object
       properties:
-        errorType:
-          $ref: '#/components/schemas/ErrorType'
-        message:
-          description: A human-readable message providing more details about the error.
+        createdAt:
           type: string
-          example: Missing required field 'amount'.
+          format: date-time
+        eventTypeId:
+          type: string
       required:
-      - errorType
-      - message
-      title: ErrorDetails
+      - createdAt
+      - eventTypeId
     WebhookEndpointResponse:
       type: object
       properties:
@@ -728,43 +711,6 @@ components:
       - createdAt
       - url
       title: WebhookEndpoint
-    NewWebhookEndpointSubscription:
-      type: object
-      properties:
-        eventTypeId:
-          type: string
-      additionalProperties: false
-      required:
-      - eventTypeId
-    CreateWebhookSubscriptionsResponse:
-      type: object
-      properties: {}
-      title: CreateWebhookSubscriptionsResponse
-    Page:
-      description: Pagination info
-      type: object
-      properties:
-        next:
-          description: URL to use to query for the next page or null if no additional results are available
-          type:
-          - string
-          - 'null'
-          example: <next page url>
-          x-omitempty: false
-      title: Page
-    WebhookEventType:
-      type: object
-      properties:
-        description:
-          type: string
-        id:
-          type: string
-      example:
-        id: transfer.completed
-        description: Notification of a successful transfer that is now completed
-      required:
-      - id
-      - description
     NewWebhookEndpoint:
       type: object
       properties:
@@ -796,6 +742,60 @@ components:
       required:
       - url
       title: NewWebhookEndpoint
+    ErrorDetails:
+      type: object
+      properties:
+        errorType:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - errorType
+      - message
+      title: ErrorDetails
+    WebhookEndpointPatch:
+      type: object
+      properties:
+        description:
+          type: string
+        publicKey:
+          type: string
+        subscriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/NewWebhookEndpointSubscription'
+        url:
+          type: string
+          format: uri
+      additionalProperties: false
+      title: WebhookEndpointPatch
+    WebhookEventType:
+      type: object
+      properties:
+        description:
+          type: string
+        id:
+          type: string
+      example:
+        id: transfer.completed
+        description: Notification of a successful transfer that is now completed
+      required:
+      - id
+      - description
+    Page:
+      description: Pagination info
+      type: object
+      properties:
+        next:
+          description: URL to use to query for the next page or null if no additional results are available
+          type:
+          - string
+          - 'null'
+          example: <next page url>
+          x-omitempty: false
+      title: Page
   securitySchemes:
     Api-Access-Key:
       type: apiKey

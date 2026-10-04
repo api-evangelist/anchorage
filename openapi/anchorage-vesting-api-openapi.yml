@@ -216,21 +216,23 @@ paths:
         Read vault activity: present
 components:
   schemas:
-    WalletInfo:
+    GetVestingBalancesBatchRequest:
       type: object
       properties:
-        address:
-          description: The public address of the wallet associated with this allocation
+        allocationIds:
+          description: List of allocation IDs to get vesting balances for
+          type: array
+          items:
+            type: string
+            minLength: 1
+          maxItems: 100
+          minItems: 1
+        stakeholderId:
+          description: The external stakeholder ID (optional, used to retrieve wallet info when no transactions exist yet)
           type: string
-          example: 0x1234567890abcdef...
-        walletId:
-          description: The ID of the wallet associated with this allocation
-          type: string
-          example: 3d293c0d64c703023692216e9b4f5280
       required:
-      - walletId
-      - address
-      title: WalletInfo
+      - allocationIds
+      title: GetVestingBalancesBatchRequest
     ErrorType:
       description: The type of error returned.
       type: string
@@ -271,105 +273,6 @@ components:
       - vestedAmount
       - vestingHolds
       title: OffchainVestingWalletAllocation
-    VestingBalance:
-      type: object
-      properties:
-        assetType:
-          description: A string representing a type of crypto-asset, which usually corresponds to the crypto asset's ticker symbol.
-          type: string
-          example: BTC
-        availableBalance:
-          description: Amount of tokens unlocked for this allocation
-          type: string
-          example: '1000.50000000'
-        externalTokenId:
-          description: The ID of the asset assigned by the external provider that funds these wallets
-          type: string
-          example: magna_token_123
-        lockedBalance:
-          description: Amount of tokens on hold to be released to this stakeholder for this allocation
-          type: string
-          example: '100.10000000'
-        networkId:
-          description: The network identifier for the blockchain network
-          type: string
-          example: ETHHOODI
-        unvestedBalance:
-          description: Amount of tokens still scheduled to be released to this stakeholder for this allocation
-          type: string
-          example: '500.25000000'
-      required:
-      - assetType
-      - externalTokenId
-      - networkId
-      - availableBalance
-      - unvestedBalance
-      - lockedBalance
-      title: VestingBalance
-    GetVestingBalancesBatchRequest:
-      type: object
-      properties:
-        allocationIds:
-          description: List of allocation IDs to get vesting balances for
-          type: array
-          items:
-            type: string
-            minLength: 1
-          maxItems: 100
-          minItems: 1
-        stakeholderId:
-          description: The external stakeholder ID (optional, used to retrieve wallet info when no transactions exist yet)
-          type: string
-      required:
-      - allocationIds
-      title: GetVestingBalancesBatchRequest
-    ErrorDetails:
-      type: object
-      properties:
-        errorType:
-          $ref: '#/components/schemas/ErrorType'
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - errorType
-      - message
-      title: ErrorDetails
-    VestingBalancesBatchResponse:
-      type: object
-      properties:
-        errorCount:
-          description: Number of allocations that failed
-          type: integer
-          example: 1
-        results:
-          description: Per-allocation vesting balance results
-          type: array
-          items:
-            $ref: '#/components/schemas/VestingBalancesResult'
-        successCount:
-          description: Number of allocations successfully processed
-          type: integer
-          example: 3
-      required:
-      - results
-      - successCount
-      - errorCount
-      title: VestingBalancesBatchResponse
-    OffchainVestingSchedulesResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/OffchainVestingSchedule'
-        page:
-          $ref: '#/components/schemas/Page'
-      required:
-      - data
-      - page
-      title: OffchainVestingSchedulesResponse
     OffchainVestingSchedule:
       type: object
       properties:
@@ -427,6 +330,118 @@ components:
       - unstakeable
       - assetType
       title: OffchainVestingSchedule
+    VestingBalance:
+      type: object
+      properties:
+        assetType:
+          description: A string representing a type of crypto-asset, which usually corresponds to the crypto asset's ticker symbol.
+          type: string
+          example: BTC
+        availableBalance:
+          description: Amount of tokens unlocked for this allocation
+          type: string
+          example: '1000.50000000'
+        externalTokenId:
+          description: The ID of the asset assigned by the external provider that funds these wallets
+          type: string
+          example: magna_token_123
+        lockedBalance:
+          description: Amount of tokens on hold to be released to this stakeholder for this allocation
+          type: string
+          example: '100.10000000'
+        networkId:
+          description: The network identifier for the blockchain network
+          type: string
+          example: ETHHOODI
+        unvestedBalance:
+          description: Amount of tokens still scheduled to be released to this stakeholder for this allocation
+          type: string
+          example: '500.25000000'
+      required:
+      - assetType
+      - externalTokenId
+      - networkId
+      - availableBalance
+      - unvestedBalance
+      - lockedBalance
+      title: VestingBalance
+    OffchainVestingSchedulesResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/OffchainVestingSchedule'
+        page:
+          $ref: '#/components/schemas/Page'
+      required:
+      - data
+      - page
+      title: OffchainVestingSchedulesResponse
+    VestingBalancesResponse:
+      type: object
+      properties:
+        balance:
+          $ref: '#/components/schemas/VestingBalance'
+        walletInfo:
+          $ref: '#/components/schemas/WalletInfo'
+      required:
+      - walletInfo
+      - balance
+      title: VestingBalancesResponse
+    VestingBalancesBatchResponse:
+      type: object
+      properties:
+        errorCount:
+          description: Number of allocations that failed
+          type: integer
+          example: 1
+        results:
+          description: Per-allocation vesting balance results
+          type: array
+          items:
+            $ref: '#/components/schemas/VestingBalancesResult'
+        successCount:
+          description: Number of allocations successfully processed
+          type: integer
+          example: 3
+      required:
+      - results
+      - successCount
+      - errorCount
+      title: VestingBalancesBatchResponse
+    VestingBalancesResult:
+      type: object
+      properties:
+        allocationId:
+          description: The allocation ID this result corresponds to
+          type: string
+          example: alloc-123
+        balance:
+          $ref: '#/components/schemas/VestingBalance'
+        error:
+          description: Error message if this allocation failed, null on success
+          type:
+          - string
+          - 'null'
+        walletInfo:
+          $ref: '#/components/schemas/WalletInfo'
+      required:
+      - allocationId
+      title: VestingBalancesResult
+    ErrorDetails:
+      type: object
+      properties:
+        errorType:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - errorType
+      - message
+      title: ErrorDetails
     OffchainVestingHold:
       type: object
       properties:
@@ -466,36 +481,21 @@ components:
           example: <next page url>
           x-omitempty: false
       title: Page
-    VestingBalancesResponse:
+    WalletInfo:
       type: object
       properties:
-        balance:
-          $ref: '#/components/schemas/VestingBalance'
-        walletInfo:
-          $ref: '#/components/schemas/WalletInfo'
-      required:
-      - walletInfo
-      - balance
-      title: VestingBalancesResponse
-    VestingBalancesResult:
-      type: object
-      properties:
-        allocationId:
-          description: The allocation ID this result corresponds to
+        address:
+          description: The public address of the wallet associated with this allocation
           type: string
-          example: alloc-123
-        balance:
-          $ref: '#/components/schemas/VestingBalance'
-        error:
-          description: Error message if this allocation failed, null on success
-          type:
-          - string
-          - 'null'
-        walletInfo:
-          $ref: '#/components/schemas/WalletInfo'
+          example: 0x1234567890abcdef...
+        walletId:
+          description: The ID of the wallet associated with this allocation
+          type: string
+          example: 3d293c0d64c703023692216e9b4f5280
       required:
-      - allocationId
-      title: VestingBalancesResult
+      - walletId
+      - address
+      title: WalletInfo
   securitySchemes:
     Api-Access-Key:
       type: apiKey

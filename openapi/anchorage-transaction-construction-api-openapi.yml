@@ -398,275 +398,21 @@ paths:
       - Transaction Construction
 components:
   schemas:
-    TRXNetworkSpecific:
-      description: Tron-specific network parameters for transaction construction. Tron uses block references and timestamps instead of nonces and gas fees.
+    Amount:
+      description: Combines an asset identifier with a decimal string value
       type: object
       properties:
-        expiration:
-          description: Transaction expiration timestamp in milliseconds since Unix epoch. Must be within 24 hours of the timestamp.
-          type: integer
-          format: int64
-        mainnetNetworkId:
-          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+        amount:
+          description: Amount as a decimal string. Amounts never include fees.
           type: string
-          default: TRON
-          enum:
-          - TRON
-        refBlockBytes:
-          description: Reference block bytes (2 bytes, hex encoded) derived from the latest solidified block height. Extract bytes 6-8 of the block height.
-          type: string
-        refBlockHash:
-          description: Reference block hash (8 bytes, hex encoded) derived from the latest solidified block hash. Extract bytes 8-16 of the block hash.
-          type: string
-        timestamp:
-          description: Transaction creation timestamp in milliseconds since Unix epoch.
-          type: integer
-          format: int64
-      additionalProperties: false
-      required:
-      - mainnetNetworkId
-      - refBlockBytes
-      - refBlockHash
-      - expiration
-      - timestamp
-      title: Tron Network Specific
-    ErrorDetails:
-      type: object
-      properties:
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - message
-      title: ErrorDetails
-    BlockchainDestination:
-      description: Transfer destination specified as a blockchain address with optional memo
-      type: object
-      properties:
-        address:
-          description: A unique string identifying an account on a blockchain. This is sometimes dervied from a public key and sometimes decided by the blockchain.
-          type: string
-          example: '0x8b3192f5eEBD8579568A2Ed41E6FEB402f93f73F'
-        memo:
-          description: Optional memo/tag/destination tag (required by some blockchain networks)
-          type:
-          - string
-          - 'null'
-          maxLength: 256
-        type:
-          description: Discriminator field indicating this is a blockchain destination
-          type: string
-          default: BLOCKCHAIN
-          enum:
-          - BLOCKCHAIN
-      additionalProperties: false
-      required:
-      - type
-      - address
-      title: Blockchain Destination
-    StellarChangeTrustTemplate:
-      description: Template for creating a Stellar ChangeTrust operation to establish a trustline. A trustline allows an account to hold and receive a non-native asset (any asset other than XLM).
-      type: object
-      properties:
+          example: '10.45234733'
         assetType:
           description: A unique string identifying a specific asset on a specific blockchain and environment (testnet, mainnet).
           type: string
-          example: USDC
-        baseFee:
-          description: Base fee in XLM (optional, defaults to network base fee)
-          type:
-          - string
-          - 'null'
-        limit:
-          description: Maximum amount of the asset that the account can hold. Defaults to maximum possible if not specified. Set to '0' to remove the trustline.
-          type:
-          - string
-          - 'null'
-          example: '1000000.0000000'
-        sequenceNumber:
-          description: Sequence number for the source account
-          type: string
-        type:
-          description: Discriminator field indicating this is a Stellar ChangeTrust template
-          type: string
-          default: STELLAR_CHANGE_TRUST
-          enum:
-          - STELLAR_CHANGE_TRUST
-      additionalProperties: false
+          example: ETH
       required:
-      - type
       - assetType
-      - sequenceNumber
-      title: Stellar Change Trust Template
-    SolanaCreateNonceAccountTemplate:
-      description: Template for creating a Solana nonce account transaction
-      type: object
-      properties:
-        authorityAddress:
-          description: The public key address that will have authority over the nonce account
-          type: string
-          example: 3z9vL1zjN6qyAFHhHQdWYRTFAcy69pJydkZmSFBKHg1R
-        computeUnitLimit:
-          description: Maximum compute units the transaction can consume. If not specified, the runtime will compute a default value.
-          type:
-          - integer
-          - 'null'
-        computeUnitPrice:
-          description: Price per compute unit in SOL. Used to prioritize transactions.
-          type:
-          - string
-          - 'null'
-        nonceAccountAddress:
-          description: The public key address of the nonce account to be created
-          type: string
-          example: 9aE476sH92Vz7DMPyq5WLPkrKWivxeuTKEFKd2sZZcde
-        rent:
-          description: Amount of SOL for rent exemption
-          type: string
-          example: '0.0015'
-        replayProtectionParams:
-          $ref: '#/components/schemas/SOLReplayProtectionParams'
-        type:
-          description: Discriminator field indicating this is a Solana nonce account creation template
-          type: string
-          default: SOLANA_CREATE_NONCE_ACCOUNT
-          enum:
-          - SOLANA_CREATE_NONCE_ACCOUNT
-      additionalProperties: false
-      required:
-      - type
-      - nonceAccountAddress
-      - authorityAddress
-      - rent
-      - replayProtectionParams
-      title: Solana Create Nonce Account Template
-    SOLNonceReplayProtection:
-      description: Solana nonce-based replay protection for durable transactions
-      type: object
-      properties:
-        nonceAccount:
-          description: Nonce account address
-          type: string
-        nonceValue:
-          description: Current nonce value
-          type: string
-        replayProtection:
-          type: string
-          default: NONCE
-          enum:
-          - NONCE
-      additionalProperties: false
-      required:
-      - replayProtection
-      - nonceAccount
-      - nonceValue
-      title: Nonce-based Replay Protection
-    RippleRequireDestinationTagTemplate:
-      description: 'Template for an AccountSet transaction that sets or clears the asfRequireDest flag.
-
-
-        When enabled (asfRequireDest set), the account rejects incoming payments that do not specify a destination tag.
-
-        When disabled (asfRequireDest cleared), the account accepts incoming payments regardless of whether a destination tag is present.'
-      type: object
-      properties:
-        enable:
-          description: True to set the asfRequireDest flag (require destination tags on incoming payments). False to clear the flag (allow payments without destination tags).
-          type: boolean
-        fee:
-          description: Transaction fee in XRP
-          type: string
-        sequence:
-          description: Sequence number for the source account
-          type: string
-        type:
-          description: Discriminator field indicating this is a Ripple Require Destination Tag template
-          type: string
-          default: RIPPLE_REQUIRE_DESTINATION_TAG
-          enum:
-          - RIPPLE_REQUIRE_DESTINATION_TAG
-      additionalProperties: false
-      required:
-      - type
-      - enable
-      - sequence
-      - fee
-      title: Ripple Require Destination Tag Template
-    XLMNetworkSpecific:
-      description: Stellar-specific network parameters for transaction construction
-      type: object
-      properties:
-        baseFee:
-          description: Transaction base fee in XLM
-          type: string
-        createDestination:
-          description: Whether to create the destination account. Set to true to create a new account with the payment. Set to false to send payment to an existing account. Only applies to native XLM transfers; Stellar classic asset (token) transfers require the destination account to already exist with an established trustline.
-          type: boolean
-        mainnetNetworkId:
-          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
-          type: string
-          default: XLM
-          enum:
-          - XLM
-        sequenceNumber:
-          description: Sequence number for the source account
-          type: string
-      additionalProperties: false
-      required:
-      - mainnetNetworkId
-      - sequenceNumber
-      - baseFee
-      - createDestination
-      title: Stellar Network Specific
-    WalletDestination:
-      description: Transfer destination specified by Anchorage wallet identifier
-      type: object
-      properties:
-        type:
-          description: Discriminator field indicating this is a wallet destination
-          type: string
-          default: WALLET
-          enum:
-          - WALLET
-        walletId:
-          description: Globally unique wallet identifier
-          type: string
-      additionalProperties: false
-      required:
-      - type
-      - walletId
-      title: Wallet Destination
-    APTNetworkSpecific:
-      description: Aptos-specific network parameters for transaction construction
-      type: object
-      properties:
-        expirationTimestampSecs:
-          description: Unix timestamp in seconds after which the transaction expires and will be rejected by the network.
-          type: string
-        gasUnitPrice:
-          description: Price per gas unit in APT. Higher values prioritize the transaction.
-          type: string
-        mainnetNetworkId:
-          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
-          type: string
-          default: APT
-          enum:
-          - APT
-        maxGasAmount:
-          description: Maximum gas units the transaction can consume. The transaction fails if it exceeds this limit.
-          type: string
-        sequenceNumber:
-          description: Sequence number for the source account. Each transaction from an account must have a unique, incrementing sequence number.
-          type: string
-      additionalProperties: false
-      required:
-      - mainnetNetworkId
-      - sequenceNumber
-      - gasUnitPrice
-      - maxGasAmount
-      - expirationTimestampSecs
-      title: Aptos Network Specific
+      - amount
     TransferNetworkSpecific:
       description: Network-specific parameters for transfer transaction construction. Use the 'mainnetNetworkId' field to discriminate between different blockchain types.
       discriminator:
@@ -716,180 +462,6 @@ components:
       - $ref: '#/components/schemas/NEARNetworkSpecific'
       - $ref: '#/components/schemas/DOTNetworkSpecific'
       title: Transfer Network Specific
-    ConstructTransferRequest:
-      description: Request to construct a transfer transaction
-      type: object
-      properties:
-        description:
-          description: Optional free-form string describing the transfer
-          type:
-          - string
-          - 'null'
-          maxLength: 512
-        destinationAmounts:
-          description: Multiple destinations and amounts are supported for some assets. Each entry specifies a destination and amount.
-          type: array
-          items:
-            $ref: '#/components/schemas/CryptoDestinationAmount'
-          minItems: 1
-        idempotencyKey:
-          description: Client-provided idempotency key to ensure request is processed only once
-          type: string
-          example: e763a50d-aa82-4ec7-b5a3-89ad0462d248
-          maxLength: 128
-        networkSpecific:
-          description: Network-specific parameters for transaction construction. Use the 'mainnetNetworkId' field to discriminate between different blockchain types.
-          allOf:
-          - $ref: '#/components/schemas/TransferNetworkSpecific'
-        sourceWalletId:
-          description: Globally unique wallet identifier for the wallet that pays the gas fees and submits the transfer on-chain. The wallet which sends the assets can be different from this one. The separation of source and sender is available only for certain assets in the asset-specific parameters.
-          type: string
-      additionalProperties: false
-      required:
-      - sourceWalletId
-      - destinationAmounts
-      - networkSpecific
-    TendermintNetworkSpecific:
-      description: Tendermint/Cosmos SDK-based network parameters for transaction construction. Supports Celestia (TIA), dYdX Chain (DYDX_CHAIN), and other Tendermint-based networks.
-      type: object
-      properties:
-        accountNumber:
-          description: Account number on the chain
-          type: string
-        fee:
-          description: Transaction fee in the native currency of the network
-          type: string
-        gas:
-          description: Gas limit for the transaction
-          type: string
-        mainnetNetworkId:
-          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
-          type: string
-          enum:
-          - TIA
-          - DYDX_CHAIN
-        sequence:
-          description: Account sequence number for replay protection
-          type: string
-        timeoutHeight:
-          description: Block height after which the transaction is invalid
-          type: integer
-          format: int64
-      additionalProperties: false
-      required:
-      - mainnetNetworkId
-      - sequence
-      - accountNumber
-      - gas
-      - fee
-      title: Tendermint Network Specific
-    FILNetworkSpecific:
-      description: Filecoin-specific network parameters for transaction construction
-      type: object
-      properties:
-        gasFeeCap:
-          description: Maximum price per gas unit in FIL. The total fee is capped at gasFeeCap * gasLimit.
-          type: string
-        gasLimit:
-          description: Maximum gas units the message can consume.
-          type: string
-        gasPremium:
-          description: Gas premium in FIL. This is the priority fee paid to miners.
-          type: string
-        mainnetNetworkId:
-          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
-          type: string
-          default: FIL
-          enum:
-          - FIL
-        nonce:
-          description: Sequence number for the source account. Each message from an account must have a unique, incrementing nonce.
-          type: string
-      additionalProperties: false
-      required:
-      - mainnetNetworkId
-      - nonce
-      - gasPremium
-      - gasFeeCap
-      - gasLimit
-      title: Filecoin Network Specific
-    ListAssetTypesResponse:
-      description: Response containing a list of supported asset types
-      type: object
-      properties:
-        data:
-          description: Array of asset type details
-          type: array
-          items:
-            $ref: '#/components/schemas/AssetType'
-      required:
-      - data
-    AssetType:
-      description: Details about a supported asset type, including its identifier, name, decimal precision, and blockchain network
-      type: object
-      properties:
-        assetType:
-          description: A unique string identifying a specific asset on a specific blockchain and environment (testnet, mainnet).
-          type: string
-          example: BTC
-        decimals:
-          description: Number of decimal places used to represent amounts of this asset. For example, Bitcoin has 8 decimals, so 1 BTC = 100000000 satoshis.
-          type: integer
-          example: 8
-        name:
-          description: Human-readable name of the asset
-          type: string
-          example: Bitcoin
-        networkId:
-          description: A unique string identifying a combination of blockchain and environment (testnet, mainnet).
-          type: string
-          example: BTC
-        onchainIdentifier:
-          description: On-chain identifier for the asset. For Ethereum, this is the contract address for token contracts (e.g., ERC-20 tokens). For Tendermint-based networks, this represents the denomination or asset identifier used on-chain. Omitted for native blockchain assets like BTC or ETH.
-          type:
-          - string
-          - 'null'
-          example: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
-      required:
-      - assetType
-      - name
-      - decimals
-      - networkId
-    HBARNetworkSpecific:
-      description: 'Hedera-specific network parameters for transaction construction. Note: Transaction validity duration is hardcoded to 180 seconds (the maximum allowed by the Hedera network).'
-      type: object
-      properties:
-        mainnetNetworkId:
-          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
-          type: string
-          default: HBAR
-          enum:
-          - HBAR
-        maxTransactionFee:
-          description: Maximum transaction fee in HBAR
-          type: string
-        nodeAccountId:
-          description: Node account to submit the transaction to (e.g., "0.0.3")
-          type: string
-          example: 0.0.3
-        validStartTimestampNanos:
-          description: Nanoseconds component (0-999999999) of the valid start timestamp.
-          type: integer
-          format: int32
-          example: 123456789
-        validStartTimestampSecs:
-          description: Unix epoch seconds from which the transaction is valid. Must be greater than 0.
-          type: integer
-          format: int64
-          example: 1234567890
-      additionalProperties: false
-      required:
-      - mainnetNetworkId
-      - validStartTimestampSecs
-      - validStartTimestampNanos
-      - maxTransactionFee
-      - nodeAccountId
-      title: Hedera Network Specific
     SOLAccountMeta:
       description: Account metadata for Solana transfer hooks. Required for Token-2022 tokens with transfer hooks.
       type: object
@@ -908,73 +480,196 @@ components:
       - isSigner
       - isWritable
       title: Solana Account Metadata
-    DOTNetworkSpecific:
-      description: Polkadot-specific network parameters for transaction construction. Transactions are immortal by default. Provide mortalEra to make the transaction expire after a certain number of blocks.
+    RippleTrustSetTemplate:
+      description: Template for creating a Ripple TrustSet transaction to establish a trustline. A trustline allows an account to hold and receive issued tokens (any asset other than XRP).
       type: object
       properties:
-        mainnetNetworkId:
-          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+        assetType:
+          description: A unique string identifying a specific asset on a specific blockchain and environment (testnet, mainnet).
           type: string
-          default: POLKADOT
-          enum:
-          - POLKADOT
-        mortalEra:
-          description: If provided, the transaction expires after a certain number of blocks. If omitted, the transaction is immortal (never expires).
-          type: object
-          additionalProperties: false
-          properties:
-            blockHash:
-              description: Checkpoint block hash for the mortal era
-              type: string
-            blockNumber:
-              description: Block number corresponding to the checkpoint block hash, used to compute the mortal era phase
-              type: integer
-              format: uint64
-            period:
-              description: Number of blocks the transaction is valid for (must be a power of 2, between 4 and 65536)
-              type: integer
-          required:
-          - period
-          - blockNumber
-          - blockHash
-        nonce:
-          description: Account nonce for replay protection
-          type: string
-        specVersion:
-          description: Runtime specification version. Query from the Polkadot node using state_getRuntimeVersion().
-          type: integer
-          format: uint32
-        tip:
-          description: Priority fee in DOT to incentivize inclusion
-          type: string
-      additionalProperties: false
-      required:
-      - mainnetNetworkId
-      - nonce
-      - specVersion
-      title: Polkadot Network Specific
-    XRPNetworkSpecific:
-      description: XRP Ledger-specific network parameters for transaction construction
-      type: object
-      properties:
+          example: USDC
         fee:
           description: Transaction fee in XRP
           type: string
-        mainnetNetworkId:
-          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
-          type: string
-          default: XRP
-          enum:
-          - XRP
+        limit:
+          description: Maximum amount of the asset that the account can hold. Defaults to maximum possible if not specified. Set to '0' to remove the trustline.
+          type:
+          - string
+          - 'null'
+          example: '1000000'
         sequence:
           description: Sequence number for the source account
           type: string
+        type:
+          description: Discriminator field indicating this is a Ripple TrustSet template
+          type: string
+          default: RIPPLE_TRUST_SET
+          enum:
+          - RIPPLE_TRUST_SET
+      additionalProperties: false
+      required:
+      - type
+      - assetType
+      - sequence
+      - fee
+      title: Ripple Trust Set Template
+    SUICoin:
+      description: A Sui coin object to be used for gas payment
+      type: object
+      properties:
+        digest:
+          description: Base58-encoded digest of the object
+          type: string
+          example: E3c6ybzozYmN551iTadDtDecrdiviv55fwMtL6U1MfrB
+        objectId:
+          description: Hex-encoded object ID of the coin
+          type: string
+          example: '0x0037cf382dc39fef8fa3dea79b9425ea636186dba86808d028644f1bafbd84e9'
+        version:
+          description: Version (sequence number) of the object
+          type: string
+      additionalProperties: false
+      required:
+      - objectId
+      - version
+      - digest
+      title: Sui Gas Coin
+    SOLBlockhashReplayProtection:
+      description: Solana blockhash-based replay protection for standard transactions
+      type: object
+      properties:
+        recentBlockhash:
+          description: Recent blockhash from the Solana network. Transaction must be submitted within approximately 2 minutes.
+          type: string
+        replayProtection:
+          type: string
+          default: BLOCKHASH
+          enum:
+          - BLOCKHASH
+      additionalProperties: false
+      required:
+      - replayProtection
+      - recentBlockhash
+      title: Blockhash-based Replay Protection
+    SOLReplayProtectionParams:
+      description: Replay protection parameters for Solana transactions. Use 'replayProtection' field to discriminate between nonce-based and blockhash-based replay protection.
+      discriminator:
+        propertyName: replayProtection
+        mapping:
+          NONCE: '#/components/schemas/SOLNonceReplayProtection'
+          BLOCKHASH: '#/components/schemas/SOLBlockhashReplayProtection'
+      oneOf:
+      - $ref: '#/components/schemas/SOLNonceReplayProtection'
+      - $ref: '#/components/schemas/SOLBlockhashReplayProtection'
+    ConstructTransactionRequest:
+      description: Request to construct a transaction
+      type: object
+      properties:
+        clientReferenceId:
+          description: Client-provided reference ID to track this transaction in their internal systems
+          type:
+          - string
+          - 'null'
+          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+        idempotencyKey:
+          description: Client-provided idempotency key to ensure request is processed only once
+          type: string
+          example: e763a50d-aa82-4ec7-b5a3-89ad0462d248
+          maxLength: 128
+        sourceWalletId:
+          description: Globally unique wallet identifier for the wallet that will pay transaction fees and sign the transaction
+          type: string
+        template:
+          description: The transaction template specifying what transaction to construct. Use the 'type' field to discriminate between different transaction types.
+          discriminator:
+            propertyName: type
+            mapping:
+              SOLANA_CREATE_NONCE_ACCOUNT: '#/components/schemas/SolanaCreateNonceAccountTemplate'
+              STELLAR_CHANGE_TRUST: '#/components/schemas/StellarChangeTrustTemplate'
+              RIPPLE_TRUST_SET: '#/components/schemas/RippleTrustSetTemplate'
+              RIPPLE_REQUIRE_DESTINATION_TAG: '#/components/schemas/RippleRequireDestinationTagTemplate'
+          oneOf:
+          - $ref: '#/components/schemas/SolanaCreateNonceAccountTemplate'
+          - $ref: '#/components/schemas/StellarChangeTrustTemplate'
+          - $ref: '#/components/schemas/RippleTrustSetTemplate'
+          - $ref: '#/components/schemas/RippleRequireDestinationTagTemplate'
+      additionalProperties: false
+      required:
+      - template
+      - sourceWalletId
+    ADANetworkSpecific:
+      description: Cardano-specific network parameters for transaction construction
+      type: object
+      properties:
+        changeAddress:
+          description: Address to send change to. If specified, any remainder after subtracting outputs and fee from UTXO inputs will be sent as change to this address.
+          type: string
+        changeAddressClientReferenceId:
+          description: Client-provided reference ID to track the change output in their internal systems
+          type: string
+          example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+        fee:
+          description: Transaction fee in ADA
+          type: string
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          default: CARDANO
+          enum:
+          - CARDANO
+        ttl:
+          description: Time to live as an absolute slot number. The transaction is invalid after this slot.
+          type: integer
+          format: int64
+        utxos:
+          description: Unspent transaction outputs to use as inputs for the transaction
+          type: array
+          items:
+            $ref: '#/components/schemas/UTXO'
       additionalProperties: false
       required:
       - mainnetNetworkId
-      - sequence
+      - utxos
       - fee
-      title: Ripple Network Specific
+      - ttl
+      title: Cardano Network Specific
+    UTXONetworkSpecific:
+      description: UTXO-based blockchain network parameters for transaction construction (BTC, BCH, LTC, DOGE)
+      type: object
+      properties:
+        changeAddress:
+          description: Address to send change to. If specified, any remainder after subtracting outputs and fee from UTXO inputs will be sent as change to this address.
+          type:
+          - string
+          - 'null'
+        changeAddressClientReferenceId:
+          description: Client-provided reference ID to track the change output in their internal systems
+          type:
+          - string
+          - 'null'
+          example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+        fee:
+          description: Transaction fee in the native currency
+          type: string
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          enum:
+          - BTC
+          - BCH
+          - LTC
+          - DOGE
+        utxos:
+          description: 'Note: the fee is computed by subtracting the destination amounts from the UTXO amounts'
+          type: array
+          items:
+            $ref: '#/components/schemas/UTXO'
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - utxos
+      - fee
+      title: UTXO Network Specific
     FLOWNetworkSpecific:
       description: Flow-specific network parameters for transaction construction
       type: object
@@ -1020,43 +715,633 @@ components:
       - gasLimit
       - referenceBlockId
       title: Flow Network Specific
-    UTXONetworkSpecific:
-      description: UTXO-based blockchain network parameters for transaction construction (BTC, BCH, LTC, DOGE)
+    APTNetworkSpecific:
+      description: Aptos-specific network parameters for transaction construction
       type: object
       properties:
-        changeAddress:
-          description: Address to send change to. If specified, any remainder after subtracting outputs and fee from UTXO inputs will be sent as change to this address.
+        expirationTimestampSecs:
+          description: Unix timestamp in seconds after which the transaction expires and will be rejected by the network.
+          type: string
+        gasUnitPrice:
+          description: Price per gas unit in APT. Higher values prioritize the transaction.
+          type: string
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          default: APT
+          enum:
+          - APT
+        maxGasAmount:
+          description: Maximum gas units the transaction can consume. The transaction fails if it exceeds this limit.
+          type: string
+        sequenceNumber:
+          description: Sequence number for the source account. Each transaction from an account must have a unique, incrementing sequence number.
+          type: string
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - sequenceNumber
+      - gasUnitPrice
+      - maxGasAmount
+      - expirationTimestampSecs
+      title: Aptos Network Specific
+    SOLNetworkSpecific:
+      description: Solana-specific network parameters for transaction construction
+      type: object
+      properties:
+        additionalAccountMetas:
+          description: Additional account metadata required for Token-2022 tokens with transfer hook extensions. These accounts are passed to the transfer hook program during token transfers. Only applicable when transferring SPL tokens that have transfer hooks configured.
+          type:
+          - array
+          - 'null'
+          items:
+            $ref: '#/components/schemas/SOLAccountMeta'
+        computeUnitLimit:
+          description: Maximum compute units the transaction can consume. If not specified, the runtime will compute a default value.
+          type:
+          - integer
+          - 'null'
+        computeUnitPrice:
+          description: Price per compute unit in SOL. Used to prioritize transactions.
           type:
           - string
           - 'null'
-        changeAddressClientReferenceId:
-          description: Client-provided reference ID to track the change output in their internal systems
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          default: SOL
+          enum:
+          - SOL
+        replayProtectionParams:
+          $ref: '#/components/schemas/SOLReplayProtectionParams'
+        sender:
+          description: Address of the account that owns and sends the assets. Use this when the sender is different from the nonce authority account. If not specified, the nonce authority (derived from the source wallet) is used as both the signer for the nonce advance instruction and the sender of assets.
           type:
           - string
           - 'null'
-          example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - replayProtectionParams
+      title: Solana Network Specific
+    RippleRequireDestinationTagTemplate:
+      description: 'Template for an AccountSet transaction that sets or clears the asfRequireDest flag.
+
+
+        When enabled (asfRequireDest set), the account rejects incoming payments that do not specify a destination tag.
+
+        When disabled (asfRequireDest cleared), the account accepts incoming payments regardless of whether a destination tag is present.'
+      type: object
+      properties:
+        enable:
+          description: True to set the asfRequireDest flag (require destination tags on incoming payments). False to clear the flag (allow payments without destination tags).
+          type: boolean
         fee:
-          description: Transaction fee in the native currency
+          description: Transaction fee in XRP
+          type: string
+        sequence:
+          description: Sequence number for the source account
+          type: string
+        type:
+          description: Discriminator field indicating this is a Ripple Require Destination Tag template
+          type: string
+          default: RIPPLE_REQUIRE_DESTINATION_TAG
+          enum:
+          - RIPPLE_REQUIRE_DESTINATION_TAG
+      additionalProperties: false
+      required:
+      - type
+      - enable
+      - sequence
+      - fee
+      title: Ripple Require Destination Tag Template
+    XRPNetworkSpecific:
+      description: XRP Ledger-specific network parameters for transaction construction
+      type: object
+      properties:
+        fee:
+          description: Transaction fee in XRP
+          type: string
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          default: XRP
+          enum:
+          - XRP
+        sequence:
+          description: Sequence number for the source account
+          type: string
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - sequence
+      - fee
+      title: Ripple Network Specific
+    ConstructWalletOperationResponse:
+      description: Async response with wallet operation ID. Use the walletOperationId with the GET /wallet-operations/{walletOperationId} endpoint to poll for the operation status and retrieve the constructed transaction details.
+      type: object
+      properties:
+        walletOperationId:
+          description: Wallet operation identifier. Poll the GET /wallet-operations/{walletOperationId} endpoint to check the status and retrieve the transaction data once construction is complete.
+          type: string
+          example: op_550e8400-e29b-41d4-a716-446655440000
+      required:
+      - walletOperationId
+    BlockchainDestination:
+      description: Transfer destination specified as a blockchain address with optional memo
+      type: object
+      properties:
+        address:
+          description: A unique string identifying an account on a blockchain. This is sometimes dervied from a public key and sometimes decided by the blockchain.
+          type: string
+          example: '0x8b3192f5eEBD8579568A2Ed41E6FEB402f93f73F'
+        memo:
+          description: Optional memo/tag/destination tag (required by some blockchain networks)
+          type:
+          - string
+          - 'null'
+          maxLength: 256
+        type:
+          description: Discriminator field indicating this is a blockchain destination
+          type: string
+          default: BLOCKCHAIN
+          enum:
+          - BLOCKCHAIN
+      additionalProperties: false
+      required:
+      - type
+      - address
+      title: Blockchain Destination
+    HBARNetworkSpecific:
+      description: 'Hedera-specific network parameters for transaction construction. Note: Transaction validity duration is hardcoded to 180 seconds (the maximum allowed by the Hedera network).'
+      type: object
+      properties:
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          default: HBAR
+          enum:
+          - HBAR
+        maxTransactionFee:
+          description: Maximum transaction fee in HBAR
+          type: string
+        nodeAccountId:
+          description: Node account to submit the transaction to (e.g., "0.0.3")
+          type: string
+          example: 0.0.3
+        validStartTimestampNanos:
+          description: Nanoseconds component (0-999999999) of the valid start timestamp.
+          type: integer
+          format: int32
+          example: 123456789
+        validStartTimestampSecs:
+          description: Unix epoch seconds from which the transaction is valid. Must be greater than 0.
+          type: integer
+          format: int64
+          example: 1234567890
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - validStartTimestampSecs
+      - validStartTimestampNanos
+      - maxTransactionFee
+      - nodeAccountId
+      title: Hedera Network Specific
+    XLMNetworkSpecific:
+      description: Stellar-specific network parameters for transaction construction
+      type: object
+      properties:
+        baseFee:
+          description: Transaction base fee in XLM
+          type: string
+        createDestination:
+          description: Whether to create the destination account. Set to true to create a new account with the payment. Set to false to send payment to an existing account. Only applies to native XLM transfers; Stellar classic asset (token) transfers require the destination account to already exist with an established trustline.
+          type: boolean
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          default: XLM
+          enum:
+          - XLM
+        sequenceNumber:
+          description: Sequence number for the source account
+          type: string
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - sequenceNumber
+      - baseFee
+      - createDestination
+      title: Stellar Network Specific
+    AssetType:
+      description: Details about a supported asset type, including its identifier, name, decimal precision, and blockchain network
+      type: object
+      properties:
+        assetType:
+          description: A unique string identifying a specific asset on a specific blockchain and environment (testnet, mainnet).
+          type: string
+          example: BTC
+        decimals:
+          description: Number of decimal places used to represent amounts of this asset. For example, Bitcoin has 8 decimals, so 1 BTC = 100000000 satoshis.
+          type: integer
+          example: 8
+        name:
+          description: Human-readable name of the asset
+          type: string
+          example: Bitcoin
+        networkId:
+          description: A unique string identifying a combination of blockchain and environment (testnet, mainnet).
+          type: string
+          example: BTC
+        onchainIdentifier:
+          description: On-chain identifier for the asset. For Ethereum, this is the contract address for token contracts (e.g., ERC-20 tokens). For Tendermint-based networks, this represents the denomination or asset identifier used on-chain. Omitted for native blockchain assets like BTC or ETH.
+          type:
+          - string
+          - 'null'
+          example: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
+      required:
+      - assetType
+      - name
+      - decimals
+      - networkId
+    StellarChangeTrustTemplate:
+      description: Template for creating a Stellar ChangeTrust operation to establish a trustline. A trustline allows an account to hold and receive a non-native asset (any asset other than XLM).
+      type: object
+      properties:
+        assetType:
+          description: A unique string identifying a specific asset on a specific blockchain and environment (testnet, mainnet).
+          type: string
+          example: USDC
+        baseFee:
+          description: Base fee in XLM (optional, defaults to network base fee)
+          type:
+          - string
+          - 'null'
+        limit:
+          description: Maximum amount of the asset that the account can hold. Defaults to maximum possible if not specified. Set to '0' to remove the trustline.
+          type:
+          - string
+          - 'null'
+          example: '1000000.0000000'
+        sequenceNumber:
+          description: Sequence number for the source account
+          type: string
+        type:
+          description: Discriminator field indicating this is a Stellar ChangeTrust template
+          type: string
+          default: STELLAR_CHANGE_TRUST
+          enum:
+          - STELLAR_CHANGE_TRUST
+      additionalProperties: false
+      required:
+      - type
+      - assetType
+      - sequenceNumber
+      title: Stellar Change Trust Template
+    UTXO:
+      description: An unspent transaction output that can be used as an input for a new transaction
+      type: object
+      properties:
+        address:
+          description: Identifies the key to use to sign the UTXO
+          type: string
+        amount:
+          description: Amount in the native currency
+          type: string
+        txId:
+          description: Hex encoded transaction ID
+          type: string
+        vout:
+          description: Index of the output
+          type: integer
+      additionalProperties: false
+      required:
+      - txId
+      - vout
+      - amount
+      - address
+      title: Unspent Transaction Output
+    TRXNetworkSpecific:
+      description: Tron-specific network parameters for transaction construction. Tron uses block references and timestamps instead of nonces and gas fees.
+      type: object
+      properties:
+        expiration:
+          description: Transaction expiration timestamp in milliseconds since Unix epoch. Must be within 24 hours of the timestamp.
+          type: integer
+          format: int64
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          default: TRON
+          enum:
+          - TRON
+        refBlockBytes:
+          description: Reference block bytes (2 bytes, hex encoded) derived from the latest solidified block height. Extract bytes 6-8 of the block height.
+          type: string
+        refBlockHash:
+          description: Reference block hash (8 bytes, hex encoded) derived from the latest solidified block hash. Extract bytes 8-16 of the block hash.
+          type: string
+        timestamp:
+          description: Transaction creation timestamp in milliseconds since Unix epoch.
+          type: integer
+          format: int64
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - refBlockBytes
+      - refBlockHash
+      - expiration
+      - timestamp
+      title: Tron Network Specific
+    TendermintNetworkSpecific:
+      description: Tendermint/Cosmos SDK-based network parameters for transaction construction. Supports Celestia (TIA), dYdX Chain (DYDX_CHAIN), and other Tendermint-based networks.
+      type: object
+      properties:
+        accountNumber:
+          description: Account number on the chain
+          type: string
+        fee:
+          description: Transaction fee in the native currency of the network
+          type: string
+        gas:
+          description: Gas limit for the transaction
           type: string
         mainnetNetworkId:
           description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
           type: string
           enum:
-          - BTC
-          - BCH
-          - LTC
-          - DOGE
-        utxos:
-          description: 'Note: the fee is computed by subtracting the destination amounts from the UTXO amounts'
-          type: array
-          items:
-            $ref: '#/components/schemas/UTXO'
+          - TIA
+          - DYDX_CHAIN
+        sequence:
+          description: Account sequence number for replay protection
+          type: string
+        timeoutHeight:
+          description: Block height after which the transaction is invalid
+          type: integer
+          format: int64
       additionalProperties: false
       required:
       - mainnetNetworkId
-      - utxos
+      - sequence
+      - accountNumber
+      - gas
       - fee
-      title: UTXO Network Specific
+      title: Tendermint Network Specific
+    CryptoDestinationAmount:
+      description: Specifies a destination and the amount to send to it
+      type: object
+      properties:
+        amount:
+          $ref: '#/components/schemas/Amount'
+        clientReferenceId:
+          description: Client-provided reference ID to track this transaction in their internal systems
+          type:
+          - string
+          - 'null'
+          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
+        destination:
+          $ref: '#/components/schemas/CryptoDestination'
+      additionalProperties: false
+      required:
+      - destination
+      - amount
+    WalletDestination:
+      description: Transfer destination specified by Anchorage wallet identifier
+      type: object
+      properties:
+        type:
+          description: Discriminator field indicating this is a wallet destination
+          type: string
+          default: WALLET
+          enum:
+          - WALLET
+        walletId:
+          description: Globally unique wallet identifier
+          type: string
+      additionalProperties: false
+      required:
+      - type
+      - walletId
+      title: Wallet Destination
+    ConstructTransferRequest:
+      description: Request to construct a transfer transaction
+      type: object
+      properties:
+        description:
+          description: Optional free-form string describing the transfer
+          type:
+          - string
+          - 'null'
+          maxLength: 512
+        destinationAmounts:
+          description: Multiple destinations and amounts are supported for some assets. Each entry specifies a destination and amount.
+          type: array
+          items:
+            $ref: '#/components/schemas/CryptoDestinationAmount'
+          minItems: 1
+        idempotencyKey:
+          description: Client-provided idempotency key to ensure request is processed only once
+          type: string
+          example: e763a50d-aa82-4ec7-b5a3-89ad0462d248
+          maxLength: 128
+        networkSpecific:
+          description: Network-specific parameters for transaction construction. Use the 'mainnetNetworkId' field to discriminate between different blockchain types.
+          allOf:
+          - $ref: '#/components/schemas/TransferNetworkSpecific'
+        sourceWalletId:
+          description: Globally unique wallet identifier for the wallet that pays the gas fees and submits the transfer on-chain. The wallet which sends the assets can be different from this one. The separation of source and sender is available only for certain assets in the asset-specific parameters.
+          type: string
+      additionalProperties: false
+      required:
+      - sourceWalletId
+      - destinationAmounts
+      - networkSpecific
+    CryptoDestination:
+      description: Identifies the target of a transfer. Use the 'type' field to discriminate between variants.
+      discriminator:
+        propertyName: type
+        mapping:
+          BLOCKCHAIN: '#/components/schemas/BlockchainDestination'
+          WALLET: '#/components/schemas/WalletDestination'
+      oneOf:
+      - $ref: '#/components/schemas/BlockchainDestination'
+      - $ref: '#/components/schemas/WalletDestination'
+    NEARNetworkSpecific:
+      description: NEAR-specific network parameters for transaction construction
+      type: object
+      properties:
+        blockHash:
+          description: Recent block hash for replay protection (base58 encoded)
+          type: string
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          default: NEAR
+          enum:
+          - NEAR
+        nonce:
+          description: Access key nonce for the sender
+          type: string
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - nonce
+      - blockHash
+      title: NEAR Network Specific
+    ListAssetTypesResponse:
+      description: Response containing a list of supported asset types
+      type: object
+      properties:
+        data:
+          description: Array of asset type details
+          type: array
+          items:
+            $ref: '#/components/schemas/AssetType'
+      required:
+      - data
+    SOLNonceReplayProtection:
+      description: Solana nonce-based replay protection for durable transactions
+      type: object
+      properties:
+        nonceAccount:
+          description: Nonce account address
+          type: string
+        nonceValue:
+          description: Current nonce value
+          type: string
+        replayProtection:
+          type: string
+          default: NONCE
+          enum:
+          - NONCE
+      additionalProperties: false
+      required:
+      - replayProtection
+      - nonceAccount
+      - nonceValue
+      title: Nonce-based Replay Protection
+    DOTNetworkSpecific:
+      description: Polkadot-specific network parameters for transaction construction. Transactions are immortal by default. Provide mortalEra to make the transaction expire after a certain number of blocks.
+      type: object
+      properties:
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          default: POLKADOT
+          enum:
+          - POLKADOT
+        mortalEra:
+          description: If provided, the transaction expires after a certain number of blocks. If omitted, the transaction is immortal (never expires).
+          type: object
+          additionalProperties: false
+          properties:
+            blockHash:
+              description: Checkpoint block hash for the mortal era
+              type: string
+            blockNumber:
+              description: Block number corresponding to the checkpoint block hash, used to compute the mortal era phase
+              type: integer
+              format: uint64
+            period:
+              description: Number of blocks the transaction is valid for (must be a power of 2, between 4 and 65536)
+              type: integer
+          required:
+          - period
+          - blockNumber
+          - blockHash
+        nonce:
+          description: Account nonce for replay protection
+          type: string
+        specVersion:
+          description: Runtime specification version. Query from the Polkadot node using state_getRuntimeVersion().
+          type: integer
+          format: uint32
+        tip:
+          description: Priority fee in DOT to incentivize inclusion
+          type: string
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - nonce
+      - specVersion
+      title: Polkadot Network Specific
+    ErrorDetails:
+      type: object
+      properties:
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - message
+      title: ErrorDetails
+    ETHNetworkSpecific:
+      description: EVM-compatible network parameters for transaction construction. Supports Ethereum and other EVM-compatible chains including L2s.
+      type: object
+      properties:
+        gasLimit:
+          description: Maximum gas to use
+          type: integer
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          enum:
+          - ETH
+          - AVALANCHE_CCHAIN
+          - BSC
+          - ARBITRUM
+          - BASE
+          - OPTIMISM
+          - ZKSYNC
+          - SEI_SEI
+          - HYPEREVM
+        maxFeePerGas:
+          description: Maximum fee per gas in the native currency
+          type: string
+        maxPriorityFeePerGas:
+          description: Maximum priority fee per gas in the native currency
+          type: string
+        nonce:
+          description: Transaction nonce
+          type: string
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - nonce
+      - gasLimit
+      - maxPriorityFeePerGas
+      - maxFeePerGas
+      title: EVM Network Specific
+    FILNetworkSpecific:
+      description: Filecoin-specific network parameters for transaction construction
+      type: object
+      properties:
+        gasFeeCap:
+          description: Maximum price per gas unit in FIL. The total fee is capped at gasFeeCap * gasLimit.
+          type: string
+        gasLimit:
+          description: Maximum gas units the message can consume.
+          type: string
+        gasPremium:
+          description: Gas premium in FIL. This is the priority fee paid to miners.
+          type: string
+        mainnetNetworkId:
+          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+          type: string
+          default: FIL
+          enum:
+          - FIL
+        nonce:
+          description: Sequence number for the source account. Each message from an account must have a unique, incrementing nonce.
+          type: string
+      additionalProperties: false
+      required:
+      - mainnetNetworkId
+      - nonce
+      - gasPremium
+      - gasFeeCap
+      - gasLimit
+      title: Filecoin Network Specific
     SUINetworkSpecific:
       description: 'Sui-specific network parameters for transaction construction. Exactly one principal source must be specified: either payPrincipalFromBalance=true or a non-empty objectsForPrincipal array. Exactly one fee source must be specified: payFeeFromBalance=true, payFeeFromPrincipalObjects=true, or a non-empty objectsForFee array.'
       type: object
@@ -1122,17 +1407,14 @@ components:
       - gasPrice
       - gasBudget
       title: Sui Network Specific
-    SOLNetworkSpecific:
-      description: Solana-specific network parameters for transaction construction
+    SolanaCreateNonceAccountTemplate:
+      description: Template for creating a Solana nonce account transaction
       type: object
       properties:
-        additionalAccountMetas:
-          description: Additional account metadata required for Token-2022 tokens with transfer hook extensions. These accounts are passed to the transfer hook program during token transfers. Only applicable when transferring SPL tokens that have transfer hooks configured.
-          type:
-          - array
-          - 'null'
-          items:
-            $ref: '#/components/schemas/SOLAccountMeta'
+        authorityAddress:
+          description: The public key address that will have authority over the nonce account
+          type: string
+          example: 3z9vL1zjN6qyAFHhHQdWYRTFAcy69pJydkZmSFBKHg1R
         computeUnitLimit:
           description: Maximum compute units the transaction can consume. If not specified, the runtime will compute a default value.
           type:
@@ -1143,312 +1425,30 @@ components:
           type:
           - string
           - 'null'
-        mainnetNetworkId:
-          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
+        nonceAccountAddress:
+          description: The public key address of the nonce account to be created
           type: string
-          default: SOL
-          enum:
-          - SOL
+          example: 9aE476sH92Vz7DMPyq5WLPkrKWivxeuTKEFKd2sZZcde
+        rent:
+          description: Amount of SOL for rent exemption
+          type: string
+          example: '0.0015'
         replayProtectionParams:
           $ref: '#/components/schemas/SOLReplayProtectionParams'
-        sender:
-          description: Address of the account that owns and sends the assets. Use this when the sender is different from the nonce authority account. If not specified, the nonce authority (derived from the source wallet) is used as both the signer for the nonce advance instruction and the sender of assets.
-          type:
-          - string
-          - 'null'
-      additionalProperties: false
-      required:
-      - mainnetNetworkId
-      - replayProtectionParams
-      title: Solana Network Specific
-    Amount:
-      description: Combines an asset identifier with a decimal string value
-      type: object
-      properties:
-        amount:
-          description: Amount as a decimal string. Amounts never include fees.
-          type: string
-          example: '10.45234733'
-        assetType:
-          description: A unique string identifying a specific asset on a specific blockchain and environment (testnet, mainnet).
-          type: string
-          example: ETH
-      required:
-      - assetType
-      - amount
-    ConstructTransactionRequest:
-      description: Request to construct a transaction
-      type: object
-      properties:
-        clientReferenceId:
-          description: Client-provided reference ID to track this transaction in their internal systems
-          type:
-          - string
-          - 'null'
-          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
-        idempotencyKey:
-          description: Client-provided idempotency key to ensure request is processed only once
-          type: string
-          example: e763a50d-aa82-4ec7-b5a3-89ad0462d248
-          maxLength: 128
-        sourceWalletId:
-          description: Globally unique wallet identifier for the wallet that will pay transaction fees and sign the transaction
-          type: string
-        template:
-          description: The transaction template specifying what transaction to construct. Use the 'type' field to discriminate between different transaction types.
-          discriminator:
-            propertyName: type
-            mapping:
-              SOLANA_CREATE_NONCE_ACCOUNT: '#/components/schemas/SolanaCreateNonceAccountTemplate'
-              STELLAR_CHANGE_TRUST: '#/components/schemas/StellarChangeTrustTemplate'
-              RIPPLE_TRUST_SET: '#/components/schemas/RippleTrustSetTemplate'
-              RIPPLE_REQUIRE_DESTINATION_TAG: '#/components/schemas/RippleRequireDestinationTagTemplate'
-          oneOf:
-          - $ref: '#/components/schemas/SolanaCreateNonceAccountTemplate'
-          - $ref: '#/components/schemas/StellarChangeTrustTemplate'
-          - $ref: '#/components/schemas/RippleTrustSetTemplate'
-          - $ref: '#/components/schemas/RippleRequireDestinationTagTemplate'
-      additionalProperties: false
-      required:
-      - template
-      - sourceWalletId
-    UTXO:
-      description: An unspent transaction output that can be used as an input for a new transaction
-      type: object
-      properties:
-        address:
-          description: Identifies the key to use to sign the UTXO
-          type: string
-        amount:
-          description: Amount in the native currency
-          type: string
-        txId:
-          description: Hex encoded transaction ID
-          type: string
-        vout:
-          description: Index of the output
-          type: integer
-      additionalProperties: false
-      required:
-      - txId
-      - vout
-      - amount
-      - address
-      title: Unspent Transaction Output
-    ETHNetworkSpecific:
-      description: EVM-compatible network parameters for transaction construction. Supports Ethereum and other EVM-compatible chains including L2s.
-      type: object
-      properties:
-        gasLimit:
-          description: Maximum gas to use
-          type: integer
-        mainnetNetworkId:
-          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
-          type: string
-          enum:
-          - ETH
-          - AVALANCHE_CCHAIN
-          - BSC
-          - ARBITRUM
-          - BASE
-          - OPTIMISM
-          - ZKSYNC
-          - SEI_SEI
-          - HYPEREVM
-        maxFeePerGas:
-          description: Maximum fee per gas in the native currency
-          type: string
-        maxPriorityFeePerGas:
-          description: Maximum priority fee per gas in the native currency
-          type: string
-        nonce:
-          description: Transaction nonce
-          type: string
-      additionalProperties: false
-      required:
-      - mainnetNetworkId
-      - nonce
-      - gasLimit
-      - maxPriorityFeePerGas
-      - maxFeePerGas
-      title: EVM Network Specific
-    CryptoDestination:
-      description: Identifies the target of a transfer. Use the 'type' field to discriminate between variants.
-      discriminator:
-        propertyName: type
-        mapping:
-          BLOCKCHAIN: '#/components/schemas/BlockchainDestination'
-          WALLET: '#/components/schemas/WalletDestination'
-      oneOf:
-      - $ref: '#/components/schemas/BlockchainDestination'
-      - $ref: '#/components/schemas/WalletDestination'
-    NEARNetworkSpecific:
-      description: NEAR-specific network parameters for transaction construction
-      type: object
-      properties:
-        blockHash:
-          description: Recent block hash for replay protection (base58 encoded)
-          type: string
-        mainnetNetworkId:
-          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
-          type: string
-          default: NEAR
-          enum:
-          - NEAR
-        nonce:
-          description: Access key nonce for the sender
-          type: string
-      additionalProperties: false
-      required:
-      - mainnetNetworkId
-      - nonce
-      - blockHash
-      title: NEAR Network Specific
-    SOLReplayProtectionParams:
-      description: Replay protection parameters for Solana transactions. Use 'replayProtection' field to discriminate between nonce-based and blockhash-based replay protection.
-      discriminator:
-        propertyName: replayProtection
-        mapping:
-          NONCE: '#/components/schemas/SOLNonceReplayProtection'
-          BLOCKHASH: '#/components/schemas/SOLBlockhashReplayProtection'
-      oneOf:
-      - $ref: '#/components/schemas/SOLNonceReplayProtection'
-      - $ref: '#/components/schemas/SOLBlockhashReplayProtection'
-    CryptoDestinationAmount:
-      description: Specifies a destination and the amount to send to it
-      type: object
-      properties:
-        amount:
-          $ref: '#/components/schemas/Amount'
-        clientReferenceId:
-          description: Client-provided reference ID to track this transaction in their internal systems
-          type:
-          - string
-          - 'null'
-          example: 3fa85f64-5717-4562-b3fc-2c963f66afa6
-        destination:
-          $ref: '#/components/schemas/CryptoDestination'
-      additionalProperties: false
-      required:
-      - destination
-      - amount
-    RippleTrustSetTemplate:
-      description: Template for creating a Ripple TrustSet transaction to establish a trustline. A trustline allows an account to hold and receive issued tokens (any asset other than XRP).
-      type: object
-      properties:
-        assetType:
-          description: A unique string identifying a specific asset on a specific blockchain and environment (testnet, mainnet).
-          type: string
-          example: USDC
-        fee:
-          description: Transaction fee in XRP
-          type: string
-        limit:
-          description: Maximum amount of the asset that the account can hold. Defaults to maximum possible if not specified. Set to '0' to remove the trustline.
-          type:
-          - string
-          - 'null'
-          example: '1000000'
-        sequence:
-          description: Sequence number for the source account
-          type: string
         type:
-          description: Discriminator field indicating this is a Ripple TrustSet template
+          description: Discriminator field indicating this is a Solana nonce account creation template
           type: string
-          default: RIPPLE_TRUST_SET
+          default: SOLANA_CREATE_NONCE_ACCOUNT
           enum:
-          - RIPPLE_TRUST_SET
+          - SOLANA_CREATE_NONCE_ACCOUNT
       additionalProperties: false
       required:
       - type
-      - assetType
-      - sequence
-      - fee
-      title: Ripple Trust Set Template
-    SOLBlockhashReplayProtection:
-      description: Solana blockhash-based replay protection for standard transactions
-      type: object
-      properties:
-        recentBlockhash:
-          description: Recent blockhash from the Solana network. Transaction must be submitted within approximately 2 minutes.
-          type: string
-        replayProtection:
-          type: string
-          default: BLOCKHASH
-          enum:
-          - BLOCKHASH
-      additionalProperties: false
-      required:
-      - replayProtection
-      - recentBlockhash
-      title: Blockhash-based Replay Protection
-    ConstructWalletOperationResponse:
-      description: Async response with wallet operation ID. Use the walletOperationId with the GET /wallet-operations/{walletOperationId} endpoint to poll for the operation status and retrieve the constructed transaction details.
-      type: object
-      properties:
-        walletOperationId:
-          description: Wallet operation identifier. Poll the GET /wallet-operations/{walletOperationId} endpoint to check the status and retrieve the transaction data once construction is complete.
-          type: string
-          example: op_550e8400-e29b-41d4-a716-446655440000
-      required:
-      - walletOperationId
-    ADANetworkSpecific:
-      description: Cardano-specific network parameters for transaction construction
-      type: object
-      properties:
-        changeAddress:
-          description: Address to send change to. If specified, any remainder after subtracting outputs and fee from UTXO inputs will be sent as change to this address.
-          type: string
-        changeAddressClientReferenceId:
-          description: Client-provided reference ID to track the change output in their internal systems
-          type: string
-          example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
-        fee:
-          description: Transaction fee in ADA
-          type: string
-        mainnetNetworkId:
-          description: Discriminator field. Always set to the mainnet network ID, even when constructing transactions for testnets.
-          type: string
-          default: CARDANO
-          enum:
-          - CARDANO
-        ttl:
-          description: Time to live as an absolute slot number. The transaction is invalid after this slot.
-          type: integer
-          format: int64
-        utxos:
-          description: Unspent transaction outputs to use as inputs for the transaction
-          type: array
-          items:
-            $ref: '#/components/schemas/UTXO'
-      additionalProperties: false
-      required:
-      - mainnetNetworkId
-      - utxos
-      - fee
-      - ttl
-      title: Cardano Network Specific
-    SUICoin:
-      description: A Sui coin object to be used for gas payment
-      type: object
-      properties:
-        digest:
-          description: Base58-encoded digest of the object
-          type: string
-          example: E3c6ybzozYmN551iTadDtDecrdiviv55fwMtL6U1MfrB
-        objectId:
-          description: Hex-encoded object ID of the coin
-          type: string
-          example: '0x0037cf382dc39fef8fa3dea79b9425ea636186dba86808d028644f1bafbd84e9'
-        version:
-          description: Version (sequence number) of the object
-          type: string
-      additionalProperties: false
-      required:
-      - objectId
-      - version
-      - digest
-      title: Sui Gas Coin
+      - nonceAccountAddress
+      - authorityAddress
+      - rent
+      - replayProtectionParams
+      title: Solana Create Nonce Account Template
   securitySchemes:
     Api-Access-Key:
       type: apiKey

@@ -1378,36 +1378,817 @@ paths:
         Subaccount: present
 components:
   schemas:
+    Balance:
+      type: object
+      properties:
+        amount:
+          type: string
+        description:
+          description: A description of the balance type and its meaning
+          type: string
+      title: Balance
+    CreateSubaccountBillingChargesRequest:
+      description: Details of the billing charge to create
+      type: object
+      properties:
+        charges:
+          type: array
+          items:
+            type: object
+            properties:
+              amount:
+                description: The amount to transfer
+                type: string
+                example: '1000.00'
+              subaccountId:
+                description: Unique Identifier for the subaccount
+                type: string
+                example: ec761b5e-fd2c-497a-a9a0-f8738ac97bdf
+            required:
+            - subaccountId
+            - amount
+          maxItems: 100
+          minItems: 1
+        feeType:
+          $ref: '#/components/schemas/CreateFeeType'
+        idempotentId:
+          type: string
+        interval:
+          type: object
+          properties:
+            endDate:
+              type: string
+              format: date
+            startDate:
+              type: string
+              format: date
+          required:
+          - startDate
+          - endDate
+      required:
+      - idempotentId
+      - feeType
+      - charges
+      title: CreateSubaccountBillingChargesRequest
+    SubaccountType:
+      description: Type of the subaccount
+      type: string
+      enum:
+      - IRA
+      - ROTH
+      - JOINT
+      - CUSTODIAL
+      - INDIVIDUAL_TAXABLE
+      - INSTITUTIONAL_TAXABLE
+    UpdateFeeDetailType:
+      type: object
+      properties:
+        isBillable:
+          description: Defines if a fee will be billed directly to the subaccount.
+          type: boolean
+          default: true
+        rate:
+          description: The rate should be in percentage format. The rate should be a value between 0 and 1 where 0.01 is 1%.
+          type: number
+          default: 0
+          maximum: 1
+          minimum: 0
+        startDate:
+          description: The start date (inclusive) in `YYYY-MM-DD` format. This date should always be set in the future. Dates are always in UTC [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'full-date'.
+          type: string
+          format: date
+        type:
+          $ref: '#/components/schemas/CreateFeeType'
+      required:
+      - type
+      - startDate
+      title: UpdateFeeDetailType
+    ListSubaccountWithdrawalsObject:
+      type: object
+      properties:
+        asset:
+          $ref: '#/components/schemas/AssetAmount'
+        createdAt:
+          description: The timestamp when the withdrawal request was created.
+          type: string
+          format: date-time
+          example: '2019-01-02T12:34:56.000Z'
+        customerDetails:
+          $ref: '#/components/schemas/WithdrawalBankInfo'
+        endedAt:
+          description: The timestamp when the withdrawal request reached a final state - COMPLETED or FAILED (optional).
+          type:
+          - string
+          - 'null'
+          format: date-time
+          example: '2019-01-03T12:34:56.000Z'
+        transactionId:
+          description: Unique Identifier for the transaction
+          type: string
+          example: c4c4652f-0c07-472c-a7f8-955fbe07775d
+        updatedAt:
+          description: The timestamp of the last update to the request.
+          type: string
+          format: date-time
+          example: '2019-01-03T12:34:56.000Z'
+        withdrawalStatus:
+          description: Identifies the status of the withdrawal transaction
+          type: string
+          enum:
+          - INITIATED
+          - PENDING_ENDORSEMENT
+          - PENDING_REVIEW
+          - BROADCASTING
+          - COMPLETED
+          - FAILED
+          - CANCELED
+      title: ListSubaccountWithdrawalsObject
     ProgramSignerGroup:
       type: array
       items:
         $ref: '#/components/schemas/ProgramSigner'
       title: ProgramSignerGroup
-    SubaccountTransactionsResponse:
+    CreateFeeType:
+      type: string
+      enum:
+      - ADVISORY
+      - MODEL
+      - MANAGEMENT
+      title: CreateFeeType
+    CreateSubaccountResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/SubaccountIdResponse'
+      required:
+      - data
+      title: CreateSubaccountResponse
+    FeeCalculationStateType:
+      type: string
+      enum:
+      - ONGOING
+      - DONE
+      title: FeeStateType
+    CreateSubaccountRequest:
+      description: Details of the subaccount to open for the program customer
+      type: object
+      properties:
+        externalSubaccountId:
+          description: The external unique identifier you wish to use to identify this subaccount.
+          type: string
+        fees:
+          description: List of fees applied to the subaccount. All fees need to be defined.
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateFeeDetailType'
+        name:
+          description: The name of the subaccount. Needs to be unique per program customer.
+          type: string
+      example:
+        name: Subaccount Name
+        externalSubaccountId: EXTERNAL_ID_001
+        fees:
+        - type: ADVISORY
+          rate: 0.01
+        - type: MODEL
+          rate: 0.01
+          isBillable: false
+        - type: MANAGEMENT
+          rate: 0.01
+      required:
+      - externalSubaccountId
+      - fees
+      - name
+      title: CreateSubaccountRequest
+    SubaccountTransactionStatus:
+      description: 'A string describing the status of the given transaction
+
+
+
+        * POSTED - This transaction has been completed and is confirmed on the blockchain.
+
+
+
+        * CANCELED - This transaction has been cancel. Funds were not successfully transferred.
+
+
+
+        * PENDING - This transaction has been queued and the funds are being held until the transaction is POSTED or CANCELED.
+
+        '
+      type: string
+      enum:
+      - POSTED
+      - PENDING
+      - CANCELED
+      title: SubaccountTransactionStatus
+    DestinationAddress:
+      description: Information related to the Address of the Benificiary
+      type: object
+      properties:
+        address:
+          description: Street Address
+          type: string
+          maxLength: 35
+        address2:
+          description: Street Address Continued
+          type: string
+          maxLength: 35
+        city:
+          description: City of the Address
+          type: string
+        country:
+          description: Country of the Address
+          type: string
+        state:
+          description: State of the Address
+          type: string
+        zipcode:
+          description: Zip Code of the Address
+          type: string
+      example:
+        address: 123 Main Street
+        city: Windsor
+        state: Iowa
+        zipcode: '12312'
+      required:
+      - address
+      - city
+      - state
+      - zipcode
+      title: DestinationAddress
+    SubaccountCustomers:
+      description: List of account owners with their respective roles (can only be changed during onboarding)
+      type: array
+      items:
+        $ref: '#/components/schemas/SubaccountCustomer'
+    SubaccountWalletResponse:
+      type: object
+      properties:
+        networkId:
+          type: string
+        walletId:
+          type: string
+      title: SubaccountWalletReponse
+    UpdateSubaccountRequest:
+      description: Details of the subaccount to open for the customer
+      type: object
+      properties:
+        beneficiaryGroup:
+          $ref: '#/components/schemas/BeneficiaryGroup'
+        contingencyBeneficiaryGroup:
+          $ref: '#/components/schemas/BeneficiaryGroup'
+        fees:
+          description: List of fees to be update
+          type: array
+          items:
+            $ref: '#/components/schemas/UpdateFeeDetailType'
+        programSignerGroup:
+          $ref: '#/components/schemas/ProgramSignerGroup'
+      example:
+        fees:
+        - type: ADVISORY
+          rate: 0.01
+          startDate: '2023-12-01'
+      title: UpdateSubaccountRequest
+    SubaccountTransactionType:
+      description: 'A string describing the type of the given transaction
+
+
+        * DEPOSIT - Deposit transaction
+
+
+        * WITHDRAWAL - Withdrawal transaction
+
+
+        * TRADE - Trade transaction
+
+
+        * MANAGEMENT_FEE - Management fee
+
+
+        * CUSTODY_FEE - Custody fee
+
+
+        * ADVISORY_FEE - Advisory fee
+
+
+        * MODEL_FEE - Model fee
+
+
+        * SUBACCOUNT_TRANSFER - subaccount transfer
+
+
+        * TRADE_SETTLEMENT - Trade settlement
+
+
+        * DEPOSIT_SWEEP - Deposit sweep
+
+
+        * GAS_FILL - Gas fill transaction
+
+
+        * FEE_SETTLEMENT - Fee settlement
+
+
+        * TRANSACTION_FEE - Transaction fee
+
+
+        * RETURN - Return transaction
+
+
+        * STAKE - Stake transaction
+
+
+        * UNSTAKE - Stake transaction
+
+
+        * CLAIM - Claim rewards
+
+
+        * STAKING_REWARD - Staking rewards
+
+
+        * DELEGATION_REWARD - Delegation rewards
+
+        '
+      type: string
+      enum:
+      - DEPOSIT
+      - WITHDRAWAL
+      - TRADE
+      - MANAGEMENT_FEE
+      - CUSTODY_FEE
+      - ADVISORY_FEE
+      - MODEL_FEE
+      - SUBACCOUNT_TRANSFER
+      - TRADE_SETTLEMENT
+      - DEPOSIT_SWEEP
+      - GAS_FILL
+      - FEE_SETTLEMENT
+      - TRANSACTION_FEE
+      - RETURN
+      - STAKE
+      - UNSTAKE
+      - CLAIM
+      - STAKING_REWARD
+      - DELEGATION_REWARD
+      title: SubaccountTransactionType
+    BeneficiaryType:
+      type: string
+      enum:
+      - SPOUSE
+      - FAMILY_OR_FRIEND
+      - CHARITY
+      - TRUST
+      - ESTATE
+      title: BeneficiaryType
+    WithdrawalBankInfo:
+      description: Information needed to trigger the wire transfer
+      type: object
+      properties:
+        beneficiary:
+          description: Beneficiary Information
+          type: object
+          properties:
+            accountNumber:
+              description: Bank Account Number
+              type: string
+            address:
+              $ref: '#/components/schemas/DestinationAddress'
+            name:
+              description: Name of the Beneficiary
+              type: string
+          required:
+          - address
+          - name
+        financialInstitution:
+          $ref: '#/components/schemas/RoutingDetails'
+        intermediateFinancialInstitution:
+          $ref: '#/components/schemas/RoutingDetails'
+        memo:
+          description: Memo field of the wire
+          type: string
+      required:
+      - beneficiary
+      title: WithdrawalBankInfo
+    CreateFeeDetailType:
+      type: object
+      properties:
+        isBillable:
+          description: Defines if a fee will be billed directly to the subaccount.
+          type: boolean
+          default: true
+        rate:
+          description: The rate should be in percentage format. The rate should be a value between 0 and 1 where 0.01 is 1%.
+          type: number
+          default: 0
+          maximum: 1
+          minimum: 0
+        type:
+          $ref: '#/components/schemas/CreateFeeType'
+      required:
+      - type
+      title: CreateFeeDetailType
+    CreateFundingAllocationsResponse:
+      type: object
+      properties:
+        idempotentId:
+          description: A client-provided unique ID for idempotent requests
+          type: string
+          example: '12838927347'
+          maxLength: 128
+        transactionIds:
+          type: array
+          items:
+            type: string
+      required:
+      - idempotentId
+      title: CreateFundingAllocationsResponse
+    RoutingDetails:
+      type: object
+      properties:
+        address:
+          $ref: '#/components/schemas/DestinationAddress'
+        code:
+          type: string
+          enum:
+          - ABA
+          - BIC
+          - DDA
+        id:
+          type: string
+        name:
+          description: Name of the Beneficiary
+          type: string
+      required:
+      - id
+      - code
+      title: RoutingDetails
+    FeeDetailType:
+      type: object
+      properties:
+        isBillable:
+          description: Defines if a fee will be billed directly to the subaccount.
+          type: boolean
+        rate:
+          description: The rate should be in percentage format. The rate should be a value between 0 and 1 where 0.01 is 1%.
+          type: number
+          maximum: 1
+          minimum: 0
+        startDate:
+          description: The start date (inclusive) in `YYYY-MM-DD` format. This date should always be set in the future. Dates are always in UTC [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'full-date'.
+          type: string
+          format: date
+        type:
+          $ref: '#/components/schemas/FeeType'
+      required:
+      - type
+      - rate
+      - startDate
+      - isBillable
+      title: FeeDetailType
+    ListSubaccountWithdrawalsResponse:
       type: object
       properties:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/SubaccountTransaction'
+            $ref: '#/components/schemas/ListSubaccountWithdrawalsObject'
         page:
           $ref: '#/components/schemas/Page'
       required:
       - data
-      title: SubaccountTransactionsResponse
-    ErrorDetails:
+      title: ListSubaccountWithdrawalsResponse
+    CancelSubaccountWithdrawalResponse:
       type: object
       properties:
-        errorType:
-          $ref: '#/components/schemas/ErrorType'
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
+        data:
+          $ref: '#/components/schemas/CancelSubaccountWithdrawalObject'
       required:
-      - errorType
-      - message
-      title: ErrorDetails
+      - data
+      title: CancelSubaccountWithdrawalResponse
+    SubaccountStatus:
+      description: Status of the subaccount
+      type: string
+      enum:
+      - OPEN
+      - CLOSED
+      - SUBMITTED
+    CreateSubaccountTransactionRequest:
+      description: Details of the transactions to create
+      type: object
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateSubaccountTransaction'
+          maxItems: 100
+          minItems: 1
+      required:
+      - transactions
+      title: CreateSubaccountTransactionRequest
+    Beneficiary:
+      type: object
+      properties:
+        beneficiaryAllocation:
+          type: number
+          maximum: 100
+          minimum: 0
+        beneficiaryName:
+          type: string
+        beneficiaryType:
+          $ref: '#/components/schemas/BeneficiaryType'
+      required:
+      - beneficiaryType
+      - beneficiaryName
+      - beneficiaryAllocation
+      title: Beneficiary
+    BalanceDetails:
+      type: object
+      properties:
+        assetType:
+          description: A string representing a type of crypto-asset, which usually corresponds to the crypto asset's ticker symbol. Use `/asset-types` to list all of the supported asset types for your organization.
+          type: string
+          example: BTC
+        availableForTrading:
+          type: string
+        availableForWithdrawal:
+          type: string
+        entries:
+          type: array
+          items:
+            $ref: '#/components/schemas/Balance'
+        totalBalance:
+          type: string
+      title: BalanceDetails
+    BeneficiaryGroup:
+      type: array
+      items:
+        $ref: '#/components/schemas/Beneficiary'
+      title: BeneficiaryGroup
+    SubaccountWithdrawalResponse:
+      type: object
+      properties:
+        transactionId:
+          description: Unique Identifier for the transaction
+          type: string
+          example: c4c4652f-0c07-472c-a7f8-955fbe07775d
+      required:
+      - transactionId
+      title: SubaccountWithdrawalResponse
+    GetSubaccountWithdrawalResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/GetSubaccountWithdrawalObject'
+      required:
+      - data
+      title: GetSubaccountWithdrawalResponse
+    AccruedFeeType:
+      type: object
+      properties:
+        accruedValue:
+          description: Accrued fee value for the period.
+          type: string
+        endPeriod:
+          description: The end date (inclusive) in `YYYY-MM-DD` format of the period accrued. Dates are always in UTC [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'full-date'.
+          type: string
+          format: date
+        rate:
+          description: The rate should be in percentage format. The rate should be a value between 0 and 1 where 0.01 is 1%.
+          type: number
+          maximum: 1
+          minimum: 0
+        startPeriod:
+          description: The start date (inclusive) in `YYYY-MM-DD` format of the period accrued. Dates are always in UTC [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'full-date'.
+          type: string
+          format: date
+        state:
+          $ref: '#/components/schemas/FeeCalculationStateType'
+        totalBalanceInUSD:
+          description: Assets under custody value in USD at the time of accrual.
+          type: string
+        type:
+          $ref: '#/components/schemas/FeeType'
+      required:
+      - startPeriod
+      - endPeriod
+      - accruedValue
+      - type
+      - rate
+      - state
+      title: AccruedFee
+    TransactionIdResponse:
+      type: object
+      properties:
+        transactionIds:
+          type: array
+          items:
+            type: object
+            properties:
+              idempotentId:
+                description: A client-provided unique ID for idempotent transaction
+                type: string
+                example: '12838927347'
+                maxLength: 128
+              transactionId:
+                description: Unique Identifier for the transaction
+                type: string
+                example: c4c4652f-0c07-472c-a7f8-955fbe07775d
+            required:
+            - transactionId
+            - idempotentId
+      title: TransactionIdResponse
+    SubaccountTransactionAmount:
+      type: object
+      properties:
+        assetType:
+          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol. Use `/asset-types` to list all of the supported asset types for your organization.
+
+
+            * Posted - Amount is fully settled and available
+
+
+            * Hold - Amount is held and not available
+
+
+            * Pending - Amount is available for trading but not for withdrawal as it not settled yet
+
+
+            * A list with the supported types of balance available for this asset and transaction'
+          type: string
+          example: BTC
+        balances:
+          type: array
+          items:
+            type: object
+            properties:
+              amount:
+                type: string
+              balanceType:
+                type: string
+      title: SubaccountTransactionAmount
+    SubaccountTransaction:
+      type: object
+      properties:
+        createdAt:
+          description: The timestamp when the transaction request was created.
+          type: string
+          format: date-time
+          example: '2019-01-02T12:34:56.000Z'
+        endedAt:
+          description: The timestamp when the transaction request reached a final state - POSTED or CANCELED (optional).
+          type:
+          - string
+          - 'null'
+          format: date-time
+          example: '2019-01-03T12:34:56.000Z'
+        status:
+          $ref: '#/components/schemas/SubaccountTransactionStatus'
+        subaccounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubaccountTransactionEntry'
+        transactionId:
+          description: The transaction ID which can be used to reference this transaction in other queries.
+          type: string
+          example: c4c4652f-0c07-472c-a7f8-955fbe07775d
+        transactionType:
+          $ref: '#/components/schemas/SubaccountTransactionType'
+      example:
+        transactionId: c4c4652f-0c07-472c-a7f8-955fbe07775d
+        subaccounts:
+        - subaccountId: ec761b5e-fd2c-497a-a9a0-f8738ac97bdf
+          balances:
+          - assetType: BTC
+            hold: '1000.00'
+            pending: '1000.00'
+            posted: '1000.00'
+        status: POSTED
+        createdAt: '2019-01-02T12:34:56.000Z'
+        endedAt: '2019-01-03T12:34:56.000Z'
+        transactionType: WITHDRAWAL
+      required:
+      - transactionId
+      - status
+      - subaccounts
+      - createdAt
+      title: SubaccountTransaction
+    SubaccountTransactionEntry:
+      type: object
+      properties:
+        amounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubaccountTransactionAmount'
+        subaccountId:
+          description: Unique Identifier for the subaccount
+          type: string
+          example: ec761b5e-fd2c-497a-a9a0-f8738ac97bdf
+      title: SubaccountTransactionEntry
+    FeeType:
+      type: string
+      enum:
+      - ADVISORY
+      - MODEL
+      - MANAGEMENT
+      - CUSTODY
+      title: FeeType
+    CreateSubaccountBillingChargesResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            ids:
+              type: array
+              items:
+                type: string
+          required:
+          - ids
+      required:
+      - data
+      title: CreateSubaccountBillingChargeResponse
+    CreateFundingAllocationsRequest:
+      description: Details of the allocations to create
+      type: object
+      properties:
+        allocations:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateFundingAllocation'
+          maxItems: 100
+          minItems: 1
+        idempotentId:
+          description: A client-provided unique ID for idempotent requests
+          type: string
+          example: '12838927347'
+          maxLength: 128
+      required:
+      - allocations
+      - idempotentId
+      title: CreateFundingAllocationsRequest
+    CreateSubaccountWithdrawalResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/SubaccountWithdrawalResponse'
+      required:
+      - data
+      title: CreateSubaccountWithdrawalResponse
+    SubaccountSubType:
+      description: SubType of the subaccount, may not always apply
+      type: string
+      enum:
+      - ROLLOVER
+      - CONVERSION
+    BankInfoResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            bank:
+              description: Bank name
+              type: string
+            bankAccountNr:
+              description: Bank Account Number
+              type: string
+            bankAddress:
+              description: Bank Address
+              type: string
+            bankRoutingNr:
+              description: Bank Routing Number
+              type: string
+              pattern: ^\d{9}$
+            bankSwiftCode:
+              description: Bank Swift Code
+              type: string
+            beneficiaryAddress:
+              description: Beneficiary Address
+              type: string
+            beneficiaryName:
+              description: Beneficiary Name
+              type: string
+            memo:
+              description: Memo field to use on a Wire deposit
+              type: string
+      title: BankInfoResponse
+    CancelSubaccountWithdrawalObject:
+      type: object
+      properties:
+        success:
+          type: boolean
+      title: CancelSubaccountWithdrawalObject
+    UpdateSubaccountResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/SubaccountIdResponse'
+      required:
+      - data
+      title: UpdateSubaccountResponse
     SubaccountsDetails:
       type: object
       properties:
@@ -1522,67 +2303,114 @@ components:
       - createdAt
       - accruedFees
       title: SubaccountsDetails
-    SubaccountSubType:
-      description: SubType of the subaccount, may not always apply
-      type: string
-      enum:
-      - ROLLOVER
-      - CONVERSION
-    SubaccountTransactionAmount:
+    SubaccountIdResponse:
       type: object
       properties:
-        assetType:
-          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol. Use `/asset-types` to list all of the supported asset types for your organization.
-
-
-            * Posted - Amount is fully settled and available
-
-
-            * Hold - Amount is held and not available
-
-
-            * Pending - Amount is available for trading but not for withdrawal as it not settled yet
-
-
-            * A list with the supported types of balance available for this asset and transaction'
+        subaccountId:
+          description: Unique Identifier for the subaccount
           type: string
-          example: BTC
-        balances:
+          example: ec761b5e-fd2c-497a-a9a0-f8738ac97bdf
+      required:
+      - subaccountId
+      title: SubaccountIdResponse
+    Page:
+      description: Pagination info
+      type: object
+      properties:
+        next:
+          description: URL to use to query for the next page or null if no additional results are available
+          type:
+          - string
+          - 'null'
+          example: <next page url>
+          x-omitempty: false
+      title: Page
+    SubaccountTransactionsResponse:
+      type: object
+      properties:
+        data:
           type: array
           items:
-            type: object
-            properties:
-              amount:
-                type: string
-              balanceType:
-                type: string
-      title: SubaccountTransactionAmount
-    FeeType:
-      type: string
-      enum:
-      - ADVISORY
-      - MODEL
-      - MANAGEMENT
-      - CUSTODY
-      title: FeeType
-    CreateFeeDetailType:
+            $ref: '#/components/schemas/SubaccountTransaction'
+        page:
+          $ref: '#/components/schemas/Page'
+      required:
+      - data
+      title: SubaccountTransactionsResponse
+    CreateFundingAllocation:
       type: object
       properties:
-        isBillable:
-          description: Defines if a fee will be billed directly to the subaccount.
-          type: boolean
-          default: true
-        rate:
-          description: The rate should be in percentage format. The rate should be a value between 0 and 1 where 0.01 is 1%.
-          type: number
-          default: 0
-          maximum: 1
-          minimum: 0
-        type:
-          $ref: '#/components/schemas/CreateFeeType'
+        amount:
+          description: The amount to allocate
+          type: string
+          example: '1000.00'
+        assetType:
+          description: A string representing a type of asset. At the moment, only USD is supported.
+          type: string
+          example: USD
+        subaccountId:
+          description: Unique Identifier for the subaccount
+          type: string
+          example: ec761b5e-fd2c-497a-a9a0-f8738ac97bdf
+        transactionType:
+          description: 'A string describing the type of the given allocation
+
+
+            * DEPOSIT - Deposit allocation (Client to Program Customer)
+
+
+            * WITHDRAWAL - Withdrawal allocation (Program Customer to Client)
+
+            '
+          type: string
+          enum:
+          - DEPOSIT
+          - WITHDRAWAL
       required:
-      - type
-      title: CreateFeeDetailType
+      - subaccountId
+      - assetType
+      - amount
+      - transactionType
+      title: CreateFundingAllocation
+    ProgramSigner:
+      type: object
+      properties:
+        programSignerEmail:
+          type: string
+        programSignerFirstName:
+          type: string
+        programSignerLastName:
+          type: string
+      required:
+      - programSignerFirstName
+      - programSignerLastName
+      - programSignerEmail
+      title: ProgramSigner
+    SubaccountsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubaccountsDetails'
+        page:
+          $ref: '#/components/schemas/Page'
+      required:
+      - data
+      title: SubaccountsResponse
+    SubaccountCustomer:
+      description: Unique Identifier and role for the program customer in subaccount
+      type: object
+      properties:
+        customerId:
+          description: Unique Identifier for the program customer
+          type: string
+        role:
+          description: Role of the program customer in the subaccount
+          type: string
+          enum:
+          - PRIMARY
+          - SECONDARY
     CreateSubaccountWithdrawalRequest:
       description: Details of the withdrawal to create for the subaccount
       type: object
@@ -1636,264 +2464,24 @@ components:
       - InsufficientFunds
       - NotImplemented
       title: ErrorType
-    SubaccountCustomer:
-      description: Unique Identifier and role for the program customer in subaccount
+    GetSubaccountWithdrawalObject:
       type: object
       properties:
-        customerId:
-          description: Unique Identifier for the program customer
-          type: string
-        role:
-          description: Role of the program customer in the subaccount
+        asset:
+          $ref: '#/components/schemas/AssetAmount'
+        customerDetails:
+          $ref: '#/components/schemas/WithdrawalBankInfo'
+        status:
           type: string
           enum:
-          - PRIMARY
-          - SECONDARY
-    CreateSubaccountWithdrawalResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/SubaccountWithdrawalResponse'
-      required:
-      - data
-      title: CreateSubaccountWithdrawalResponse
-    SubaccountIdResponse:
-      type: object
-      properties:
-        subaccountId:
-          description: Unique Identifier for the subaccount
-          type: string
-          example: ec761b5e-fd2c-497a-a9a0-f8738ac97bdf
-      required:
-      - subaccountId
-      title: SubaccountIdResponse
-    CreateSubaccountRequest:
-      description: Details of the subaccount to open for the program customer
-      type: object
-      properties:
-        externalSubaccountId:
-          description: The external unique identifier you wish to use to identify this subaccount.
-          type: string
-        fees:
-          description: List of fees applied to the subaccount. All fees need to be defined.
-          type: array
-          items:
-            $ref: '#/components/schemas/CreateFeeDetailType'
-        name:
-          description: The name of the subaccount. Needs to be unique per program customer.
-          type: string
-      example:
-        name: Subaccount Name
-        externalSubaccountId: EXTERNAL_ID_001
-        fees:
-        - type: ADVISORY
-          rate: 0.01
-        - type: MODEL
-          rate: 0.01
-          isBillable: false
-        - type: MANAGEMENT
-          rate: 0.01
-      required:
-      - externalSubaccountId
-      - fees
-      - name
-      title: CreateSubaccountRequest
-    BeneficiaryType:
-      type: string
-      enum:
-      - SPOUSE
-      - FAMILY_OR_FRIEND
-      - CHARITY
-      - TRUST
-      - ESTATE
-      title: BeneficiaryType
-    SubaccountType:
-      description: Type of the subaccount
-      type: string
-      enum:
-      - IRA
-      - ROTH
-      - JOINT
-      - CUSTODIAL
-      - INDIVIDUAL_TAXABLE
-      - INSTITUTIONAL_TAXABLE
-    CreateFundingAllocation:
-      type: object
-      properties:
-        amount:
-          description: The amount to allocate
-          type: string
-          example: '1000.00'
-        assetType:
-          description: A string representing a type of asset. At the moment, only USD is supported.
-          type: string
-          example: USD
-        subaccountId:
-          description: Unique Identifier for the subaccount
-          type: string
-          example: ec761b5e-fd2c-497a-a9a0-f8738ac97bdf
-        transactionType:
-          description: 'A string describing the type of the given allocation
-
-
-            * DEPOSIT - Deposit allocation (Client to Program Customer)
-
-
-            * WITHDRAWAL - Withdrawal allocation (Program Customer to Client)
-
-            '
-          type: string
-          enum:
-          - DEPOSIT
-          - WITHDRAWAL
-      required:
-      - subaccountId
-      - assetType
-      - amount
-      - transactionType
-      title: CreateFundingAllocation
-    BankInfoResponse:
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            bank:
-              description: Bank name
-              type: string
-            bankAccountNr:
-              description: Bank Account Number
-              type: string
-            bankAddress:
-              description: Bank Address
-              type: string
-            bankRoutingNr:
-              description: Bank Routing Number
-              type: string
-              pattern: ^\d{9}$
-            bankSwiftCode:
-              description: Bank Swift Code
-              type: string
-            beneficiaryAddress:
-              description: Beneficiary Address
-              type: string
-            beneficiaryName:
-              description: Beneficiary Name
-              type: string
-            memo:
-              description: Memo field to use on a Wire deposit
-              type: string
-      title: BankInfoResponse
-    UpdateFeeDetailType:
-      type: object
-      properties:
-        isBillable:
-          description: Defines if a fee will be billed directly to the subaccount.
-          type: boolean
-          default: true
-        rate:
-          description: The rate should be in percentage format. The rate should be a value between 0 and 1 where 0.01 is 1%.
-          type: number
-          default: 0
-          maximum: 1
-          minimum: 0
-        startDate:
-          description: The start date (inclusive) in `YYYY-MM-DD` format. This date should always be set in the future. Dates are always in UTC [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'full-date'.
-          type: string
-          format: date
-        type:
-          $ref: '#/components/schemas/CreateFeeType'
-      required:
-      - type
-      - startDate
-      title: UpdateFeeDetailType
-    RoutingDetails:
-      type: object
-      properties:
-        address:
-          $ref: '#/components/schemas/DestinationAddress'
-        code:
-          type: string
-          enum:
-          - ABA
-          - BIC
-          - DDA
-        id:
-          type: string
-        name:
-          description: Name of the Beneficiary
-          type: string
-      required:
-      - id
-      - code
-      title: RoutingDetails
-    CreateSubaccountBillingChargesResponse:
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            ids:
-              type: array
-              items:
-                type: string
-          required:
-          - ids
-      required:
-      - data
-      title: CreateSubaccountBillingChargeResponse
-    BalanceDetails:
-      type: object
-      properties:
-        assetType:
-          description: A string representing a type of crypto-asset, which usually corresponds to the crypto asset's ticker symbol. Use `/asset-types` to list all of the supported asset types for your organization.
-          type: string
-          example: BTC
-        availableForTrading:
-          type: string
-        availableForWithdrawal:
-          type: string
-        entries:
-          type: array
-          items:
-            $ref: '#/components/schemas/Balance'
-        totalBalance:
-          type: string
-      title: BalanceDetails
-    Balance:
-      type: object
-      properties:
-        amount:
-          type: string
-        description:
-          description: A description of the balance type and its meaning
-          type: string
-      title: Balance
-    CreateFundingAllocationsRequest:
-      description: Details of the allocations to create
-      type: object
-      properties:
-        allocations:
-          type: array
-          items:
-            $ref: '#/components/schemas/CreateFundingAllocation'
-          maxItems: 100
-          minItems: 1
-        idempotentId:
-          description: A client-provided unique ID for idempotent requests
-          type: string
-          example: '12838927347'
-          maxLength: 128
-      required:
-      - allocations
-      - idempotentId
-      title: CreateFundingAllocationsRequest
-    FeeCalculationStateType:
-      type: string
-      enum:
-      - ONGOING
-      - DONE
-      title: FeeStateType
+          - INITIATED
+          - PENDING_ENDORSEMENT
+          - PENDING_REVIEW
+          - BROADCASTING
+          - COMPLETED
+          - FAILED
+          - CANCELED
+      title: GetSubaccountWithdrawalObject
     SubaccountTransactionsByIdResponse:
       type: object
       properties:
@@ -1906,28 +2494,19 @@ components:
       required:
       - data
       title: SubaccountTransactionsByIdResponse
-    SubaccountTransactionStatus:
-      description: 'A string describing the status of the given transaction
-
-
-
-        * POSTED - This transaction has been completed and is confirmed on the blockchain.
-
-
-
-        * CANCELED - This transaction has been cancel. Funds were not successfully transferred.
-
-
-
-        * PENDING - This transaction has been queued and the funds are being held until the transaction is POSTED or CANCELED.
-
-        '
-      type: string
-      enum:
-      - POSTED
-      - PENDING
-      - CANCELED
-      title: SubaccountTransactionStatus
+    ErrorDetails:
+      type: object
+      properties:
+        errorType:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - errorType
+      - message
+      title: ErrorDetails
     AssetAmount:
       type: object
       properties:
@@ -1949,69 +2528,6 @@ components:
       - assetType
       - amount
       title: AssetAmount
-    CancelSubaccountWithdrawalResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/CancelSubaccountWithdrawalObject'
-      required:
-      - data
-      title: CancelSubaccountWithdrawalResponse
-    CreateSubaccountBillingChargesRequest:
-      description: Details of the billing charge to create
-      type: object
-      properties:
-        charges:
-          type: array
-          items:
-            type: object
-            properties:
-              amount:
-                description: The amount to transfer
-                type: string
-                example: '1000.00'
-              subaccountId:
-                description: Unique Identifier for the subaccount
-                type: string
-                example: ec761b5e-fd2c-497a-a9a0-f8738ac97bdf
-            required:
-            - subaccountId
-            - amount
-          maxItems: 100
-          minItems: 1
-        feeType:
-          $ref: '#/components/schemas/CreateFeeType'
-        idempotentId:
-          type: string
-        interval:
-          type: object
-          properties:
-            endDate:
-              type: string
-              format: date
-            startDate:
-              type: string
-              format: date
-          required:
-          - startDate
-          - endDate
-      required:
-      - idempotentId
-      - feeType
-      - charges
-      title: CreateSubaccountBillingChargesRequest
-    CreateFeeType:
-      type: string
-      enum:
-      - ADVISORY
-      - MODEL
-      - MANAGEMENT
-      title: CreateFeeType
-    SubaccountCustomers:
-      description: List of account owners with their respective roles (can only be changed during onboarding)
-      type: array
-      items:
-        $ref: '#/components/schemas/SubaccountCustomer'
     CreateSubaccountTransaction:
       description: Details of a transaction to create
       type: object
@@ -2048,19 +2564,14 @@ components:
       - amount
       - idempotentId
       title: CreateSubaccountTransaction
-    CreateSubaccountTransactionRequest:
-      description: Details of the transactions to create
+    CreateSubaccountTransactionResponse:
       type: object
       properties:
-        transactions:
-          type: array
-          items:
-            $ref: '#/components/schemas/CreateSubaccountTransaction'
-          maxItems: 100
-          minItems: 1
+        data:
+          $ref: '#/components/schemas/TransactionIdResponse'
       required:
-      - transactions
-      title: CreateSubaccountTransactionRequest
+      - data
+      title: CreateSubaccountTransactionResponse
     CancelSubaccountBillingChargeResponse:
       type: object
       properties:
@@ -2074,517 +2585,6 @@ components:
       required:
       - data
       title: CancelSubaccountBillingChargeResponse
-    DestinationAddress:
-      description: Information related to the Address of the Benificiary
-      type: object
-      properties:
-        address:
-          description: Street Address
-          type: string
-          maxLength: 35
-        address2:
-          description: Street Address Continued
-          type: string
-          maxLength: 35
-        city:
-          description: City of the Address
-          type: string
-        country:
-          description: Country of the Address
-          type: string
-        state:
-          description: State of the Address
-          type: string
-        zipcode:
-          description: Zip Code of the Address
-          type: string
-      example:
-        address: 123 Main Street
-        city: Windsor
-        state: Iowa
-        zipcode: '12312'
-      required:
-      - address
-      - city
-      - state
-      - zipcode
-      title: DestinationAddress
-    CreateFundingAllocationsResponse:
-      type: object
-      properties:
-        idempotentId:
-          description: A client-provided unique ID for idempotent requests
-          type: string
-          example: '12838927347'
-          maxLength: 128
-        transactionIds:
-          type: array
-          items:
-            type: string
-      required:
-      - idempotentId
-      title: CreateFundingAllocationsResponse
-    GetSubaccountWithdrawalResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/GetSubaccountWithdrawalObject'
-      required:
-      - data
-      title: GetSubaccountWithdrawalResponse
-    SubaccountTransactionEntry:
-      type: object
-      properties:
-        amounts:
-          type: array
-          items:
-            $ref: '#/components/schemas/SubaccountTransactionAmount'
-        subaccountId:
-          description: Unique Identifier for the subaccount
-          type: string
-          example: ec761b5e-fd2c-497a-a9a0-f8738ac97bdf
-      title: SubaccountTransactionEntry
-    SubaccountWithdrawalResponse:
-      type: object
-      properties:
-        transactionId:
-          description: Unique Identifier for the transaction
-          type: string
-          example: c4c4652f-0c07-472c-a7f8-955fbe07775d
-      required:
-      - transactionId
-      title: SubaccountWithdrawalResponse
-    GetSubaccountWithdrawalObject:
-      type: object
-      properties:
-        asset:
-          $ref: '#/components/schemas/AssetAmount'
-        customerDetails:
-          $ref: '#/components/schemas/WithdrawalBankInfo'
-        status:
-          type: string
-          enum:
-          - INITIATED
-          - PENDING_ENDORSEMENT
-          - PENDING_REVIEW
-          - BROADCASTING
-          - COMPLETED
-          - FAILED
-          - CANCELED
-      title: GetSubaccountWithdrawalObject
-    WithdrawalBankInfo:
-      description: Information needed to trigger the wire transfer
-      type: object
-      properties:
-        beneficiary:
-          description: Beneficiary Information
-          type: object
-          properties:
-            accountNumber:
-              description: Bank Account Number
-              type: string
-            address:
-              $ref: '#/components/schemas/DestinationAddress'
-            name:
-              description: Name of the Beneficiary
-              type: string
-          required:
-          - address
-          - name
-        financialInstitution:
-          $ref: '#/components/schemas/RoutingDetails'
-        intermediateFinancialInstitution:
-          $ref: '#/components/schemas/RoutingDetails'
-        memo:
-          description: Memo field of the wire
-          type: string
-      required:
-      - beneficiary
-      title: WithdrawalBankInfo
-    SubaccountStatus:
-      description: Status of the subaccount
-      type: string
-      enum:
-      - OPEN
-      - CLOSED
-      - SUBMITTED
-    CreateSubaccountTransactionResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/TransactionIdResponse'
-      required:
-      - data
-      title: CreateSubaccountTransactionResponse
-    SubaccountWalletResponse:
-      type: object
-      properties:
-        networkId:
-          type: string
-        walletId:
-          type: string
-      title: SubaccountWalletReponse
-    ListSubaccountWithdrawalsObject:
-      type: object
-      properties:
-        asset:
-          $ref: '#/components/schemas/AssetAmount'
-        createdAt:
-          description: The timestamp when the withdrawal request was created.
-          type: string
-          format: date-time
-          example: '2019-01-02T12:34:56.000Z'
-        customerDetails:
-          $ref: '#/components/schemas/WithdrawalBankInfo'
-        endedAt:
-          description: The timestamp when the withdrawal request reached a final state - COMPLETED or FAILED (optional).
-          type:
-          - string
-          - 'null'
-          format: date-time
-          example: '2019-01-03T12:34:56.000Z'
-        transactionId:
-          description: Unique Identifier for the transaction
-          type: string
-          example: c4c4652f-0c07-472c-a7f8-955fbe07775d
-        updatedAt:
-          description: The timestamp of the last update to the request.
-          type: string
-          format: date-time
-          example: '2019-01-03T12:34:56.000Z'
-        withdrawalStatus:
-          description: Identifies the status of the withdrawal transaction
-          type: string
-          enum:
-          - INITIATED
-          - PENDING_ENDORSEMENT
-          - PENDING_REVIEW
-          - BROADCASTING
-          - COMPLETED
-          - FAILED
-          - CANCELED
-      title: ListSubaccountWithdrawalsObject
-    ProgramSigner:
-      type: object
-      properties:
-        programSignerEmail:
-          type: string
-        programSignerFirstName:
-          type: string
-        programSignerLastName:
-          type: string
-      required:
-      - programSignerFirstName
-      - programSignerLastName
-      - programSignerEmail
-      title: ProgramSigner
-    FeeDetailType:
-      type: object
-      properties:
-        isBillable:
-          description: Defines if a fee will be billed directly to the subaccount.
-          type: boolean
-        rate:
-          description: The rate should be in percentage format. The rate should be a value between 0 and 1 where 0.01 is 1%.
-          type: number
-          maximum: 1
-          minimum: 0
-        startDate:
-          description: The start date (inclusive) in `YYYY-MM-DD` format. This date should always be set in the future. Dates are always in UTC [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'full-date'.
-          type: string
-          format: date
-        type:
-          $ref: '#/components/schemas/FeeType'
-      required:
-      - type
-      - rate
-      - startDate
-      - isBillable
-      title: FeeDetailType
-    SubaccountsResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/SubaccountsDetails'
-        page:
-          $ref: '#/components/schemas/Page'
-      required:
-      - data
-      title: SubaccountsResponse
-    SubaccountTransaction:
-      type: object
-      properties:
-        createdAt:
-          description: The timestamp when the transaction request was created.
-          type: string
-          format: date-time
-          example: '2019-01-02T12:34:56.000Z'
-        endedAt:
-          description: The timestamp when the transaction request reached a final state - POSTED or CANCELED (optional).
-          type:
-          - string
-          - 'null'
-          format: date-time
-          example: '2019-01-03T12:34:56.000Z'
-        status:
-          $ref: '#/components/schemas/SubaccountTransactionStatus'
-        subaccounts:
-          type: array
-          items:
-            $ref: '#/components/schemas/SubaccountTransactionEntry'
-        transactionId:
-          description: The transaction ID which can be used to reference this transaction in other queries.
-          type: string
-          example: c4c4652f-0c07-472c-a7f8-955fbe07775d
-        transactionType:
-          $ref: '#/components/schemas/SubaccountTransactionType'
-      example:
-        transactionId: c4c4652f-0c07-472c-a7f8-955fbe07775d
-        subaccounts:
-        - subaccountId: ec761b5e-fd2c-497a-a9a0-f8738ac97bdf
-          balances:
-          - assetType: BTC
-            hold: '1000.00'
-            pending: '1000.00'
-            posted: '1000.00'
-        status: POSTED
-        createdAt: '2019-01-02T12:34:56.000Z'
-        endedAt: '2019-01-03T12:34:56.000Z'
-        transactionType: WITHDRAWAL
-      required:
-      - transactionId
-      - status
-      - subaccounts
-      - createdAt
-      title: SubaccountTransaction
-    SubaccountTransactionType:
-      description: 'A string describing the type of the given transaction
-
-
-        * DEPOSIT - Deposit transaction
-
-
-        * WITHDRAWAL - Withdrawal transaction
-
-
-        * TRADE - Trade transaction
-
-
-        * MANAGEMENT_FEE - Management fee
-
-
-        * CUSTODY_FEE - Custody fee
-
-
-        * ADVISORY_FEE - Advisory fee
-
-
-        * MODEL_FEE - Model fee
-
-
-        * SUBACCOUNT_TRANSFER - subaccount transfer
-
-
-        * TRADE_SETTLEMENT - Trade settlement
-
-
-        * DEPOSIT_SWEEP - Deposit sweep
-
-
-        * GAS_FILL - Gas fill transaction
-
-
-        * FEE_SETTLEMENT - Fee settlement
-
-
-        * TRANSACTION_FEE - Transaction fee
-
-
-        * RETURN - Return transaction
-
-
-        * STAKE - Stake transaction
-
-
-        * UNSTAKE - Stake transaction
-
-
-        * CLAIM - Claim rewards
-
-
-        * STAKING_REWARD - Staking rewards
-
-
-        * DELEGATION_REWARD - Delegation rewards
-
-        '
-      type: string
-      enum:
-      - DEPOSIT
-      - WITHDRAWAL
-      - TRADE
-      - MANAGEMENT_FEE
-      - CUSTODY_FEE
-      - ADVISORY_FEE
-      - MODEL_FEE
-      - SUBACCOUNT_TRANSFER
-      - TRADE_SETTLEMENT
-      - DEPOSIT_SWEEP
-      - GAS_FILL
-      - FEE_SETTLEMENT
-      - TRANSACTION_FEE
-      - RETURN
-      - STAKE
-      - UNSTAKE
-      - CLAIM
-      - STAKING_REWARD
-      - DELEGATION_REWARD
-      title: SubaccountTransactionType
-    CancelSubaccountWithdrawalObject:
-      type: object
-      properties:
-        success:
-          type: boolean
-      title: CancelSubaccountWithdrawalObject
-    CreateSubaccountResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/SubaccountIdResponse'
-      required:
-      - data
-      title: CreateSubaccountResponse
-    UpdateSubaccountRequest:
-      description: Details of the subaccount to open for the customer
-      type: object
-      properties:
-        beneficiaryGroup:
-          $ref: '#/components/schemas/BeneficiaryGroup'
-        contingencyBeneficiaryGroup:
-          $ref: '#/components/schemas/BeneficiaryGroup'
-        fees:
-          description: List of fees to be update
-          type: array
-          items:
-            $ref: '#/components/schemas/UpdateFeeDetailType'
-        programSignerGroup:
-          $ref: '#/components/schemas/ProgramSignerGroup'
-      example:
-        fees:
-        - type: ADVISORY
-          rate: 0.01
-          startDate: '2023-12-01'
-      title: UpdateSubaccountRequest
-    Beneficiary:
-      type: object
-      properties:
-        beneficiaryAllocation:
-          type: number
-          maximum: 100
-          minimum: 0
-        beneficiaryName:
-          type: string
-        beneficiaryType:
-          $ref: '#/components/schemas/BeneficiaryType'
-      required:
-      - beneficiaryType
-      - beneficiaryName
-      - beneficiaryAllocation
-      title: Beneficiary
-    UpdateSubaccountResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/SubaccountIdResponse'
-      required:
-      - data
-      title: UpdateSubaccountResponse
-    Page:
-      description: Pagination info
-      type: object
-      properties:
-        next:
-          description: URL to use to query for the next page or null if no additional results are available
-          type:
-          - string
-          - 'null'
-          example: <next page url>
-          x-omitempty: false
-      title: Page
-    AccruedFeeType:
-      type: object
-      properties:
-        accruedValue:
-          description: Accrued fee value for the period.
-          type: string
-        endPeriod:
-          description: The end date (inclusive) in `YYYY-MM-DD` format of the period accrued. Dates are always in UTC [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'full-date'.
-          type: string
-          format: date
-        rate:
-          description: The rate should be in percentage format. The rate should be a value between 0 and 1 where 0.01 is 1%.
-          type: number
-          maximum: 1
-          minimum: 0
-        startPeriod:
-          description: The start date (inclusive) in `YYYY-MM-DD` format of the period accrued. Dates are always in UTC [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339#section-5.6) 'full-date'.
-          type: string
-          format: date
-        state:
-          $ref: '#/components/schemas/FeeCalculationStateType'
-        totalBalanceInUSD:
-          description: Assets under custody value in USD at the time of accrual.
-          type: string
-        type:
-          $ref: '#/components/schemas/FeeType'
-      required:
-      - startPeriod
-      - endPeriod
-      - accruedValue
-      - type
-      - rate
-      - state
-      title: AccruedFee
-    BeneficiaryGroup:
-      type: array
-      items:
-        $ref: '#/components/schemas/Beneficiary'
-      title: BeneficiaryGroup
-    ListSubaccountWithdrawalsResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/ListSubaccountWithdrawalsObject'
-        page:
-          $ref: '#/components/schemas/Page'
-      required:
-      - data
-      title: ListSubaccountWithdrawalsResponse
-    TransactionIdResponse:
-      type: object
-      properties:
-        transactionIds:
-          type: array
-          items:
-            type: object
-            properties:
-              idempotentId:
-                description: A client-provided unique ID for idempotent transaction
-                type: string
-                example: '12838927347'
-                maxLength: 128
-              transactionId:
-                description: Unique Identifier for the transaction
-                type: string
-                example: c4c4652f-0c07-472c-a7f8-955fbe07775d
-            required:
-            - transactionId
-            - idempotentId
-      title: TransactionIdResponse
   securitySchemes:
     Api-Access-Key:
       type: apiKey

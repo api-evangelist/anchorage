@@ -281,13 +281,6 @@ paths:
     - url: https://api.anchorage-staging.com/v2
 components:
   schemas:
-    StablecoinConversionResponse:
-      type: object
-      properties:
-        authorizationOperationId:
-          type: string
-      required:
-      - authorizationOperationId
     StablecoinConversion:
       type: object
       properties:
@@ -321,16 +314,6 @@ components:
       - destinationWalletId
       - destinationAssetType
       - amount
-    EntitledStablecoins:
-      type: object
-      properties:
-        stablecoins:
-          description: Stablecoin token symbols your organization is entitled to query reserves history for.
-          type: array
-          items:
-            type: string
-      required:
-      - stablecoins
     ErrorType:
       description: The type of error returned.
       type: string
@@ -448,6 +431,13 @@ components:
       - amount
       - status
       - createdAt
+    StablecoinConversionResponse:
+      type: object
+      properties:
+        authorizationOperationId:
+          type: string
+      required:
+      - authorizationOperationId
     ReservesHistoryResponse:
       type: object
       properties:
@@ -460,31 +450,16 @@ components:
       required:
       - data
       - page
-    ErrorDetails:
+    EntitledStablecoins:
       type: object
       properties:
-        errorType:
-          $ref: '#/components/schemas/ErrorType'
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - errorType
-      - message
-      title: ErrorDetails
-    IssueRedeemHistoryResponse:
-      type: object
-      properties:
-        data:
+        stablecoins:
+          description: Stablecoin token symbols your organization is entitled to query reserves history for.
           type: array
           items:
-            $ref: '#/components/schemas/IssueRedeemConversion'
-        page:
-          $ref: '#/components/schemas/Page'
+            type: string
       required:
-      - data
-      - page
+      - stablecoins
     ReserveComposition:
       description: 'Reserve backing for the queried token, as a map of reserve-component key to balance.
 
@@ -497,18 +472,13 @@ components:
       additionalProperties:
         type: string
       title: Reserve Composition
-    Page:
-      description: Pagination info
+    StablecoinReservesEntitledStablecoinsResponse:
       type: object
       properties:
-        next:
-          description: URL to use to query for the next page or null if no additional results are available
-          type:
-          - string
-          - 'null'
-          example: <next page url>
-          x-omitempty: false
-      title: Page
+        data:
+          $ref: '#/components/schemas/EntitledStablecoins'
+      required:
+      - data
     ReservesSnapshot:
       type: object
       properties:
@@ -552,13 +522,43 @@ components:
       - inTransit
       - createdAt
       title: Reserves Snapshot
-    StablecoinReservesEntitledStablecoinsResponse:
+    ErrorDetails:
+      type: object
+      properties:
+        errorType:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - errorType
+      - message
+      title: ErrorDetails
+    IssueRedeemHistoryResponse:
       type: object
       properties:
         data:
-          $ref: '#/components/schemas/EntitledStablecoins'
+          type: array
+          items:
+            $ref: '#/components/schemas/IssueRedeemConversion'
+        page:
+          $ref: '#/components/schemas/Page'
       required:
       - data
+      - page
+    Page:
+      description: Pagination info
+      type: object
+      properties:
+        next:
+          description: URL to use to query for the next page or null if no additional results are available
+          type:
+          - string
+          - 'null'
+          example: <next page url>
+          x-omitempty: false
+      title: Page
     ErrorDetails_2:
       type: object
       properties:

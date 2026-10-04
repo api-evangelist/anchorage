@@ -193,35 +193,6 @@ paths:
       - Wallet Operations
 components:
   schemas:
-    ListWalletOperationsResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/WalletOperation'
-        page:
-          $ref: '#/components/schemas/Page'
-      required:
-      - data
-      - page
-    ErrorDetails:
-      type: object
-      properties:
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - message
-      title: ErrorDetails
-    WalletOperationResponse:
-      type: object
-      properties:
-        walletOperation:
-          $ref: '#/components/schemas/WalletOperation'
-      required:
-      - walletOperation
     WalletOperation:
       description: 'A wallet operation represents a transaction that your organization signed and broadcast on-chain.
 
@@ -274,6 +245,35 @@ components:
       - networkId
       - status
       - createdAt
+    WalletOperationResponse:
+      type: object
+      properties:
+        walletOperation:
+          $ref: '#/components/schemas/WalletOperation'
+      required:
+      - walletOperation
+    ErrorDetails:
+      type: object
+      properties:
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - message
+      title: ErrorDetails
+    ListWalletOperationsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WalletOperation'
+        page:
+          $ref: '#/components/schemas/Page'
+      required:
+      - data
+      - page
     Page:
       description: Pagination info
       type: object
