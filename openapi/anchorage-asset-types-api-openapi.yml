@@ -143,75 +143,6 @@ paths:
         None: present
 components:
   schemas:
-    ErrorType:
-      description: The type of error returned.
-      type: string
-      enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
-    SupportedFeature:
-      description: A string describing a particular unit of API functionality
-      type: string
-      enum:
-      - TRANSFERS
-      - HOLDS
-      title: SupportedFeature
-    AssetTypesResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/AssetTypeDetails'
-          example:
-          - assetType: BTC
-            name: Bitcoin
-            decimals: 8
-            featureSupport:
-            - TRANSFERS
-            - HOLDS
-            networkId: BTC
-          - assetType: ETH
-            name: Ethereum
-            decimals: 18
-            featureSupport:
-            - TRANSFERS
-            - HOLDS
-            networkId: ETH
-          - assetType: USDC
-            name: USD Coin
-            decimals: 6
-            featureSupport:
-            - TRANSFERS
-            - HOLDS
-            networkId: ETH
-      required:
-      - data
-      title: AssetTypesResponse
-    ErrorDetails:
-      type: object
-      properties:
-        errorType:
-          $ref: '#/components/schemas/ErrorType'
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - errorType
-      - message
-      title: ErrorDetails
     AssetTypeDetails:
       description: A representation of the details a given crypto-asset
       type: object
@@ -261,6 +192,75 @@ components:
       - decimals
       - featureSupport
       title: AssetTypeDetails
+    AssetTypesResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssetTypeDetails'
+          example:
+          - assetType: BTC
+            name: Bitcoin
+            decimals: 8
+            featureSupport:
+            - TRANSFERS
+            - HOLDS
+            networkId: BTC
+          - assetType: ETH
+            name: Ethereum
+            decimals: 18
+            featureSupport:
+            - TRANSFERS
+            - HOLDS
+            networkId: ETH
+          - assetType: USDC
+            name: USD Coin
+            decimals: 6
+            featureSupport:
+            - TRANSFERS
+            - HOLDS
+            networkId: ETH
+      required:
+      - data
+      title: AssetTypesResponse
+    SupportedFeature:
+      description: A string describing a particular unit of API functionality
+      type: string
+      enum:
+      - TRANSFERS
+      - HOLDS
+      title: SupportedFeature
+    ErrorType:
+      description: The type of error returned.
+      type: string
+      enum:
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
+    ErrorDetails:
+      type: object
+      properties:
+        errorType:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - errorType
+      - message
+      title: ErrorDetails
   securitySchemes:
     Api-Access-Key:
       type: apiKey

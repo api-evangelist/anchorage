@@ -441,6 +441,18 @@ components:
       - InsufficientFunds
       - NotImplemented
       title: ErrorType
+    Page:
+      description: Pagination info
+      type: object
+      properties:
+        next:
+          description: URL to use to query for the next page or null if no additional results are available
+          type:
+          - string
+          - 'null'
+          example: <next page url>
+          x-omitempty: false
+      title: Page
     ErrorDetails:
       type: object
       properties:
@@ -454,18 +466,6 @@ components:
       - errorType
       - message
       title: ErrorDetails
-    Page:
-      description: Pagination info
-      type: object
-      properties:
-        next:
-          description: URL to use to query for the next page or null if no additional results are available
-          type:
-          - string
-          - 'null'
-          example: <next page url>
-          x-omitempty: false
-      title: Page
     StatementDetails:
       type: object
       properties:

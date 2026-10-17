@@ -281,56 +281,18 @@ paths:
     - url: https://api.anchorage-staging.com/v2
 components:
   schemas:
-    StablecoinConversion:
+    IssueRedeemHistoryResponse:
       type: object
       properties:
-        amount:
-          type: string
-        destinationAssetType:
-          description: 'A string representing the asset used for this operation. For issuance, this value must be the stablecoin asset. For redemptions, it must be USD.
-
-            Use `/asset-types` to list all supported asset types for your organization.'
-          type: string
-          example: USDX
-        destinationWalletId:
-          type: string
-        idempotencyKey:
-          description: Client-provided idempotency key to ensure request is processed only once
-          type: string
-          example: e763a50d-aa82-4ec7-b5a3-89ad0462d248
-          maxLength: 128
-        sourceAssetType:
-          description: 'A string representing the asset used for this operation. For issuance, this value must be USD. For redemptions, it must be the asset being redeemed.
-
-            Use `/asset-types` to list all supported asset types for your organization.'
-          type: string
-          example: USD
-        sourceWalletId:
-          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/IssueRedeemConversion'
+        page:
+          $ref: '#/components/schemas/Page'
       required:
-      - idempotencyKey
-      - sourceWalletId
-      - sourceAssetType
-      - destinationWalletId
-      - destinationAssetType
-      - amount
-    ErrorType:
-      description: The type of error returned.
-      type: string
-      enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
+      - data
+      - page
     IssueRedeemConversion:
       type: object
       properties:
@@ -431,54 +393,6 @@ components:
       - amount
       - status
       - createdAt
-    StablecoinConversionResponse:
-      type: object
-      properties:
-        authorizationOperationId:
-          type: string
-      required:
-      - authorizationOperationId
-    ReservesHistoryResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/ReservesSnapshot'
-        page:
-          $ref: '#/components/schemas/Page'
-      required:
-      - data
-      - page
-    EntitledStablecoins:
-      type: object
-      properties:
-        stablecoins:
-          description: Stablecoin token symbols your organization is entitled to query reserves history for.
-          type: array
-          items:
-            type: string
-      required:
-      - stablecoins
-    ReserveComposition:
-      description: 'Reserve backing for the queried token, as a map of reserve-component key to balance.
-
-
-        Each value is a decimal string. The set of keys is not fixed; it varies by token and may gain new keys over time, so iterate over whatever keys are present and ignore any you do not recognize. Existing keys are stable and will not be renamed or removed without a new API version.'
-      type: object
-      example:
-        cashDeposits: '5000.00'
-        mmfXyz: '5000.00'
-      additionalProperties:
-        type: string
-      title: Reserve Composition
-    StablecoinReservesEntitledStablecoinsResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/EntitledStablecoins'
-      required:
-      - data
     ReservesSnapshot:
       type: object
       properties:
@@ -522,6 +436,106 @@ components:
       - inTransit
       - createdAt
       title: Reserves Snapshot
+    StablecoinReservesEntitledStablecoinsResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/EntitledStablecoins'
+      required:
+      - data
+    StablecoinConversionResponse:
+      type: object
+      properties:
+        authorizationOperationId:
+          type: string
+      required:
+      - authorizationOperationId
+    ReservesHistoryResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReservesSnapshot'
+        page:
+          $ref: '#/components/schemas/Page'
+      required:
+      - data
+      - page
+    ReserveComposition:
+      description: 'Reserve backing for the queried token, as a map of reserve-component key to balance.
+
+
+        Each value is a decimal string. The set of keys is not fixed; it varies by token and may gain new keys over time, so iterate over whatever keys are present and ignore any you do not recognize. Existing keys are stable and will not be renamed or removed without a new API version.'
+      type: object
+      example:
+        cashDeposits: '5000.00'
+        mmfXyz: '5000.00'
+      additionalProperties:
+        type: string
+      title: Reserve Composition
+    ErrorType:
+      description: The type of error returned.
+      type: string
+      enum:
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
+    StablecoinConversion:
+      type: object
+      properties:
+        amount:
+          type: string
+        destinationAssetType:
+          description: 'A string representing the asset used for this operation. For issuance, this value must be the stablecoin asset. For redemptions, it must be USD.
+
+            Use `/asset-types` to list all supported asset types for your organization.'
+          type: string
+          example: USDX
+        destinationWalletId:
+          type: string
+        idempotencyKey:
+          description: Client-provided idempotency key to ensure request is processed only once
+          type: string
+          example: e763a50d-aa82-4ec7-b5a3-89ad0462d248
+          maxLength: 128
+        sourceAssetType:
+          description: 'A string representing the asset used for this operation. For issuance, this value must be USD. For redemptions, it must be the asset being redeemed.
+
+            Use `/asset-types` to list all supported asset types for your organization.'
+          type: string
+          example: USD
+        sourceWalletId:
+          type: string
+      required:
+      - idempotencyKey
+      - sourceWalletId
+      - sourceAssetType
+      - destinationWalletId
+      - destinationAssetType
+      - amount
+    Page:
+      description: Pagination info
+      type: object
+      properties:
+        next:
+          description: URL to use to query for the next page or null if no additional results are available
+          type:
+          - string
+          - 'null'
+          example: <next page url>
+          x-omitempty: false
+      title: Page
     ErrorDetails:
       type: object
       properties:
@@ -535,29 +549,25 @@ components:
       - errorType
       - message
       title: ErrorDetails
-    IssueRedeemHistoryResponse:
+    EntitledStablecoins:
       type: object
       properties:
-        data:
+        stablecoins:
+          description: Stablecoin token symbols your organization is entitled to query reserves history for.
           type: array
           items:
-            $ref: '#/components/schemas/IssueRedeemConversion'
-        page:
-          $ref: '#/components/schemas/Page'
+            type: string
       required:
-      - data
-      - page
-    Page:
+      - stablecoins
+    Page_2:
       description: Pagination info
       type: object
       properties:
-        next:
-          description: URL to use to query for the next page or null if no additional results are available
+        endCursor:
+          description: Submit this parameter in the "after" field to fetch the next page.
           type:
           - string
           - 'null'
-          example: <next page url>
-          x-omitempty: false
       title: Page
     ErrorDetails_2:
       type: object
@@ -569,16 +579,6 @@ components:
       required:
       - message
       title: ErrorDetails
-    Page_2:
-      description: Pagination info
-      type: object
-      properties:
-        endCursor:
-          description: Submit this parameter in the "after" field to fetch the next page.
-          type:
-          - string
-          - 'null'
-      title: Page
   securitySchemes:
     Api-Access-Key:
       type: apiKey

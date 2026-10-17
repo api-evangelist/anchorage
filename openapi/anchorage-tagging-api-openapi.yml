@@ -368,6 +368,114 @@ paths:
         Read vault activity: present
 components:
   schemas:
+    EntityTagsData:
+      type: object
+      properties:
+        tags:
+          description: List of tags applied to the entity
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+      required:
+      - tags
+      title: EntityTagsData
+    TagType:
+      description: The ownership type of a tag.
+      type: string
+      enum:
+      - system
+      - backoffice
+      - client
+      title: TagType
+    CreateTagResponse:
+      type: object
+      properties:
+        id:
+          description: The unique identifier of the created tag
+          type: string
+          example: '208045946'
+        name:
+          description: The name of the tag
+          type: string
+          example: urgent
+        tagType:
+          $ref: '#/components/schemas/TagType'
+      required:
+      - id
+      - name
+      - tagType
+      title: CreateTagResponse
+    Tag:
+      type: object
+      properties:
+        name:
+          description: The name of the tag (case-insensitive, max 25 chars)
+          type: string
+          example: urgent
+        tagType:
+          $ref: '#/components/schemas/TagType'
+      required:
+      - name
+      - tagType
+      title: Tag
+    TaggingResult:
+      type: object
+      properties:
+        createdAt:
+          description: When the tag association was created (RFC3339)
+          type: string
+          example: '2026-03-19T10:00:00Z'
+        entityId:
+          description: The entity ID
+          type: string
+          example: abc123
+        entityType:
+          description: The entity type
+          type: string
+          example: withdrawal
+        tags:
+          description: Tags applied to this entity
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+      required:
+      - entityId
+      - entityType
+      - createdAt
+      - tags
+      title: TaggingResult
+    DeleteAppliedTagResponse:
+      type: object
+      properties:
+        deleted:
+          description: The name of the tag that was removed
+          type: string
+          example: urgent
+      required:
+      - deleted
+      title: DeleteAppliedTagResponse
+    SearchTagsResponse:
+      type: object
+      properties:
+        data:
+          description: Entities matching the tag search
+          type: array
+          items:
+            $ref: '#/components/schemas/TaggingResult'
+        pagination:
+          $ref: '#/components/schemas/TaggingPagination'
+      required:
+      - data
+      - pagination
+      title: SearchTagsResponse
+    ListTagsResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/EntityTagsData'
+      required:
+      - data
+      title: ListTagsResponse
     ApplyTagsRequest:
       type: object
       properties:
@@ -410,114 +518,21 @@ components:
       - InsufficientFunds
       - NotImplemented
       title: ErrorType
-    SearchTagsResponse:
-      type: object
-      properties:
-        data:
-          description: Entities matching the tag search
-          type: array
-          items:
-            $ref: '#/components/schemas/TaggingResult'
-        pagination:
-          $ref: '#/components/schemas/TaggingPagination'
-      required:
-      - data
-      - pagination
-      title: SearchTagsResponse
-    TaggingResult:
-      type: object
-      properties:
-        createdAt:
-          description: When the tag association was created (RFC3339)
-          type: string
-          example: '2026-03-19T10:00:00Z'
-        entityId:
-          description: The entity ID
-          type: string
-          example: abc123
-        entityType:
-          description: The entity type
-          type: string
-          example: withdrawal
-        tags:
-          description: Tags applied to this entity
-          type: array
-          items:
-            $ref: '#/components/schemas/Tag'
-      required:
-      - entityId
-      - entityType
-      - createdAt
-      - tags
-      title: TaggingResult
-    CreateTagResponse:
-      type: object
-      properties:
-        id:
-          description: The unique identifier of the created tag
-          type: string
-          example: '208045946'
-        name:
-          description: The name of the tag
-          type: string
-          example: urgent
-        tagType:
-          $ref: '#/components/schemas/TagType'
-      required:
-      - id
-      - name
-      - tagType
-      title: CreateTagResponse
-    DeleteAppliedTagResponse:
-      type: object
-      properties:
-        deleted:
-          description: The name of the tag that was removed
-          type: string
-          example: urgent
-      required:
-      - deleted
-      title: DeleteAppliedTagResponse
-    TagType:
-      description: The ownership type of a tag.
-      type: string
-      enum:
-      - system
-      - backoffice
-      - client
-      title: TagType
-    Tag:
+    CreateTagRequest:
       type: object
       properties:
         name:
-          description: The name of the tag (case-insensitive, max 25 chars)
+          description: Tag name (max 25 chars, letters/numbers/underscores/hyphens only)
           type: string
           example: urgent
+          maxLength: 25
+          pattern: ^[a-zA-Z0-9_-]+$
         tagType:
           $ref: '#/components/schemas/TagType'
       required:
       - name
       - tagType
-      title: Tag
-    ListTagsResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/EntityTagsData'
-      required:
-      - data
-      title: ListTagsResponse
-    ApplyTagsResponse:
-      type: object
-      properties:
-        warnings:
-          description: Warnings encountered during tag application (e.g. TAG_LIMIT_REACHED)
-          type:
-          - array
-          - 'null'
-          items:
-            type: string
-      title: ApplyTagsResponse
+      title: CreateTagRequest
     ErrorDetails:
       type: object
       properties:
@@ -549,32 +564,17 @@ components:
       - hasMore
       - limit
       title: TaggingPagination
-    EntityTagsData:
+    ApplyTagsResponse:
       type: object
       properties:
-        tags:
-          description: List of tags applied to the entity
-          type: array
+        warnings:
+          description: Warnings encountered during tag application (e.g. TAG_LIMIT_REACHED)
+          type:
+          - array
+          - 'null'
           items:
-            $ref: '#/components/schemas/Tag'
-      required:
-      - tags
-      title: EntityTagsData
-    CreateTagRequest:
-      type: object
-      properties:
-        name:
-          description: Tag name (max 25 chars, letters/numbers/underscores/hyphens only)
-          type: string
-          example: urgent
-          maxLength: 25
-          pattern: ^[a-zA-Z0-9_-]+$
-        tagType:
-          $ref: '#/components/schemas/TagType'
-      required:
-      - name
-      - tagType
-      title: CreateTagRequest
+            type: string
+      title: ApplyTagsResponse
   securitySchemes:
     Api-Access-Key:
       type: apiKey

@@ -189,17 +189,6 @@ components:
       - name
       - decimals
       - networkId
-    ListNetworksResponse:
-      description: Response containing a list of supported networks
-      type: object
-      properties:
-        data:
-          description: Array of network details
-          type: array
-          items:
-            $ref: '#/components/schemas/Network'
-      required:
-      - data
     ListAssetTypesResponse:
       description: Response containing a list of supported asset types
       type: object
@@ -209,6 +198,17 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AssetType'
+      required:
+      - data
+    ListNetworksResponse:
+      description: Response containing a list of supported networks
+      type: object
+      properties:
+        data:
+          description: Array of network details
+          type: array
+          items:
+            $ref: '#/components/schemas/Network'
       required:
       - data
     ErrorDetails:

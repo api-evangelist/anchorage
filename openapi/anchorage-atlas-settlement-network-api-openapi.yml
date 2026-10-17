@@ -814,25 +814,54 @@ paths:
     - url: https://api.anchorage-staging.com/v2
 components:
   schemas:
-    SNParticipantResponse:
-      type: object
-      properties:
-        participant:
-          $ref: '#/components/schemas/SNParticipant'
-      required:
-      - participant
-    SNSettlementsResponse:
+    SNParticipantsResponse:
       type: object
       properties:
         data:
           type: array
           items:
-            $ref: '#/components/schemas/SNSettlement'
+            $ref: '#/components/schemas/SNParticipant'
         page:
           $ref: '#/components/schemas/Page'
       required:
       - data
       - page
+    SNTrustedCounterpartiesResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SNTrustedCounterparty'
+        page:
+          $ref: '#/components/schemas/Page'
+      required:
+      - data
+      - page
+    SNTrustedCounterpartyResponse:
+      type: object
+      properties:
+        counterparty:
+          $ref: '#/components/schemas/SNTrustedCounterparty'
+      required:
+      - counterparty
+    ErrorType:
+      description: The type of error returned.
+      type: string
+      enum:
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
     SNTrustedCounterparty:
       type: object
       properties:
@@ -848,6 +877,25 @@ components:
       - counterpartyId
       - counterpartyName
       - isActive
+    SNProposeSettlementResponse:
+      type: object
+      properties:
+        settlementId:
+          type: string
+      required:
+      - settlementId
+    SNSettlementsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SNSettlement'
+        page:
+          $ref: '#/components/schemas/Page'
+      required:
+      - data
+      - page
     SNSettlementState:
       type: string
       enum:
@@ -858,6 +906,164 @@ components:
       - Rejected
       - Executed
       - Failed
+    SNTrustedCounterpartyProposal:
+      type: object
+      properties:
+        counterpartyId:
+          type: string
+        description:
+          type: string
+        idempotentId:
+          type: string
+          maxLength: 128
+        participantId:
+          type: string
+      required:
+      - participantId
+      - counterpartyId
+      - idempotentId
+    SNParticipantResponse:
+      type: object
+      properties:
+        participant:
+          $ref: '#/components/schemas/SNParticipant'
+      required:
+      - participant
+    ErrorDetails:
+      type: object
+      properties:
+        errorType:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - errorType
+      - message
+      title: ErrorDetails
+    SNSettlementSide:
+      type: object
+      properties:
+        authorized:
+          description: This can be null if authorization is not required or if the caller doesn't have access to this information.
+          type: boolean
+        feesFunded:
+          description: This can be null if the caller doesn't have access to this information. Fees funded status is based on the same fee logic as transfers and is checked independently of any other settlements. It takes into account only the current available balance for the relevant wallet. If the primary amount and fee amount are the of same asset, the primary amount is also taken into account when calculating this.
+          type: boolean
+        funded:
+          description: This can be null if the caller doesn't have access to this information. The funded status does not include fees and is checked independently of any other settlements. It takes into account only the current available balance for the relevant wallet.
+          type: boolean
+        gasStationEnabled:
+          description: Indicates the Gas Station is enabled to cover fees for this participant. This can be null if the caller doesn't have access to this information.
+          type: boolean
+        participantId:
+          type: string
+        walletAmounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/SNWalletAmount'
+      required:
+      - participantId
+    SNParticipant:
+      type: object
+      properties:
+        isActive:
+          type: boolean
+        participantId:
+          type: string
+        participantName:
+          type: string
+        tier:
+          $ref: '#/components/schemas/SNParticipantTier'
+      required:
+      - participantId
+      - participantName
+      - isActive
+    SNSettlementAuthorization:
+      type: object
+      properties:
+        acceptorId:
+          type: string
+        proposerId:
+          type: string
+        walletAmounts:
+          description: In a proposal, each asset type can appear only once in the wallet amount list.
+          type: array
+          items:
+            $ref: '#/components/schemas/SNWalletAmount'
+      required:
+      - proposerId
+      - acceptorId
+      - walletAmounts
+    SNParticipantTier:
+      type: string
+      enum:
+      - Basic
+      - Advanced
+    SNAcceptSettlementRequest:
+      type: object
+      properties:
+        useGasStation:
+          description: Option to request to use Gas Station to cover fees for acceptor.
+          type: boolean
+        vaultId:
+          description: ID of vault to use for the settlement
+          type: string
+        walletAmounts:
+          description: The set of wallets to use for the requested walletAmounts. The assets must match exactly the list of assets in the proposal and the amounts must be exactly opposite the amounts in the proposal. Use positive numbers to describe assets to receive and negative to send. The sum of the amounts, by asset type, must match the negative of the sum of the amounts on the proposer's side of the settlement. The special string `createWallet` can be used to indicate that a new wallet should be created for this asset for this settlement.
+          type: array
+          items:
+            $ref: '#/components/schemas/SNWalletAmount'
+      required:
+      - vaultId
+      - walletAmounts
+    SNSettlement:
+      description: 'A settlement is a proposal to move assets between wallets owned by two participants.
+
+
+        When the settlement status is `ActionNeeded`, refer to your participant''s settlement side (`proposerSide` or `acceptorSide`) for more detailed information. Fields on the settlement side reflect the individual actions needed.'
+      type: object
+      properties:
+        acceptorSide:
+          $ref: '#/components/schemas/SNSettlementSide'
+        clientReferenceId:
+          description: An ID, set by the proposer, visible to both sides, to uniquely identify the purpose of the settlement so that both sides can account for it correctly.
+          type: string
+        pendingAcceptorReview:
+          description: a flag indicating whether the settlement is awaiting acceptor selection
+          type: boolean
+        proposerSide:
+          $ref: '#/components/schemas/SNSettlementSide'
+        settlementId:
+          type: string
+        state:
+          $ref: '#/components/schemas/SNSettlementState'
+      required:
+      - settlementId
+      - proposerSide
+      - acceptorSide
+      - state
+      - clientReferenceId
+      - pendingAcceptorReview
+    SNWalletAmount:
+      type: object
+      properties:
+        assetType:
+          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
+
+            Use `/asset-types` to list all of the supported asset types for your organization.'
+          type: string
+          example: BTC
+        quantity:
+          description: The numeric value of this amount, excluding units. Use positive numbers for receiving and negative for sending assets. Amounts never include fees.
+          type: string
+          example: '10.45234733'
+        walletId:
+          type: string
+      required:
+      - assetType
+      - quantity
     SNSettlementProposal:
       type: object
       properties:
@@ -891,104 +1097,6 @@ components:
       - idempotentId
       - vaultId
       - walletAmounts
-    SNTrustedCounterpartyProposal:
-      type: object
-      properties:
-        counterpartyId:
-          type: string
-        description:
-          type: string
-        idempotentId:
-          type: string
-          maxLength: 128
-        participantId:
-          type: string
-      required:
-      - participantId
-      - counterpartyId
-      - idempotentId
-    SNParticipant:
-      type: object
-      properties:
-        isActive:
-          type: boolean
-        participantId:
-          type: string
-        participantName:
-          type: string
-        tier:
-          $ref: '#/components/schemas/SNParticipantTier'
-      required:
-      - participantId
-      - participantName
-      - isActive
-    SNTrustedCounterpartyResponse:
-      type: object
-      properties:
-        counterparty:
-          $ref: '#/components/schemas/SNTrustedCounterparty'
-      required:
-      - counterparty
-    SNSettlementSide:
-      type: object
-      properties:
-        authorized:
-          description: This can be null if authorization is not required or if the caller doesn't have access to this information.
-          type: boolean
-        feesFunded:
-          description: This can be null if the caller doesn't have access to this information. Fees funded status is based on the same fee logic as transfers and is checked independently of any other settlements. It takes into account only the current available balance for the relevant wallet. If the primary amount and fee amount are the of same asset, the primary amount is also taken into account when calculating this.
-          type: boolean
-        funded:
-          description: This can be null if the caller doesn't have access to this information. The funded status does not include fees and is checked independently of any other settlements. It takes into account only the current available balance for the relevant wallet.
-          type: boolean
-        gasStationEnabled:
-          description: Indicates the Gas Station is enabled to cover fees for this participant. This can be null if the caller doesn't have access to this information.
-          type: boolean
-        participantId:
-          type: string
-        walletAmounts:
-          type: array
-          items:
-            $ref: '#/components/schemas/SNWalletAmount'
-      required:
-      - participantId
-    SNProposeSettlementResponse:
-      type: object
-      properties:
-        settlementId:
-          type: string
-      required:
-      - settlementId
-    SNWalletAmount:
-      type: object
-      properties:
-        assetType:
-          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
-
-            Use `/asset-types` to list all of the supported asset types for your organization.'
-          type: string
-          example: BTC
-        quantity:
-          description: The numeric value of this amount, excluding units. Use positive numbers for receiving and negative for sending assets. Amounts never include fees.
-          type: string
-          example: '10.45234733'
-        walletId:
-          type: string
-      required:
-      - assetType
-      - quantity
-    SNTrustedCounterpartiesResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/SNTrustedCounterparty'
-        page:
-          $ref: '#/components/schemas/Page'
-      required:
-      - data
-      - page
     Page:
       description: Pagination info
       type: object
@@ -1001,23 +1109,6 @@ components:
           example: <next page url>
           x-omitempty: false
       title: Page
-    SNAcceptSettlementRequest:
-      type: object
-      properties:
-        useGasStation:
-          description: Option to request to use Gas Station to cover fees for acceptor.
-          type: boolean
-        vaultId:
-          description: ID of vault to use for the settlement
-          type: string
-        walletAmounts:
-          description: The set of wallets to use for the requested walletAmounts. The assets must match exactly the list of assets in the proposal and the amounts must be exactly opposite the amounts in the proposal. Use positive numbers to describe assets to receive and negative to send. The sum of the amounts, by asset type, must match the negative of the sum of the amounts on the proposer's side of the settlement. The special string `createWallet` can be used to indicate that a new wallet should be created for this asset for this settlement.
-          type: array
-          items:
-            $ref: '#/components/schemas/SNWalletAmount'
-      required:
-      - vaultId
-      - walletAmounts
     SNSettlementResponse:
       type: object
       properties:
@@ -1025,107 +1116,6 @@ components:
           $ref: '#/components/schemas/SNSettlement'
       required:
       - settlement
-    ErrorType:
-      description: The type of error returned.
-      type: string
-      enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
-    SNSettlementAuthorization:
-      type: object
-      properties:
-        acceptorId:
-          type: string
-        proposerId:
-          type: string
-        walletAmounts:
-          description: In a proposal, each asset type can appear only once in the wallet amount list.
-          type: array
-          items:
-            $ref: '#/components/schemas/SNWalletAmount'
-      required:
-      - proposerId
-      - acceptorId
-      - walletAmounts
-    SNSettlement:
-      description: 'A settlement is a proposal to move assets between wallets owned by two participants.
-
-
-        When the settlement status is `ActionNeeded`, refer to your participant''s settlement side (`proposerSide` or `acceptorSide`) for more detailed information. Fields on the settlement side reflect the individual actions needed.'
-      type: object
-      properties:
-        acceptorSide:
-          $ref: '#/components/schemas/SNSettlementSide'
-        clientReferenceId:
-          description: An ID, set by the proposer, visible to both sides, to uniquely identify the purpose of the settlement so that both sides can account for it correctly.
-          type: string
-        pendingAcceptorReview:
-          description: a flag indicating whether the settlement is awaiting acceptor selection
-          type: boolean
-        proposerSide:
-          $ref: '#/components/schemas/SNSettlementSide'
-        settlementId:
-          type: string
-        state:
-          $ref: '#/components/schemas/SNSettlementState'
-      required:
-      - settlementId
-      - proposerSide
-      - acceptorSide
-      - state
-      - clientReferenceId
-      - pendingAcceptorReview
-    ErrorDetails:
-      type: object
-      properties:
-        errorType:
-          $ref: '#/components/schemas/ErrorType'
-        message:
-          description: A human-readable message providing more details about the error.
-          type: string
-          example: Missing required field 'amount'.
-      required:
-      - errorType
-      - message
-      title: ErrorDetails
-    SNParticipantTier:
-      type: string
-      enum:
-      - Basic
-      - Advanced
-    SNParticipantsResponse:
-      type: object
-      properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/SNParticipant'
-        page:
-          $ref: '#/components/schemas/Page'
-      required:
-      - data
-      - page
-    Page_2:
-      description: Pagination info
-      type: object
-      properties:
-        endCursor:
-          description: Submit this parameter in the "after" field to fetch the next page.
-          type:
-          - string
-          - 'null'
-      title: Page
     ErrorDetails_2:
       type: object
       properties:
@@ -1136,6 +1126,16 @@ components:
       required:
       - message
       title: ErrorDetails
+    Page_2:
+      description: Pagination info
+      type: object
+      properties:
+        endCursor:
+          description: Submit this parameter in the "after" field to fetch the next page.
+          type:
+          - string
+          - 'null'
+      title: Page
   securitySchemes:
     Api-Access-Key:
       type: apiKey

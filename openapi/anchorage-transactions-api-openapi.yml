@@ -889,73 +889,27 @@ paths:
       - Transactions
 components:
   schemas:
-    Amount:
-      description: 'An amount of a crypto-asset represented by quantity, assetType, current unit price and current USD value.
-
-
-
-        Fee amounts will be estimates if a transaction is not final.
-
-
-
-        NOTE: price and USD value information is recent but does not reflect real-time data.
-
-        '
+    DelegationAddressesResponse:
       type: object
       properties:
-        assetType:
-          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
-
-
-            Use `/asset-types` to list all of the supported asset types for your organization.
-
-            '
-          type: string
-          example: BTC
-        currentPrice:
-          description: A recent assessment of the intra-day USD value of 1 unit of this asset type. This value is provided for convenience for such use cases as estimating point-in-time portfolio balances. This value does not represent authoritative pricing information used by Anchorage Digital for any purpose. The price is fetched as of the present, and may be omitted in certain contexts where more structured pricing information is provided (e.g. quotes and trades).
-          type: string
-          example: '9751.01'
-        currentUSDValue:
-          description: The result of `quantity * currentPrice`, rounded to the nearest cent. A unitless number implicitly denominated in dollars. See `currentPrice` for methodology and disclaimers.
-          type: string
-          example: '101920.94'
-        quantity:
-          description: The numeric value of this amount, excluding units
-          type: string
-          example: '10.45234733'
-      example:
-        quantity: '10.45234733'
-        assetType: BTC
-        currentPrice: '9751.01'
-        currentUSDValue: '101920.94'
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/DelegationWalletAddressesDetails'
+        page:
+          $ref: '#/components/schemas/Page'
       required:
-      - quantity
-      - assetType
-      title: Amount
-    SourceResourceDetailsRequest:
-      description: "An object representing a resource capable of sending funds.\n\n\nConstruction example:\n  ```\n  {\n    \"id\":\"1c920f4241b78a1d483a29f3c24b6c4c\",\n    \"type\":\"WALLET\"\n  }\n  ```\n"
-      type: object
-      properties:
-        customerId:
-          description: Identifier of a Subaccout Customer. Required property if subaccount type is JOINT, optional otherwise
-          type: string
-        id:
-          description: The identifier of the resource
-          type: string
-          example: 1c920f4241b78a1d483a29f3c24b6c4c
-        type:
-          $ref: '#/components/schemas/SourceResourceTypeRequest'
-      required:
-      - id
-      - type
-      title: SourceResource
-    CreateStakeRequest:
+      - data
+      - page
+      title: DelegationAddressesResponse
+    CreateUnstakeRequest:
       type: object
       properties:
         amount:
-          description: An amount of a crypto-asset to transfer, without units. The unit is derived from the asset type.
-          type: string
+          description: An amount of a crypto-asset to unstake, without units. The unit is derived from the asset type.
+          type:
+          - string
+          - 'null'
           example: '32'
         assetType:
           description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
@@ -977,119 +931,192 @@ components:
           type: string
           example: '12838927347'
           maxLength: 128
-        parameters:
-          $ref: '#/components/schemas/StakingParameters'
+        isFullAmount:
+          description: Specifies whether to unstake the full amount, which overrides any provided amount if set to true.
+          type: boolean
+          default: false
         source:
           $ref: '#/components/schemas/SimpleSourceResourceDetails'
+        stakingPositionId:
+          description: Unique identifier of the staking position
+          type: string
+          example: 9bc4c2ccba8192b64d41b46d1770abe9ddbb430b85de3fe73e1b4f21336bc48a
       required:
       - assetType
-      - amount
       - idempotentId
       - source
-      title: CreateStakeRequest
-    TransactionType:
-      description: 'The type of transaction
-
-
-
-        * "DEPOSIT" - A deposit has been detected in an Anchorage Digital vault
-
-
-
-        * "WITHDRAW" - A withdraw of funds from your Anchorage Digital vault to another destination
-
-
-
-        * "TRANSFER" - A transfer activity between Anchorage Digital vaults
-
-
-
-        * "STAKING_REWARD" - A reward granted for staking contribution in certain currencies
-
-
-
-        * "RESTAKING_REWARD" - A reward granted for restaking contribution in certain currencies
-
-
-
-        * "ALLUVIAL_STAKING_REWARD" - A reward granted for staking contribution through Alluvial
-
-
-
-        * "DELEGATION_REWARD" - A reward granted for delegation in certain currencies
-
-
-
-        * "MEV_REWARD" - Maximal Extractable Value (MEV) reward granted while holding certain currencies
-
-
-
-        * "PRIORITY_FEE_REWARD" - Priority fee reward granted for Jito priority fee distributions on Solana
-
-
-
-        * "FIAT_INTEREST" - Fiat interest payment deposited into the account
-
-
-
-        * "MINT" - Assets minted or created on the blockchain
-
-
-
-        * "BURN" - Assets burned or destroyed on the blockchain
-
-
-
-        * "DIEM_PREBURN" - A movement of assets on the Diem blockchain to a state of preburn
-
-
-
-        * "GAS_STATION" - Funds received from the gas station to cover network fees
-
-
-
-        * "OTHER" - Any other activity associated to your Anchorage Digital vault that isn''t a deposit, withdraw, transfer, staking reward, delegation reward, mint, burn, or preburn transaction
-
-        '
-      type: string
-      example: WITHDRAW
-      enum:
-      - DEPOSIT
-      - WITHDRAW
-      - TRANSFER
-      - STAKING_REWARD
-      - RESTAKING_REWARD
-      - ALLUVIAL_STAKING_REWARD
-      - DELEGATION_REWARD
-      - MEV_REWARD
-      - PRIORITY_FEE_REWARD
-      - FIAT_INTEREST
-      - MINT
-      - BURN
-      - DIEM_PREBURN
-      - GAS_STATION
-      - OTHER
-      title: TransactionType
-    DelegationWalletAddressesDetails:
+      title: CreateUnstakeRequest
+    FiatDetails:
+      description: Banking details for fiat transactions
+      type: object
       properties:
-        address:
-          description: The address to delegate to.
+        accountNumber:
+          description: Bank account number
           type: string
-        anchorageValidator:
-          description: Whether this address belongs to an Anchorage Digital Validator.
-          type: boolean
+          example: '123456789'
+        bankId:
+          description: Financial institution ID
+          type: string
+          example: IRVTUS3N
+        bankName:
+          description: The name of the financial institution
+          type: string
+          example: The Bank of New York Mellon
+        fedWire:
+          description: IMAD/OMAD unique number for the payment
+          type: string
+          example: 20260524ABCDXXXX012345
+        memo:
+          description: Note to Beneficiary
+          type: string
+          example: Quarterly dividend
         name:
-          description: The name of the delegation address.
+          description: The name of the bank account holder
           type: string
-        validatorType:
-          description: The type of validator for this delegation address.
-          type: string
+          example: Satoshi Nakamoto
+      title: FiatDetails
+    TransactionResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/TransactionDetails'
       required:
-      - name
-      - address
-      - anchorageValidator
-      - validatorType
-      title: DelegationWalletAddressesDetails
+      - data
+      title: TransactionResponse
+    WithdrawalParametersForCosmos:
+      description: Additional parameters to be provided exclusively when `assetType` is for a Cosmos blockchain. When using a Trusted Destination, these parameters must not be provided — the memo is inherited from the trusted destination. Set `destination.type` to `TRUSTED_DESTINATION` and `destination.id` to the trusted destination ID instead.
+      type: object
+      properties:
+        memo:
+          description: An alphanumeric string often used to uniquely identify the recipient of the transaction, commonly used when transferring funds to custodial wallets, exchanges or other situations where the `destinationAddress` is multi-purpose. Must be included whenever provided by the recipient of the transaction.
+          type: string
+          example: w3mp19cqp2
+          maxLength: 256
+      required:
+      - memo
+      title: WithdrawalParametersForCosmos
+    SimpleSourceResourceDetails:
+      description: "An object representing a resource capable of sending funds.\n\n\nConstruction example:\n\n  ```\n  {\n  \"id\":\"1c920f4241b78a1d483a29f3c24b6c4c\",\n  \"type\":\"WALLET\"\n  }\n  ```\n"
+      type: object
+      properties:
+        id:
+          description: The identifier of the resource
+          type: string
+          example: 1c920f4241b78a1d483a29f3c24b6c4c
+        type:
+          $ref: '#/components/schemas/SimpleSourceResourceType'
+      required:
+      - id
+      - type
+      title: SimpleSourceResourceDetails
+    WithdrawalDetails:
+      type: object
+      properties:
+        withdrawalId:
+          description: The withdrawal ID which can be used to reference this operation in other queries
+          type: string
+      example:
+        withdrawalId: 8696144cca28a634c05858d00e51191408498a7808a837fc4645b4b6997dde09
+      required:
+      - withdrawalId
+      title: WithdrawalDetails
+    TransactionsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionDetails'
+        page:
+          $ref: '#/components/schemas/Page'
+      required:
+      - data
+      - page
+      title: TransactionsResponse
+    CreateCollectResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/CreateStakeDetails'
+      required:
+      - data
+      title: CreateCollectResponse
+    ErrorType:
+      description: The type of error returned.
+      type: string
+      enum:
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
+    WithdrawalParametersForATOM:
+      description: Additional parameters to be provided exclusively when `assetType` is "ATOM". This field is deprecated, please migrate to using `assetParametersCosmos` instead. When using a Trusted Destination, these parameters must not be provided — the memo is inherited from the trusted destination. Set `destination.type` to `TRUSTED_DESTINATION` and `destination.id` to the trusted destination ID instead.
+      type: object
+      properties:
+        memo:
+          description: An alphanumeric string often used to uniquely identify the recipient of the transaction, commonly used when transferring funds to custodial wallets, exchanges or other situations where the `destinationAddress` is multi-purpose. Must be included whenever provided by the recipient of the transaction.
+          type: string
+          example: w3mp19cqp2
+          maxLength: 256
+      required:
+      - memo
+      title: WithdrawalParametersForATOM
+    WithdrawalParametersForFiatTrustedDestination:
+      description: Additional parameters to be provided exclusively when the destination is a Trusted Destination and `assetType` is fiat.
+      type: object
+      properties:
+        memo:
+          description: Note to Beneficiary. If not provided, the memo on the Trusted Destination will be used by default.
+          type: string
+          example: Invoice 123
+          maxLength: 140
+        purpose:
+          description: "The purpose of the funds being withdrawn.\n\n * `TRADING_SETTLEMENT` - Trading Settlement\n * `LENDING` - Lending\n * `INVESTMENT` - Investment\n * `EXPENSES` - Expenses\n * `FEE_PAYMENT` - Fee Payment\n * `GRANT_PAYMENT` - Grant Payment\n * `PRIZE_AWARD` - Prize Award\n * `GIFT` - Gift\n * `REIMBURSEMENT` - Reimbursement\n * `REBALANCE` - Rebalance\n * `INTRA_COMPANY` - Intra Company"
+          type: string
+          example: TRADING_SETTLEMENT
+          enum:
+          - TRADING_SETTLEMENT
+          - LENDING
+          - INVESTMENT
+          - EXPENSES
+          - FEE_PAYMENT
+          - GRANT_PAYMENT
+          - PRIZE_AWARD
+          - GIFT
+          - REIMBURSEMENT
+          - REBALANCE
+          - INTRA_COMPANY
+      required:
+      - purpose
+      title: WithdrawalParametersForFiatTrustedDestination
+    CreateStakeDetails:
+      type: object
+      properties:
+        transactionId:
+          description: The transaction Id which can be used to reference this operation in other queries
+          type: string
+      example:
+        transactionId: 8696144cca28a634c05858d00e51191408498a7808a837fc4645b4b6997dde09
+      required:
+      - transactionId
+      title: CreateStakeDetails
+    StakingParameters:
+      description: Sets specific assets configuration parameters to perform staking
+      type:
+      - object
+      - 'null'
+      oneOf:
+      - $ref: '#/components/schemas/SOLStakingParameters'
+      - $ref: '#/components/schemas/ETHStakingParameters'
     WithdrawalRequest:
       type: object
       properties:
@@ -1146,19 +1173,232 @@ components:
       - assetType
       - amount
       title: WithdrawalRequest
-    TransactionsResponse:
+    WithdrawalResponse:
       type: object
       properties:
         data:
-          type: array
-          items:
-            $ref: '#/components/schemas/TransactionDetails'
-        page:
-          $ref: '#/components/schemas/Page'
+          $ref: '#/components/schemas/WithdrawalDetails'
       required:
       - data
-      - page
-      title: TransactionsResponse
+      title: WithdrawalResponse
+    CreateUnstakeResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/CreateStakeDetails'
+      required:
+      - data
+      title: CreateUnstakeResponse
+    CreateCollectRequest:
+      type: object
+      properties:
+        amount:
+          description: An amount of a crypto-asset to unstake, without units. The unit is derived from the asset type.
+          type: string
+          example: '32'
+        assetType:
+          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
+
+
+            Use `/asset-types` to list all of the supported asset types for your organization.
+
+            '
+          type: string
+          example: ETH
+        description:
+          description: An optional string providing more context to this transaction. It will be visible on the Anchorage Digital iOS app and will not be published to the blockchain.
+          type:
+          - string
+          - 'null'
+          example: 'Internal ID: #12838927347'
+        idempotentId:
+          description: A client-provided unique ID for idempotent requests
+          type: string
+          example: '12838927347'
+          maxLength: 128
+        isFullAmount:
+          description: Specifies whether to collect the full amount, which overrides any provided amount if set to true.
+          type: boolean
+          default: false
+        source:
+          $ref: '#/components/schemas/SimpleSourceResourceDetails'
+        stakingPositionId:
+          description: Unique identifier of the staking position
+          type: string
+          example: 9bc4c2ccba8192b64d41b46d1770abe9ddbb430b85de3fe73e1b4f21336bc48a
+      required:
+      - assetType
+      - stakingPositionId
+      - source
+      title: CreateCollectRequest
+    ErrorDetails:
+      type: object
+      properties:
+        errorType:
+          $ref: '#/components/schemas/ErrorType'
+        message:
+          description: A human-readable message providing more details about the error.
+          type: string
+          example: Missing required field 'amount'.
+      required:
+      - errorType
+      - message
+      title: ErrorDetails
+    ETHStakingParameters:
+      description: 'UNDER DEVELOPMENT: ETH specific staking parameters'
+      type: object
+      properties:
+        stakingPositionId:
+          description: The staking position identifier. Only required for deposits.
+          type: string
+        stakingProvider:
+          description: The validator's provider. Only required for provisioning.
+          type: string
+          enum:
+          - FIGMENT
+          - BLOCKDAEMON
+        validatorType:
+          description: 'Defines which validator to use: 0x01 Pre-Pectra validators; 0x02 Post-Pectra validators'
+          type: string
+          enum:
+          - '0x01'
+          - '0x02'
+      additionalProperties: false
+      required:
+      - validatorType
+      title: ETHStakingParameters
+    DelegationWalletAddressesDetails:
+      properties:
+        address:
+          description: The address to delegate to.
+          type: string
+        anchorageValidator:
+          description: Whether this address belongs to an Anchorage Digital Validator.
+          type: boolean
+        name:
+          description: The name of the delegation address.
+          type: string
+        validatorType:
+          description: The type of validator for this delegation address.
+          type: string
+      required:
+      - name
+      - address
+      - anchorageValidator
+      - validatorType
+      title: DelegationWalletAddressesDetails
+    WithdrawalParametersExtra:
+      description: Extra parameters, to be provided for assets. When using a Trusted Destination, these parameters must not be provided — the memo is inherited from the trusted destination. Set `destination.type` to `TRUSTED_DESTINATION` and `destination.id` to the trusted destination ID instead.
+      type: object
+      properties:
+        value:
+          description: An alphanumeric string often used to uniquely identify the recipient of the transaction, commonly used when transferring funds to custodial wallets, exchanges or other situations where the `destinationAddress` is multi-purpose. Must be included whenever provided by the recipient of the transaction.
+          type: string
+          example: w3mp19cqp2
+          maxLength: 256
+      required:
+      - value
+      title: WithdrawalParametersExtra
+    TransactionStatus:
+      description: 'A string describing the status of the given transaction
+
+
+
+        * INITIATING - This transaction is being created
+
+
+
+        * SUCCESS - This transaction has succeeded
+
+
+
+        * NEEDS_APPROVAL - This transaction has begun but is awaiting approval by members of the quorum
+
+
+
+        * INPROGRESS - This transaction is currently in progress
+
+
+
+        * FAILURE - This transaction has failed
+
+
+
+        * REJECTED - This transaction has been rejected
+
+
+
+        * EXPIRED - This transaction has expired
+
+        '
+      type: string
+      enum:
+      - INITIATING
+      - SUCCESS
+      - NEEDS_APPROVAL
+      - INPROGRESS
+      - FAILURE
+      - REJECTED
+      - EXPIRED
+      title: TransactionStatus
+    ResourceDetails:
+      description: "An object representing a resource capable of receiving, or holding funds.\n\n\n\nConstruction example:\n\n  ```\n  {\n    \"id\":\"1c920f4241b78a1d483a29f3c24b6c4c\",\n    \"type\":\"WALLET\"\n  }\n  ```\n"
+      type: object
+      properties:
+        id:
+          description: The identifier of the resource
+          type: string
+          example: 1c920f4241b78a1d483a29f3c24b6c4c
+        type:
+          $ref: '#/components/schemas/ResourceType'
+      required:
+      - id
+      - type
+      title: Resource
+    Amount:
+      description: 'An amount of a crypto-asset represented by quantity, assetType, current unit price and current USD value.
+
+
+
+        Fee amounts will be estimates if a transaction is not final.
+
+
+
+        NOTE: price and USD value information is recent but does not reflect real-time data.
+
+        '
+      type: object
+      properties:
+        assetType:
+          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
+
+
+            Use `/asset-types` to list all of the supported asset types for your organization.
+
+            '
+          type: string
+          example: BTC
+        currentPrice:
+          description: A recent assessment of the intra-day USD value of 1 unit of this asset type. This value is provided for convenience for such use cases as estimating point-in-time portfolio balances. This value does not represent authoritative pricing information used by Anchorage Digital for any purpose. The price is fetched as of the present, and may be omitted in certain contexts where more structured pricing information is provided (e.g. quotes and trades).
+          type: string
+          example: '9751.01'
+        currentUSDValue:
+          description: The result of `quantity * currentPrice`, rounded to the nearest cent. A unitless number implicitly denominated in dollars. See `currentPrice` for methodology and disclaimers.
+          type: string
+          example: '101920.94'
+        quantity:
+          description: The numeric value of this amount, excluding units
+          type: string
+          example: '10.45234733'
+      example:
+        quantity: '10.45234733'
+        assetType: BTC
+        currentPrice: '9751.01'
+        currentUSDValue: '101920.94'
+      required:
+      - quantity
+      - assetType
+      title: Amount
     AMLQuestionnaire:
       description: Anti-money laundering questionnaire submission
       type: object
@@ -1289,139 +1529,129 @@ components:
       required:
       - purpose
       title: AMLQuestionnaire
-    CreateCollectRequest:
+    WithdrawalParametersForXRP:
+      description: Additional parameters to be provided exclusively when `assetType` is "XRP". When using a Trusted Destination, these parameters must not be provided — the destination tag is inherited from the trusted destination. Set `destination.type` to `TRUSTED_DESTINATION` and `destination.id` to the trusted destination ID instead.
       type: object
       properties:
-        amount:
-          description: An amount of a crypto-asset to unstake, without units. The unit is derived from the asset type.
-          type: string
-          example: '32'
-        assetType:
-          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
-
-
-            Use `/asset-types` to list all of the supported asset types for your organization.
-
-            '
-          type: string
-          example: ETH
-        description:
-          description: An optional string providing more context to this transaction. It will be visible on the Anchorage Digital iOS app and will not be published to the blockchain.
-          type:
-          - string
-          - 'null'
-          example: 'Internal ID: #12838927347'
-        idempotentId:
-          description: A client-provided unique ID for idempotent requests
-          type: string
-          example: '12838927347'
-          maxLength: 128
-        isFullAmount:
-          description: Specifies whether to collect the full amount, which overrides any provided amount if set to true.
-          type: boolean
-          default: false
-        source:
-          $ref: '#/components/schemas/SimpleSourceResourceDetails'
-        stakingPositionId:
-          description: Unique identifier of the staking position
-          type: string
-          example: 9bc4c2ccba8192b64d41b46d1770abe9ddbb430b85de3fe73e1b4f21336bc48a
+        destinationTag:
+          description: A number often used to uniquely identify the recipient of the transaction, commonly used when transferring funds to custodial wallets, exchanges or other situations where the `destinationAddress` is multi-purpose. Must be included whenever provided by the recipient of the transaction.
+          type: integer
+          format: uint32
+          example: 23874
       required:
-      - assetType
-      - stakingPositionId
-      - source
-      title: CreateCollectRequest
-    WithdrawalResponse:
+      - destinationTag
+      title: WithdrawalParametersForXRP
+    CreateStakeResponse:
       type: object
       properties:
         data:
-          $ref: '#/components/schemas/WithdrawalDetails'
+          $ref: '#/components/schemas/CreateStakeDetails'
       required:
       - data
-      title: WithdrawalResponse
-    DelegationAddressesResponse:
+      title: CreateStakeResponse
+    SOLStakingParameters:
+      description: 'UNDER DEVELOPMENT: Solana specific staking parameters'
       type: object
       properties:
-        data:
-          type: array
-          items:
-            $ref: '#/components/schemas/DelegationWalletAddressesDetails'
-        page:
-          $ref: '#/components/schemas/Page'
-      required:
-      - data
-      - page
-      title: DelegationAddressesResponse
-    SimpleSourceResourceType:
-      description: The type of the resource being referenced.
-      type: string
-      enum:
-      - WALLET
-      title: SimpleSourceResourceType
-    CreateStakeDetails:
-      type: object
-      properties:
-        transactionId:
-          description: The transaction Id which can be used to reference this operation in other queries
+        stakingProvider:
+          description: The validator's provider
           type: string
-      example:
-        transactionId: 8696144cca28a634c05858d00e51191408498a7808a837fc4645b4b6997dde09
-      required:
-      - transactionId
-      title: CreateStakeDetails
-    WithdrawalDetails:
-      type: object
-      properties:
-        withdrawalId:
-          description: The withdrawal ID which can be used to reference this operation in other queries
-          type: string
-      example:
-        withdrawalId: 8696144cca28a634c05858d00e51191408498a7808a837fc4645b4b6997dde09
-      required:
-      - withdrawalId
-      title: WithdrawalDetails
-    WithdrawalParametersForFiatTrustedDestination:
-      description: Additional parameters to be provided exclusively when the destination is a Trusted Destination and `assetType` is fiat.
-      type: object
-      properties:
-        memo:
-          description: Note to Beneficiary. If not provided, the memo on the Trusted Destination will be used by default.
-          type: string
-          example: Invoice 123
-          maxLength: 140
-        purpose:
-          description: "The purpose of the funds being withdrawn.\n\n * `TRADING_SETTLEMENT` - Trading Settlement\n * `LENDING` - Lending\n * `INVESTMENT` - Investment\n * `EXPENSES` - Expenses\n * `FEE_PAYMENT` - Fee Payment\n * `GRANT_PAYMENT` - Grant Payment\n * `PRIZE_AWARD` - Prize Award\n * `GIFT` - Gift\n * `REIMBURSEMENT` - Reimbursement\n * `REBALANCE` - Rebalance\n * `INTRA_COMPANY` - Intra Company"
-          type: string
-          example: TRADING_SETTLEMENT
           enum:
-          - TRADING_SETTLEMENT
-          - LENDING
-          - INVESTMENT
-          - EXPENSES
-          - FEE_PAYMENT
-          - GRANT_PAYMENT
-          - PRIZE_AWARD
-          - GIFT
-          - REIMBURSEMENT
-          - REBALANCE
-          - INTRA_COMPANY
-      required:
-      - purpose
-      title: WithdrawalParametersForFiatTrustedDestination
-    SimpleSourceResourceDetails:
-      description: "An object representing a resource capable of sending funds.\n\n\nConstruction example:\n\n  ```\n  {\n  \"id\":\"1c920f4241b78a1d483a29f3c24b6c4c\",\n  \"type\":\"WALLET\"\n  }\n  ```\n"
-      type: object
-      properties:
-        id:
-          description: The identifier of the resource
+          - FIGMENT
+          - BLOCKDAEMON
+        stakingProviderAddress:
+          description: The validator's vote account address
           type: string
-          example: 1c920f4241b78a1d483a29f3c24b6c4c
-        type:
-          $ref: '#/components/schemas/SimpleSourceResourceType'
-      required:
-      - id
-      - type
-      title: SimpleSourceResourceDetails
+      additionalProperties: false
+      oneOf:
+      - required:
+        - stakingProviderAddress
+      - required:
+        - stakingProvider
+      title: SOLStakingParameters
+    TransactionType:
+      description: 'The type of transaction
+
+
+
+        * "DEPOSIT" - A deposit has been detected in an Anchorage Digital vault
+
+
+
+        * "WITHDRAW" - A withdraw of funds from your Anchorage Digital vault to another destination
+
+
+
+        * "TRANSFER" - A transfer activity between Anchorage Digital vaults
+
+
+
+        * "STAKING_REWARD" - A reward granted for staking contribution in certain currencies
+
+
+
+        * "RESTAKING_REWARD" - A reward granted for restaking contribution in certain currencies
+
+
+
+        * "ALLUVIAL_STAKING_REWARD" - A reward granted for staking contribution through Alluvial
+
+
+
+        * "DELEGATION_REWARD" - A reward granted for delegation in certain currencies
+
+
+
+        * "MEV_REWARD" - Maximal Extractable Value (MEV) reward granted while holding certain currencies
+
+
+
+        * "PRIORITY_FEE_REWARD" - Priority fee reward granted for Jito priority fee distributions on Solana
+
+
+
+        * "FIAT_INTEREST" - Fiat interest payment deposited into the account
+
+
+
+        * "MINT" - Assets minted or created on the blockchain
+
+
+
+        * "BURN" - Assets burned or destroyed on the blockchain
+
+
+
+        * "DIEM_PREBURN" - A movement of assets on the Diem blockchain to a state of preburn
+
+
+
+        * "GAS_STATION" - Funds received from the gas station to cover network fees
+
+
+
+        * "OTHER" - Any other activity associated to your Anchorage Digital vault that isn''t a deposit, withdraw, transfer, staking reward, delegation reward, mint, burn, or preburn transaction
+
+        '
+      type: string
+      example: WITHDRAW
+      enum:
+      - DEPOSIT
+      - WITHDRAW
+      - TRANSFER
+      - STAKING_REWARD
+      - RESTAKING_REWARD
+      - ALLUVIAL_STAKING_REWARD
+      - DELEGATION_REWARD
+      - MEV_REWARD
+      - PRIORITY_FEE_REWARD
+      - FIAT_INTEREST
+      - MINT
+      - BURN
+      - DIEM_PREBURN
+      - GAS_STATION
+      - OTHER
+      title: TransactionType
     SourceResourceTypeRequest:
       description: The type of the resource being referenced. Note that the VAULT type has been deprecated and WALLET should be used instead.
       type: string
@@ -1430,279 +1660,29 @@ components:
       - WALLET
       - SUBACCOUNT
       title: SourceResourceType
-    TransactionStatus:
-      description: 'A string describing the status of the given transaction
-
-
-
-        * INITIATING - This transaction is being created
-
-
-
-        * SUCCESS - This transaction has succeeded
-
-
-
-        * NEEDS_APPROVAL - This transaction has begun but is awaiting approval by members of the quorum
-
-
-
-        * INPROGRESS - This transaction is currently in progress
-
-
-
-        * FAILURE - This transaction has failed
-
-
-
-        * REJECTED - This transaction has been rejected
-
-
-
-        * EXPIRED - This transaction has expired
-
-        '
-      type: string
-      enum:
-      - INITIATING
-      - SUCCESS
-      - NEEDS_APPROVAL
-      - INPROGRESS
-      - FAILURE
-      - REJECTED
-      - EXPIRED
-      title: TransactionStatus
-    WithdrawalParametersForCosmos:
-      description: Additional parameters to be provided exclusively when `assetType` is for a Cosmos blockchain. When using a Trusted Destination, these parameters must not be provided — the memo is inherited from the trusted destination. Set `destination.type` to `TRUSTED_DESTINATION` and `destination.id` to the trusted destination ID instead.
+    SourceResourceDetailsRequest:
+      description: "An object representing a resource capable of sending funds.\n\n\nConstruction example:\n  ```\n  {\n    \"id\":\"1c920f4241b78a1d483a29f3c24b6c4c\",\n    \"type\":\"WALLET\"\n  }\n  ```\n"
       type: object
       properties:
-        memo:
-          description: An alphanumeric string often used to uniquely identify the recipient of the transaction, commonly used when transferring funds to custodial wallets, exchanges or other situations where the `destinationAddress` is multi-purpose. Must be included whenever provided by the recipient of the transaction.
+        customerId:
+          description: Identifier of a Subaccout Customer. Required property if subaccount type is JOINT, optional otherwise
           type: string
-          example: w3mp19cqp2
-          maxLength: 256
+        id:
+          description: The identifier of the resource
+          type: string
+          example: 1c920f4241b78a1d483a29f3c24b6c4c
+        type:
+          $ref: '#/components/schemas/SourceResourceTypeRequest'
       required:
-      - memo
-      title: WithdrawalParametersForCosmos
-    Page:
-      description: Pagination info
-      type: object
-      properties:
-        next:
-          description: URL to use to query for the next page or null if no additional results are available
-          type:
-          - string
-          - 'null'
-          example: <next page url>
-          x-omitempty: false
-      title: Page
-    FiatDetails:
-      description: Banking details for fiat transactions
-      type: object
-      properties:
-        accountNumber:
-          description: Bank account number
-          type: string
-          example: '123456789'
-        bankId:
-          description: Financial institution ID
-          type: string
-          example: IRVTUS3N
-        bankName:
-          description: The name of the financial institution
-          type: string
-          example: The Bank of New York Mellon
-        fedWire:
-          description: IMAD/OMAD unique number for the payment
-          type: string
-          example: 20260524ABCDXXXX012345
-        memo:
-          description: Note to Beneficiary
-          type: string
-          example: Quarterly dividend
-        name:
-          description: The name of the bank account holder
-          type: string
-          example: Satoshi Nakamoto
-      title: FiatDetails
-    ResourceType:
-      description: The type of the resource being referenced. Note that the VAULT type has been deprecated and WALLET should be used instead.
+      - id
+      - type
+      title: SourceResource
+    SimpleSourceResourceType:
+      description: The type of the resource being referenced.
       type: string
       enum:
-      - VAULT
       - WALLET
-      - ADDRESS
-      - STANDING_INSTRUCTION
-      - TRUSTED_DESTINATION
-      title: ResourceType
-    TransactionResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/TransactionDetails'
-      required:
-      - data
-      title: TransactionResponse
-    WithdrawalParametersForATOM:
-      description: Additional parameters to be provided exclusively when `assetType` is "ATOM". This field is deprecated, please migrate to using `assetParametersCosmos` instead. When using a Trusted Destination, these parameters must not be provided — the memo is inherited from the trusted destination. Set `destination.type` to `TRUSTED_DESTINATION` and `destination.id` to the trusted destination ID instead.
-      type: object
-      properties:
-        memo:
-          description: An alphanumeric string often used to uniquely identify the recipient of the transaction, commonly used when transferring funds to custodial wallets, exchanges or other situations where the `destinationAddress` is multi-purpose. Must be included whenever provided by the recipient of the transaction.
-          type: string
-          example: w3mp19cqp2
-          maxLength: 256
-      required:
-      - memo
-      title: WithdrawalParametersForATOM
-    StakingParameters:
-      description: Sets specific assets configuration parameters to perform staking
-      type:
-      - object
-      - 'null'
-      oneOf:
-      - $ref: '#/components/schemas/SOLStakingParameters'
-      - $ref: '#/components/schemas/ETHStakingParameters'
-    CreateUnstakeRequest:
-      type: object
-      properties:
-        amount:
-          description: An amount of a crypto-asset to unstake, without units. The unit is derived from the asset type.
-          type:
-          - string
-          - 'null'
-          example: '32'
-        assetType:
-          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
-
-
-            Use `/asset-types` to list all of the supported asset types for your organization.
-
-            '
-          type: string
-          example: ETH
-        description:
-          description: An optional string providing more context to this transaction. It will be visible on the Anchorage Digital iOS app and will not be published to the blockchain.
-          type:
-          - string
-          - 'null'
-          example: 'Internal ID: #12838927347'
-        idempotentId:
-          description: A client-provided unique ID for idempotent requests
-          type: string
-          example: '12838927347'
-          maxLength: 128
-        isFullAmount:
-          description: Specifies whether to unstake the full amount, which overrides any provided amount if set to true.
-          type: boolean
-          default: false
-        source:
-          $ref: '#/components/schemas/SimpleSourceResourceDetails'
-        stakingPositionId:
-          description: Unique identifier of the staking position
-          type: string
-          example: 9bc4c2ccba8192b64d41b46d1770abe9ddbb430b85de3fe73e1b4f21336bc48a
-      required:
-      - assetType
-      - idempotentId
-      - source
-      title: CreateUnstakeRequest
-    ErrorType:
-      description: The type of error returned.
-      type: string
-      enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
-    CreateConsolidateStakeRequest:
-      type: object
-      properties:
-        assetType:
-          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
-
-
-            Use `/asset-types` to list all of the supported asset types for your organization.
-
-            '
-          type: string
-          example: ETH
-        description:
-          description: An optional string providing more context to this transaction. It will be visible on the Anchorage Digital iOS app and will not be published to the blockchain.
-          type:
-          - string
-          - 'null'
-          example: 'Internal ID: #12838927347'
-        idempotentId:
-          description: A client-provided unique ID for idempotent requests
-          type: string
-          example: '12838927347'
-          maxLength: 128
-        source:
-          $ref: '#/components/schemas/SimpleSourceResourceDetails'
-        sourceStakingPosition:
-          description: Source staking validator public key to consolidate
-          type: string
-          example: 0xa1d1...
-        targetStakingPosition:
-          description: Target staking validator public key
-          type: string
-          example: 0x9647...
-      required:
-      - assetType
-      - idempotentId
-      - source
-      - sourceStakingPosition
-      - targetStakingPosition
-      title: CreateConsolidateStakeRequest
-    CreateUnstakeResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/CreateStakeDetails'
-      required:
-      - data
-      title: CreateUnstakeResponse
-    CreateCollectResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/CreateStakeDetails'
-      required:
-      - data
-      title: CreateCollectResponse
-    ETHStakingParameters:
-      description: 'UNDER DEVELOPMENT: ETH specific staking parameters'
-      type: object
-      properties:
-        stakingPositionId:
-          description: The staking position identifier. Only required for deposits.
-          type: string
-        stakingProvider:
-          description: The validator's provider. Only required for provisioning.
-          type: string
-          enum:
-          - FIGMENT
-          - BLOCKDAEMON
-        validatorType:
-          description: 'Defines which validator to use: 0x01 Pre-Pectra validators; 0x02 Post-Pectra validators'
-          type: string
-          enum:
-          - '0x01'
-          - '0x02'
-      additionalProperties: false
-      required:
-      - validatorType
-      title: ETHStakingParameters
+      title: SimpleSourceResourceType
     WithdrawalParametersForXLM:
       description: Additional parameters to be provided exclusively when `assetType` is "XLM". When using a Trusted Destination, these parameters must not be provided — the memo is inherited from the trusted destination. Set `destination.type` to `TRUSTED_DESTINATION` and `destination.id` to the trusted destination ID instead.
       type: object
@@ -1792,85 +1772,105 @@ components:
       - assetType
       - description
       title: TransactionDetails
-    WithdrawalParametersExtra:
-      description: Extra parameters, to be provided for assets. When using a Trusted Destination, these parameters must not be provided — the memo is inherited from the trusted destination. Set `destination.type` to `TRUSTED_DESTINATION` and `destination.id` to the trusted destination ID instead.
+    CreateConsolidateStakeRequest:
       type: object
       properties:
-        value:
-          description: An alphanumeric string often used to uniquely identify the recipient of the transaction, commonly used when transferring funds to custodial wallets, exchanges or other situations where the `destinationAddress` is multi-purpose. Must be included whenever provided by the recipient of the transaction.
+        assetType:
+          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
+
+
+            Use `/asset-types` to list all of the supported asset types for your organization.
+
+            '
           type: string
-          example: w3mp19cqp2
-          maxLength: 256
-      required:
-      - value
-      title: WithdrawalParametersExtra
-    CreateStakeResponse:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/CreateStakeDetails'
-      required:
-      - data
-      title: CreateStakeResponse
-    ErrorDetails:
-      type: object
-      properties:
-        errorType:
-          $ref: '#/components/schemas/ErrorType'
-        message:
-          description: A human-readable message providing more details about the error.
+          example: ETH
+        description:
+          description: An optional string providing more context to this transaction. It will be visible on the Anchorage Digital iOS app and will not be published to the blockchain.
+          type:
+          - string
+          - 'null'
+          example: 'Internal ID: #12838927347'
+        idempotentId:
+          description: A client-provided unique ID for idempotent requests
           type: string
-          example: Missing required field 'amount'.
+          example: '12838927347'
+          maxLength: 128
+        source:
+          $ref: '#/components/schemas/SimpleSourceResourceDetails'
+        sourceStakingPosition:
+          description: Source staking validator public key to consolidate
+          type: string
+          example: 0xa1d1...
+        targetStakingPosition:
+          description: Target staking validator public key
+          type: string
+          example: 0x9647...
       required:
-      - errorType
-      - message
-      title: ErrorDetails
-    SOLStakingParameters:
-      description: 'UNDER DEVELOPMENT: Solana specific staking parameters'
+      - assetType
+      - idempotentId
+      - source
+      - sourceStakingPosition
+      - targetStakingPosition
+      title: CreateConsolidateStakeRequest
+    CreateStakeRequest:
       type: object
       properties:
-        stakingProvider:
-          description: The validator's provider
+        amount:
+          description: An amount of a crypto-asset to transfer, without units. The unit is derived from the asset type.
           type: string
-          enum:
-          - FIGMENT
-          - BLOCKDAEMON
-        stakingProviderAddress:
-          description: The validator's vote account address
+          example: '32'
+        assetType:
+          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
+
+
+            Use `/asset-types` to list all of the supported asset types for your organization.
+
+            '
           type: string
-      additionalProperties: false
-      oneOf:
-      - required:
-        - stakingProviderAddress
-      - required:
-        - stakingProvider
-      title: SOLStakingParameters
-    ResourceDetails:
-      description: "An object representing a resource capable of receiving, or holding funds.\n\n\n\nConstruction example:\n\n  ```\n  {\n    \"id\":\"1c920f4241b78a1d483a29f3c24b6c4c\",\n    \"type\":\"WALLET\"\n  }\n  ```\n"
+          example: ETH
+        description:
+          description: An optional string providing more context to this transaction. It will be visible on the Anchorage Digital iOS app and will not be published to the blockchain.
+          type:
+          - string
+          - 'null'
+          example: 'Internal ID: #12838927347'
+        idempotentId:
+          description: A client-provided unique ID for idempotent requests
+          type: string
+          example: '12838927347'
+          maxLength: 128
+        parameters:
+          $ref: '#/components/schemas/StakingParameters'
+        source:
+          $ref: '#/components/schemas/SimpleSourceResourceDetails'
+      required:
+      - assetType
+      - amount
+      - idempotentId
+      - source
+      title: CreateStakeRequest
+    Page:
+      description: Pagination info
       type: object
       properties:
-        id:
-          description: The identifier of the resource
-          type: string
-          example: 1c920f4241b78a1d483a29f3c24b6c4c
-        type:
-          $ref: '#/components/schemas/ResourceType'
-      required:
-      - id
-      - type
-      title: Resource
-    WithdrawalParametersForXRP:
-      description: Additional parameters to be provided exclusively when `assetType` is "XRP". When using a Trusted Destination, these parameters must not be provided — the destination tag is inherited from the trusted destination. Set `destination.type` to `TRUSTED_DESTINATION` and `destination.id` to the trusted destination ID instead.
-      type: object
-      properties:
-        destinationTag:
-          description: A number often used to uniquely identify the recipient of the transaction, commonly used when transferring funds to custodial wallets, exchanges or other situations where the `destinationAddress` is multi-purpose. Must be included whenever provided by the recipient of the transaction.
-          type: integer
-          format: uint32
-          example: 23874
-      required:
-      - destinationTag
-      title: WithdrawalParametersForXRP
+        next:
+          description: URL to use to query for the next page or null if no additional results are available
+          type:
+          - string
+          - 'null'
+          example: <next page url>
+          x-omitempty: false
+      title: Page
+    ResourceType:
+      description: The type of the resource being referenced. Note that the VAULT type has been deprecated and WALLET should be used instead.
+      type: string
+      enum:
+      - VAULT
+      - WALLET
+      - ADDRESS
+      - STANDING_INSTRUCTION
+      - TRUSTED_DESTINATION
+      title: ResourceType
   securitySchemes:
     Api-Access-Key:
       type: apiKey

@@ -252,6 +252,16 @@ components:
           $ref: '#/components/schemas/WalletOperation'
       required:
       - walletOperation
+    Page:
+      description: Pagination info
+      type: object
+      properties:
+        endCursor:
+          description: Submit this parameter in the "after" field to fetch the next page.
+          type:
+          - string
+          - 'null'
+      title: Page
     ErrorDetails:
       type: object
       properties:
@@ -274,16 +284,6 @@ components:
       required:
       - data
       - page
-    Page:
-      description: Pagination info
-      type: object
-      properties:
-        endCursor:
-          description: Submit this parameter in the "after" field to fetch the next page.
-          type:
-          - string
-          - 'null'
-      title: Page
   securitySchemes:
     Api-Access-Key:
       type: apiKey

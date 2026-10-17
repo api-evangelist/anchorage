@@ -159,6 +159,76 @@ paths:
         Read vault activity: checkSourceVault
 components:
   schemas:
+    VaultsResponse1:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/VaultDetails'
+      required:
+      - data
+      title: VaultsResponse1
+    AssetDetails:
+      type: object
+      properties:
+        assetType:
+          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
+
+
+            Use `/asset-types` to list all of the supported asset types for your organization.
+
+            '
+          type: string
+          example: BTC
+        availableBalance:
+          $ref: '#/components/schemas/Amount'
+        stakedBalance:
+          $ref: '#/components/schemas/Amount'
+        totalBalance:
+          $ref: '#/components/schemas/Amount'
+        unclaimedBalance:
+          $ref: '#/components/schemas/Amount'
+        vaultId:
+          description: The unique ID of the vault that this asset is in
+          type: string
+        vaultName:
+          description: The name of the vault that this asset is in
+          type: string
+        walletId:
+          description: An ID uniquely identifying an Anchorage Digital wallet
+          type: string
+      example:
+        walletId: 3d293c0d64c703023692216e9b4f5280
+        assetType: BTC
+        availableBalance:
+          quantity: '10.00000000'
+          assetType: BTC
+          currentPrice: '9751.01'
+          currentUSDValue: '97510.1'
+        totalBalance:
+          quantity: '10.45234733'
+          assetType: BTC
+          currentPrice: '9751.01'
+          currentUSDValue: '101920.94'
+        stakedBalance:
+          quantity: '32.00000000'
+          assetType: BTC
+          currentPrice: '9751.01'
+          currentUSDValue: '312032.32'
+        unclaimedBalance:
+          quantity: '0'
+          assetType: BTC
+          currentPrice: '9751.01'
+          currentUSDValue: '0'
+        vaultId: 1c920f4241b78a1d483a29f3c24b6c4c
+        vaultName: Long Hold Vault
+      required:
+      - walletId
+      - assetType
+      - availableBalance
+      - totalBalance
+      - vaultId
+      - vaultName
+      title: AssetDetails
     Amount:
       description: 'An amount of a crypto-asset represented by quantity, assetType, current unit price and current USD value.
 
@@ -203,31 +273,6 @@ components:
       - quantity
       - assetType
       title: Amount
-    VaultsResponse1:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/VaultDetails'
-      required:
-      - data
-      title: VaultsResponse1
-    ErrorType:
-      description: The type of error returned.
-      type: string
-      enum:
-      - InternalError
-      - InvalidRequest
-      - Unauthenticated
-      - Forbidden
-      - NotFound
-      - Conflict
-      - UnprocessableEntity
-      - TooManyRequests
-      - ServiceUnavailable
-      - QuoteExpired
-      - InsufficientFunds
-      - NotImplemented
-      title: ErrorType
     VaultDetails:
       type: object
       properties:
@@ -303,68 +348,23 @@ components:
       - errorType
       - message
       title: ErrorDetails
-    AssetDetails:
-      type: object
-      properties:
-        assetType:
-          description: 'A string representing a type of crypto-asset, which usually corresponds to the crypto asset''s ticker symbol.
-
-
-            Use `/asset-types` to list all of the supported asset types for your organization.
-
-            '
-          type: string
-          example: BTC
-        availableBalance:
-          $ref: '#/components/schemas/Amount'
-        stakedBalance:
-          $ref: '#/components/schemas/Amount'
-        totalBalance:
-          $ref: '#/components/schemas/Amount'
-        unclaimedBalance:
-          $ref: '#/components/schemas/Amount'
-        vaultId:
-          description: The unique ID of the vault that this asset is in
-          type: string
-        vaultName:
-          description: The name of the vault that this asset is in
-          type: string
-        walletId:
-          description: An ID uniquely identifying an Anchorage Digital wallet
-          type: string
-      example:
-        walletId: 3d293c0d64c703023692216e9b4f5280
-        assetType: BTC
-        availableBalance:
-          quantity: '10.00000000'
-          assetType: BTC
-          currentPrice: '9751.01'
-          currentUSDValue: '97510.1'
-        totalBalance:
-          quantity: '10.45234733'
-          assetType: BTC
-          currentPrice: '9751.01'
-          currentUSDValue: '101920.94'
-        stakedBalance:
-          quantity: '32.00000000'
-          assetType: BTC
-          currentPrice: '9751.01'
-          currentUSDValue: '312032.32'
-        unclaimedBalance:
-          quantity: '0'
-          assetType: BTC
-          currentPrice: '9751.01'
-          currentUSDValue: '0'
-        vaultId: 1c920f4241b78a1d483a29f3c24b6c4c
-        vaultName: Long Hold Vault
-      required:
-      - walletId
-      - assetType
-      - availableBalance
-      - totalBalance
-      - vaultId
-      - vaultName
-      title: AssetDetails
+    ErrorType:
+      description: The type of error returned.
+      type: string
+      enum:
+      - InternalError
+      - InvalidRequest
+      - Unauthenticated
+      - Forbidden
+      - NotFound
+      - Conflict
+      - UnprocessableEntity
+      - TooManyRequests
+      - ServiceUnavailable
+      - QuoteExpired
+      - InsufficientFunds
+      - NotImplemented
+      title: ErrorType
     Page:
       description: Pagination info
       type: object
